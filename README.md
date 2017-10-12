@@ -92,7 +92,7 @@ The supported input label format is
 
     node label1 label2 label3...
 
-## Compare with other package
+## Compare with other packages
 
 We list the classification result of various methods in different datasets. We set the dimension of vectors = 128 and **p=1, q=1** in node2vec. DeepWalk can walk faster than node2vec because it only accepts binary edges. As a result, the time of DeepWalk is shorter than node2vec's.
 
@@ -108,8 +108,8 @@ CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 
 |Algorithm | Time| Micro-F1 | Macro-F1|
 |:------------|-------------:|------------:|-------:|
-|node2vec(implemented by ourselves) | 1522s  | 0.403 | 0.268|
-|LINE 1st+2nd(implemented by ourselves) | 943s | 0.368 | 0.192|
+|LibNRL(node2vec) | 1522s  | 0.403 | 0.268|
+|LibNRL(LINE 1st+2nd) | 943s | 0.368 | 0.192|
 |[Node2vec](https://github.com/aditya-grover/node2vec) | 1687s  | 0.390| 0.230|
 |[LINE 1st+2nd](https://github.com/tangjianpku/LINE) | 2008s | 0.398 | 0.235|
 |[DeepWalk](https://github.com/phanein/deepwalk) | 271s | 0.385 | 0.238|
@@ -121,8 +121,8 @@ CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 
 |Algorithm | Time| Micro-F1 | Macro-F1|
 |:------------|-------------:|------------:|-------:|
-|Node2vec(implemented by ourselves) | 49s  | 0.633 | 0.543|
-|LINE 2nd(implemented by ourselves) | 111s | 0.641 | 0.461|
+|LibNRL(Node2vec) | 49s  | 0.633 | 0.543|
+|LibNRL(LINE 2nd) | 111s | 0.641 | 0.461|
 |[node2vec](https://github.com/aditya-grover/node2vec) | 51s  | 0.623 | 0.537|
 |[LINE 2nd](https://github.com/tangjianpku/LINE) | 103s | 0.584 | 0.396|
 |[DeepWalk](https://github.com/phanein/deepwalk) | 50s | 0.667 | 0.566|
@@ -134,12 +134,12 @@ CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 - data/cora/cora_labels.txt
 - data/cora/cora_status.txt (split nodes to traing set, validation set and test set)
 
-|Algorithm | Time| Accuracy | Dropout | Weight_decay | Hidden |
+|Algorithm | Dropout | Weight_decay | Hidden | Time| Accuracy |
 |:------------|-------------:|-------:|-------:|-------:|-------:|
-|GCN | 8s  | 0.824 | 0.5 | 5e-4 | 16 |
-|GCN | 9s  | 0.800 | 0 | 5e-4 | 16 |
-|GCN | 11s  | 0.809 | 0.5 | 1e-4 | 16 |
-|GCN | 9s  | 0.816 | 0.5 | 5e-4 | 64 |
+|GCN | 0.5 | 5e-4 | 16 | 8s  | 0.824 |
+|GCN | 0 | 5e-4 | 16 | 9s  | 0.800 |
+|GCN | 0.5 | 1e-4 | 16 | 11s  | 0.809 |
+|GCN | 0.5 | 5e-4 | 64 | 9s  | 0.816 |
 
 ## Citing
 
