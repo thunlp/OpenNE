@@ -7,6 +7,7 @@ from libnrl import node2vec
 from libnrl.classify import Classifier, read_node_label
 from libnrl import line
 from libnrl.gcn import gcnAPI
+from libnrl.grarep import GraRep
 import time
 
 def parse_args():
@@ -32,7 +33,7 @@ def parse_args():
                         help='The training epochs of LINE and GCN')
     parser.add_argument('--p', default=1.0, type=float)
     parser.add_argument('--q', default=1.0, type=float)
-    parser.add_argument('--method', required=True, choices=['node2vec', 'deepWalk', 'line', 'gcn'],
+    parser.add_argument('--method', required=True, choices=['node2vec', 'deepWalk', 'line', 'gcn', 'grarep'],
                         help='The learning method')
     parser.add_argument('--label-file', default='',
                         help='The file of node label')
@@ -58,6 +59,8 @@ def parse_args():
                         help='Weight for L2 loss on embedding matrix')
     parser.add_argument('--hidden', default=16, type=int,
                         help='Number of units in hidden layer 1')
+    parser.add_argument('--kstep', default=4, type=int,
+                        help='Use k-step transition probability matrix')
     args = parser.parse_args()
     return args
 
@@ -94,6 +97,8 @@ def main(args):
         model = gcnAPI.GCN(graph=g, dropout=args.dropout,
                             weight_decay=args.weight_decay, hidden1=args.hidden,
                             epochs=args.epochs)
+    elif args.method == 'grarep':
+        model = GraRep(graph=g, Kstep=args.kstep, dim=args.representation_size)
     t2 = time.time()
     # print t2-t1
     if args.method != 'gcn':

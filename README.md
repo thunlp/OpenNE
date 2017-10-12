@@ -65,6 +65,10 @@ GCN Options:
 - --weight-decay, Weight for L2 loss on embedding matrix;
 - --hidden, Number of units in hidden layer 1.
 
+GraRep Options:
+
+- --kstep, Use k-step transition probability matrix（make sure representation-size%k-step == 0).
+
 #### Input
 The supported input format is an edgelist or an adjlist:
 
@@ -123,6 +127,7 @@ CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 |:------------|-------------:|------------:|-------:|
 |LibNRL(Node2vec) | 49s  | 0.633 | 0.543|
 |LibNRL(LINE 2nd) | 111s | 0.641 | 0.461|
+|LibNRL(GraRep) | 75s | 0.654 | 0.509 |
 |[node2vec](https://github.com/aditya-grover/node2vec) | 51s  | 0.623 | 0.537|
 |[LINE 2nd](https://github.com/tangjianpku/LINE) | 103s | 0.584 | 0.396|
 |[DeepWalk](https://github.com/phanein/deepwalk) | 50s | 0.667 | 0.566|
