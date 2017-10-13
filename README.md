@@ -114,6 +114,7 @@ CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 |:------------|-------------:|------------:|-------:|
 |LibNRL(node2vec) | 1522s  | 0.403 | 0.268|
 |LibNRL(LINE 1st+2nd) | 943s | 0.368 | 0.192|
+|LibNRL(GraRep) | 4178s | 0.393 | 0.230 |
 |[Node2vec](https://github.com/aditya-grover/node2vec) | 1687s  | 0.390| 0.230|
 |[LINE 1st+2nd](https://github.com/tangjianpku/LINE) | 2008s | 0.398 | 0.235|
 |[DeepWalk](https://github.com/phanein/deepwalk) | 271s | 0.385 | 0.238|
