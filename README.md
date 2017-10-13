@@ -1,6 +1,6 @@
 # LibNRL
 
-This  repository provide a NRL(network representation learning) framework. It contains implementation of "node2vec"  ,"LINE" and "GCN".
+This  repository provide a NRL(network representation learning) framework. It contains implementation of "node2vec", "LINE", "GraRep" and "GCN".
 
 The NRL algorithm learns continuous representations for nodes in any (un)directed, (un)weighted graph.
 
@@ -20,6 +20,8 @@ The NRL algorithm learns continuous representations for nodes in any (un)directe
 To run "node2vec" on BlogCatalog network and evaluate the feature representations on multi-label classification for nodes, execute the following command from the project home directory:
 
     python src/main.py --method node2vec --label-file data/blogCatalog/bc_labels.txt --input data/blogCatalog/bc_adjlist.txt --graph-format adjlist --output vec_all.txt --q 0.25 --p 0.25
+
+To run "gcn" on Cora network and evaluate the feature representations on classification for nodes, execute the following command from the project home directory:
 
     python src/main.py --method gcn --label-file data/cora/cora_labels.txt --input data/cora/cora_edgelist.txt --graph-format edgelist --nodestatus-file data/cora/cora_status.txt --feature-file data/cora/cora_features.pkl --epochs 200 --output vec_all.txt
 
@@ -98,7 +100,7 @@ The supported input label format is
 
 ## Compare with other packages
 
-We list the classification result of various methods in different datasets. We set the dimension of vectors = 128 and **p=1, q=1** in node2vec. DeepWalk can walk faster than node2vec because it only accepts binary edges. As a result, the time of DeepWalk is shorter than node2vec's.
+We list the classification result of various methods in different datasets. We set the dimension of vectors = 128, **p=1, q=1** in node2vec and **kstep=4** in GraRep . DeepWalk can walk faster than node2vec because it only accepts binary edges. As a result, the time of DeepWalk is shorter than node2vec's.
 
 GCN is an approach for semi-supervised learning on graph-structured data. GCN performs batch gradient descent using the full dataset for every training iteration, so it can't work with GPU on a large dataset. And GCN is suitable for the dataset whose nodes have features.
 
@@ -180,6 +182,14 @@ If you find *LibNRL* is useful for your research, please consider citing the fol
       Author                   = {Kipf, Thomas N and Welling, Max},
       journal                  = {arXiv preprint arXiv:1609.02907},
       Year                     = {2016}
+    }
+
+    @InProceedings{cao2015grarep,
+      Title                    = {Grarep: Learning graph representations with global structural information},
+      Author                   = {Cao, Shaosheng and Lu, Wei and Xu, Qiongkai},
+      Booktitle                = {Proceedings of CIKM},
+      Year                     = {2015},
+      Pages                    = {891--900}
     }
 
 ## Sponsor
