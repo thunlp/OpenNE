@@ -134,6 +134,7 @@ CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 |[node2vec](https://github.com/aditya-grover/node2vec) | 51s  | 0.623 | 0.537|
 |[LINE 2nd](https://github.com/tangjianpku/LINE) | 103s | 0.584 | 0.396|
 |[DeepWalk](https://github.com/phanein/deepwalk) | 50s | 0.667 | 0.566|
+|[GraRep](https://github.com/ShelsonCao/GraRep) | - | 0.633 | 0.476|
 
 [cora](https://github.com/tkipf/gcn/tree/master/gcn/data): 2708 nodes 5429 edges 7 labels directed:
 
