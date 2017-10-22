@@ -6,6 +6,7 @@ from libnrl.graph import *
 from libnrl import node2vec
 from libnrl.classify import Classifier, read_node_label
 from libnrl import line
+from libnrl import tadw
 from libnrl.gcn import gcnAPI
 from libnrl.grarep import GraRep
 import time
@@ -33,7 +34,7 @@ def parse_args():
                         help='The training epochs of LINE and GCN')
     parser.add_argument('--p', default=1.0, type=float)
     parser.add_argument('--q', default=1.0, type=float)
-    parser.add_argument('--method', required=True, choices=['node2vec', 'deepWalk', 'line', 'gcn', 'grarep'],
+    parser.add_argument('--method', required=True, choices=['node2vec', 'deepWalk', 'line', 'gcn', 'grarep', 'tadw'],
                         help='The learning method')
     parser.add_argument('--label-file', default='',
                         help='The file of node label')
@@ -87,6 +88,12 @@ def main(args):
         model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
                                  num_paths=args.number_walks, dim=args.representation_size,
                                  workers=args.workers, window=args.window_size)
+    elif args.method == 'tadw':
+        assert args.label_file != ''
+        assert args.feature_file != ''
+        g.read_node_label(args.label_file)
+        g.read_node_features(args.feature_file)
+        model = tadw.TADW(graph=g, dim=args.representation_size)
     elif args.method == 'gcn':
         assert args.label_file != ''
         assert args.feature_file != ''
