@@ -97,6 +97,7 @@ def preprocess_features(features):
     r_inv = np.power(rowsum, -1).flatten()
     r_inv[np.isinf(r_inv)] = 0.
     r_mat_inv = sp.diags(r_inv)
+    features = sp.coo_matrix(features)
     features = r_mat_inv.dot(features)
     return sparse_to_tuple(features)
 

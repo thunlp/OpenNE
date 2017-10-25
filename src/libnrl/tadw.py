@@ -37,10 +37,6 @@ class TADW(object):
         self.features = sp.vstack([g.nodes[look_back[i]]['feature']
             for i in range(g.number_of_nodes())]) 
         self.features = self.features.toarray()
-        fout = open('text.features', 'w')
-        for i in range(g.number_of_nodes()):
-            fout.write('{}\n'.format(' '.join([str(x) for x in g.nodes[str(i)]['feature'].toarray()[0]])))
-        fout.close()
         self.preprocessFeature()
         return self.features.T
 

@@ -136,7 +136,7 @@ class GCN(object):
         """
         g = self.graph.G
         look_back = self.graph.look_back_list
-        self.features = sp.vstack([g.nodes[look_back[i]]['feature']
+        self.features = np.vstack([g.nodes[look_back[i]]['feature']
             for i in range(g.number_of_nodes())]) 
         self.features = preprocess_features(self.features)
         self.build_label()
