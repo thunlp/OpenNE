@@ -9,7 +9,7 @@ class GCN(object):
 
     def __init__(self, graph, learning_rate=0.01, epochs=200,
                  hidden1=16, dropout=0.5, weight_decay=5e-4, early_stopping=10,
-                 max_degree=3):
+                 max_degree=3, clf_ratio=0.1):
         """
                         learning_rate: Initial learning rate
                         epochs: Number of epochs to train
@@ -20,6 +20,7 @@ class GCN(object):
                         max_degree: Maximum Chebyshev polynomial degree
         """
         self.graph = graph
+        self.clf_ratio = clf_ratio
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.hidden1 = hidden1
@@ -114,20 +115,28 @@ class GCN(object):
         """
             build train_mask test_mask val_mask
         """
+        train_precent = self.clf_ratio
+        training_size = int(train_precent * self.graph.G.number_of_nodes())
+        state = np.random.get_state()
+        np.random.seed(0)
+        shuffle_indices = np.random.permutation(np.arange(self.graph.G.number_of_nodes()))
+        np.random.set_state(state)
+
         look_up = self.graph.look_up_dict
         g = self.graph.G
-        def sample_mask(tag, l):
-            mask = np.zeros(l)
-            for node in g.nodes():
-                if g.nodes[node]['status'] == tag:
-                    mask[look_up[node]] = 1
+        def sample_mask(begin, end):
+            mask = np.zeros(g.number_of_nodes())
+            for i in range(begin, end):
+                mask[shuffle_indices[i]] = 1
             return mask
 
-        nodes_num = len(self.labels)
-        self.train_mask = sample_mask('train', nodes_num)
-        self.val_mask = sample_mask('valid', nodes_num)
-        self.test_mask = sample_mask('test', nodes_num)
-
+        # nodes_num = len(self.labels)
+        # self.train_mask = sample_mask('train', nodes_num)
+        # self.val_mask = sample_mask('valid', nodes_num)
+        # self.test_mask = sample_mask('test', nodes_num)
+        self.train_mask = sample_mask(0, training_size-100)
+        self.val_mask = sample_mask(training_size-100, training_size)
+        self.test_mask = sample_mask(training_size, g.number_of_nodes())
 
     def preprocess_data(self):
         """

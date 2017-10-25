@@ -23,7 +23,7 @@ To run "node2vec" on BlogCatalog network and evaluate the feature representation
 
 To run "gcn" on Cora network and evaluate the feature representations on classification for nodes, execute the following command from the project home directory:
 
-    python src/main.py --method gcn --label-file data/cora/cora_labels.txt --input data/cora/cora_edgelist.txt --graph-format edgelist --nodestatus-file data/cora/cora_status.txt --feature-file data/cora/cora_features.pkl --epochs 200 --output vec_all.txt
+    python src/main.py --method gcn --label-file data/cora/cora_labels.txt --input data/cora/cora_edgelist.txt --graph-format edgelist --feature-file data/cora/cora.features  --epochs 200 --output vec_all.txt --clf-ratio 0.1
 
 #### Options
 You can check out the other options available to use with *LibNRL* using:
@@ -61,7 +61,6 @@ LINE Options:
 GCN Options:
 
 - --feature-file, The file of node features;
-- --nodestatus-file, The file of node status;
 - --epochs, the training epochs of GCN; the default is 5;
 - --dropout, Dropout rate (1 - keep probability);
 - --weight-decay, Weight for L2 loss on embedding matrix;
@@ -102,7 +101,7 @@ The supported input label format is
 
 We list the classification result of various methods in different datasets. We set the dimension of vectors = 128, **p=1, q=1** in node2vec and **kstep=4** in GraRep . DeepWalk can walk faster than node2vec because it only accepts binary edges. As a result, the time of DeepWalk is shorter than node2vec's.
 
-GCN is an approach for semi-supervised learning on graph-structured data. GCN performs batch gradient descent using the full dataset for every training iteration, so it can't work with GPU on a large dataset. And GCN is suitable for the dataset whose nodes have features.
+GCN is an approach for semi-supervised learning on graph-structured data. GCN performs batch gradient descent using the full dataset for every training iteration, so it can't work with GPU on a large dataset. And GCN is suitable for the dataset whose nodes have features. In Cora, we use 10% data to train our model.
 
 CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 
@@ -144,10 +143,10 @@ CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 
 |Algorithm | Dropout | Weight_decay | Hidden | Time| Accuracy |
 |:------------|-------------:|-------:|-------:|-------:|-------:|
-|GCN | 0.5 | 5e-4 | 16 | 8s  | 0.824 |
-|GCN | 0 | 5e-4 | 16 | 9s  | 0.800 |
-|GCN | 0.5 | 1e-4 | 16 | 11s  | 0.809 |
-|GCN | 0.5 | 5e-4 | 64 | 9s  | 0.816 |
+|GCN | 0.5 | 5e-4 | 16 | 5.7s  | 0.780 |
+|GCN | 0 | 5e-4 | 16 | 6.5s  | 0.890 |
+|GCN | 0.5 | 1e-4 | 16 | 5.5s  | 0.782 |
+|GCN | 0.5 | 5e-4 | 64 | 6.0s  | 0.785 |
 
 ## Citing
 

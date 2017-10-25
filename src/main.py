@@ -38,8 +38,6 @@ def parse_args():
                         help='The learning method')
     parser.add_argument('--label-file', default='',
                         help='The file of node label')
-    parser.add_argument('--nodestatus-file', default='',
-                        help='The file of node status')
     parser.add_argument('--feature-file', default='',
                         help='The file of node features')
     parser.add_argument('--graph-format', default='adjlist', choices=['adjlist', 'edgelist'],
@@ -97,13 +95,11 @@ def main(args):
     elif args.method == 'gcn':
         assert args.label_file != ''
         assert args.feature_file != ''
-        assert args.nodestatus_file != ''
         g.read_node_label(args.label_file)
         g.read_node_features(args.feature_file)
-        g.read_node_status(args.nodestatus_file)
         model = gcnAPI.GCN(graph=g, dropout=args.dropout,
                             weight_decay=args.weight_decay, hidden1=args.hidden,
-                            epochs=args.epochs)
+                            epochs=args.epochs, clf_ratio=args.clf_ratio)
     elif args.method == 'grarep':
         model = GraRep(graph=g, Kstep=args.kstep, dim=args.representation_size)
     t2 = time.time()
