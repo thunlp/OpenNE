@@ -37,7 +37,18 @@ class TADW(object):
         self.features = sp.vstack([g.nodes[look_back[i]]['feature']
             for i in range(g.number_of_nodes())]) 
         self.features = self.features.toarray()
+        fout = open('text.features', 'w')
+        for i in range(g.number_of_nodes()):
+            fout.write('{}\n'.format(' '.join([str(x) for x in g.nodes[str(i)]['feature'].toarray()[0]])))
+        fout.close()
+        self.preprocessFeature()
         return self.features.T
+
+    def preprocessFeature(self):
+        U, S, VT = la.svd(self.features)
+        Ud = U[:, 0:200]
+        Sd = S[0:200]
+        self.features = np.array(Ud)*Sd.reshape(200)
 
     def train(self):
         self.adj = self.getAdj()
@@ -71,7 +82,7 @@ class TADW(object):
                 rt = rt - at*Hdt
                 bt = np.dot(rt.T, rt)/np.dot(rtmp.T, rtmp)
                 dt = rt + bt * dt
-            W = np.reshape(vecW, (self.dim, self.node_size))
+            self.W = np.reshape(vecW, (self.dim, self.node_size))
 
             # Update H
             drv = np.dot((np.dot(np.dot(np.dot(self.W, self.W.T),self.H),self.T)
@@ -80,7 +91,7 @@ class TADW(object):
             rt = -drv
             dt = rt
             vecH = np.reshape(self.H, (self.dim*self.feature_size, 1))
-            while np.linalg.norm(rt, 2) > 1e3:
+            while np.linalg.norm(rt, 2) > 1e-4:
                 dtS = np.reshape(dt, (self.dim, self.feature_size))
                 Hdt = np.reshape(np.dot(np.dot(np.dot(self.W, self.W.T), dtS), np.dot(self.T, self.T.T))
                                 + self.lamb*dtS, (self.dim*self.feature_size, 1))
@@ -90,13 +101,15 @@ class TADW(object):
                 rt = rt - at*Hdt
                 bt = np.dot(rt.T, rt)/np.dot(rtmp.T, rtmp)
                 dt = rt + bt * dt
-            H = np.reshape(vecH, (self.dim, self.feature_size))
+            self.H = np.reshape(vecH, (self.dim, self.feature_size))
         self.Vecs = np.hstack((self.W.T, np.dot(self.T.T, self.H.T)))
         # get embeddings
         self.vectors = {}
         look_back = self.g.look_back_list
         for i, embedding in enumerate(self.Vecs):
-            self.vectors[look_back[i]] = embedding
+            # norm = sum([x*x for x in embedding])
+            norm = math.sqrt(sum([x*x for x in embedding]))
+            self.vectors[look_back[i]] = embedding/norm
 
 
 
