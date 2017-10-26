@@ -1,8 +1,8 @@
 # OpenNE: An open source toolkit for Netowrk Embedding
 
-This repository provide a standard NE/NRL(Network Representation Learning）training and testing framework. In this framework, we unify the input and output interfaces of different NE models and provide scalable options for each model. Moreover, we implment typical NE models under this framework based on tensorflow, which enables these models trained with GPUs.
+This repository provide a standard NE/NRL(Network Representation Learning）training and testing framework. In this framework, we unify the input and output interfaces of different NE models and provide scalable options for each model. Moreover, we implment typical NE models under this framework based on tensorflow, which enables these models be trained with GPUs.
 
-We develop this toolkit according to the settings of DeepWalk. The implemented models include DeepWalk, LINE, node2vec, GraRep, TADW and GCN. We will implement more representive NE models continuously. Specifically, we welcome other researchers to contribute NE models into this toolkit based on our framework. We will announce the contribution in this project.
+We develop this toolkit according to the settings of DeepWalk. The implemented or modified models include [DeepWalk](https://github.com/phanein/deepwalk), [LINE](https://github.com/tangjianpku/LINE), [node2vec](https://github.com/aditya-grover/node2vec), [GraRep](https://github.com/ShelsonCao/GraRep), [TADW](https://github.com/thunlp/TADW) and [GCN](https://github.com/tkipf/gcn). We will implement more representive NE models continuously according to our released [NRL paper list](https://github.com/thunlp/nrlpapers). Specifically, we welcome other researchers to contribute NE models into this toolkit based on our framework. We will announce the contribution in this project.
 
 ## Requirements
 
