@@ -70,6 +70,10 @@ GraRep Options:
 
 - --kstep, Use k-step transition probability matrix（make sure representation-size%k-step == 0).
 
+TADW Options:
+
+- --lamb, lambda is a hyperparameter in TADW.
+
 #### Input
 The supported input format is an edgelist or an adjlist:
 
@@ -152,6 +156,7 @@ CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 | LibNRL(GCN) | 0.5 | 1e-4 | 16 | - | 5.5s | 0.782 |
 | LibNRL(GCN) | 0.5 | 5e-4 | 64 | - | 6.0s | 0.785 |
 | LibNRL(TADW) | - | - | - | 80*2 | 23.0s | 0.785 |
+| [GCN](https://github.com/tkipf/gcn) | 0.5 | 5e-4 | 16 | - | 8.7s | 0.790 |
 | [TADW](https://github.com/thunlp/TADW) | - | - | - | 80*2 | - | 0.780 |
 
 ## Citing

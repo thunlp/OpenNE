@@ -60,6 +60,8 @@ def parse_args():
                         help='Number of units in hidden layer 1')
     parser.add_argument('--kstep', default=4, type=int,
                         help='Use k-step transition probability matrix')
+    parser.add_argument('--lamb', default=0.2, type=float,
+                        help='lambda is a hyperparameter in TADW')
     args = parser.parse_args()
     return args
 
@@ -91,7 +93,7 @@ def main(args):
         assert args.feature_file != ''
         g.read_node_label(args.label_file)
         g.read_node_features(args.feature_file)
-        model = tadw.TADW(graph=g, dim=args.representation_size)
+        model = tadw.TADW(graph=g, dim=args.representation_size, lamb=args.lamb)
     elif args.method == 'gcn':
         assert args.label_file != ''
         assert args.feature_file != ''
