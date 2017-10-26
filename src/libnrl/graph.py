@@ -86,10 +86,10 @@ class Graph(object):
         fin.close()
 
     def read_node_features(self, filename):
-        fin = open(filename, 'rb')
-        features = pkl.load(fin)
-        for node, feature in features.items():
-            self.G.nodes[node]['feature'] = feature
+        fin = open(filename, 'r')
+        for l in fin.readlines():
+            vec = l.split()
+            self.G.nodes[vec[0]]['feature'] = np.array([float(x) for x in vec[1:]])
         fin.close()
 
     def read_node_status(self, filename):

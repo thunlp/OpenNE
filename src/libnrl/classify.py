@@ -62,9 +62,9 @@ class Classifier(object):
         Y_test = [Y[shuffle_indices[i]] for i in range(training_size, len(X))]
 
         self.train(X_train, Y_train, Y)
+        numpy.random.set_state(state)
         return self.evaluate(X_test, Y_test)
 
-        numpy.random.set_state(state)
 
 
 def load_embeddings(filename):

@@ -1,13 +1,13 @@
 # LibNRL
 
-This  repository provide a NRL(network representation learning) framework. It contains implementation of "node2vec", "LINE", "GraRep" and "GCN".
+This  repository provide a NRL(network representation learning) framework. It contains implementation of "node2vec", "LINE", "GraRep", "TADW" and "GCN".
 
 The NRL algorithm learns continuous representations for nodes in any (un)directed, (un)weighted graph.
 
 ## Requirements
 
 -  numpy
--  networkx
+-  networkx==2.0
 -  scipy (if you want to use cython to spead up node2vec, please set scipy==0.15.1)
 -  tensorflow
 -  gensim
@@ -23,7 +23,7 @@ To run "node2vec" on BlogCatalog network and evaluate the feature representation
 
 To run "gcn" on Cora network and evaluate the feature representations on classification for nodes, execute the following command from the project home directory:
 
-    python src/main.py --method gcn --label-file data/cora/cora_labels.txt --input data/cora/cora_edgelist.txt --graph-format edgelist --nodestatus-file data/cora/cora_status.txt --feature-file data/cora/cora_features.pkl --epochs 200 --output vec_all.txt
+    python src/main.py --method gcn --label-file data/cora/cora_labels.txt --input data/cora/cora_edgelist.txt --graph-format edgelist --feature-file data/cora/cora.features  --epochs 200 --output vec_all.txt --clf-ratio 0.1
 
 #### Options
 You can check out the other options available to use with *LibNRL* using:
@@ -61,7 +61,6 @@ LINE Options:
 GCN Options:
 
 - --feature-file, The file of node features;
-- --nodestatus-file, The file of node status;
 - --epochs, the training epochs of GCN; the default is 5;
 - --dropout, Dropout rate (1 - keep probability);
 - --weight-decay, Weight for L2 loss on embedding matrix;
@@ -71,12 +70,21 @@ GraRep Options:
 
 - --kstep, Use k-step transition probability matrix（make sure representation-size%k-step == 0).
 
+TADW Options:
+
+- --lamb, lambda is a hyperparameter in TADW.
+
 #### Input
 The supported input format is an edgelist or an adjlist:
 
     edgelist: node1 node2 <weight_float, optional>
     adjlist: node n1 n2 n3 ... nk
 The graph is assumed to be undirected and unweighted by default. These options can be changed by setting the appropriate flags.
+
+If the model need node's feature, the supported feature input format is as follow(**feature_i** should be a float number):
+
+    node feature_1 feature_2 ... feature_n
+
 
 #### Output
 The output file has *n+1* lines for a graph with *n* vertices. 
@@ -102,7 +110,7 @@ The supported input label format is
 
 We list the classification result of various methods in different datasets. We set the dimension of vectors = 128, **p=1, q=1** in node2vec and **kstep=4** in GraRep . DeepWalk can walk faster than node2vec because it only accepts binary edges. As a result, the time of DeepWalk is shorter than node2vec's.
 
-GCN is an approach for semi-supervised learning on graph-structured data. GCN performs batch gradient descent using the full dataset for every training iteration, so it can't work with GPU on a large dataset. And GCN is suitable for the dataset whose nodes have features.
+GCN is an approach for semi-supervised learning on graph-structured data. GCN performs batch gradient descent using the full dataset for every training iteration, so it can't work with GPU on a large dataset. And GCN is suitable for the dataset whose nodes have features. In Cora, we use 10% data to train our model. For TADW, we use SVM as classifier.
 
 CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 
@@ -139,16 +147,18 @@ CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 [cora](https://github.com/tkipf/gcn/tree/master/gcn/data): 2708 nodes 5429 edges 7 labels directed:
 
 - data/cora/cora_edgelist.txt
-- data/cora/cora_feature.pkl (save the features of nodes)
+- data/cora/cora.features
 - data/cora/cora_labels.txt
-- data/cora/cora_status.txt (split nodes to traing set, validation set and test set)
 
-|Algorithm | Dropout | Weight_decay | Hidden | Time| Accuracy |
-|:------------|-------------:|-------:|-------:|-------:|-------:|
-|GCN | 0.5 | 5e-4 | 16 | 8s  | 0.824 |
-|GCN | 0 | 5e-4 | 16 | 9s  | 0.800 |
-|GCN | 0.5 | 1e-4 | 16 | 11s  | 0.809 |
-|GCN | 0.5 | 5e-4 | 64 | 9s  | 0.816 |
+|Algorithm | Dropout | Weight_decay | Hidden | Dimension | Time| Accuracy |
+|:------------|-------------:|-------:|-------:|-------:|-------:|-------:|
+| LibNRL(GCN) | 0.5 | 5e-4 | 16 | - | 5.7s | 0.780 |
+| LibNRL(GCN) | 0 | 5e-4 | 16 | - | 6.5s | 0.779 |
+| LibNRL(GCN) | 0.5 | 1e-4 | 16 | - | 5.5s | 0.782 |
+| LibNRL(GCN) | 0.5 | 5e-4 | 64 | - | 6.0s | 0.785 |
+| LibNRL(TADW) | - | - | - | 80*2 | 23.0s | 0.785 |
+| [GCN](https://github.com/tkipf/gcn) | 0.5 | 5e-4 | 16 | - | 8.7s | 0.790 |
+| [TADW](https://github.com/thunlp/TADW) | - | - | - | 80*2 | - | 0.780 |
 
 ## Citing
 
@@ -191,6 +201,13 @@ If you find *LibNRL* is useful for your research, please consider citing the fol
       Booktitle                = {Proceedings of CIKM},
       Year                     = {2015},
       Pages                    = {891--900}
+    }
+
+    @InProceedings{yang2015network,
+    Title                    = {Network representation learning with rich text information},
+    Author                   = {Yang, Cheng and Liu, Zhiyuan and Zhao, Deli and Sun, Maosong and Chang, Edward},
+    Booktitle                = {Proceedings of IJCAI},
+    Year                     = {2015}
     }
 
 ## Sponsor
