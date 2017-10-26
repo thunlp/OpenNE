@@ -103,7 +103,7 @@ def main(args):
     elif args.method == 'grarep':
         model = GraRep(graph=g, Kstep=args.kstep, dim=args.representation_size)
     t2 = time.time()
-    # print t2-t1
+    print t2-t1
     if args.method != 'gcn':
         print "Saving embeddings..."
         model.save_embeddings(args.output)

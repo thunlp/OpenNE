@@ -34,9 +34,8 @@ class TADW(object):
     def getT(self):
         g = self.g.G
         look_back = self.g.look_back_list
-        self.features = sp.vstack([g.nodes[look_back[i]]['feature']
+        self.features = np.vstack([g.nodes[look_back[i]]['feature']
             for i in range(g.number_of_nodes())]) 
-        self.features = self.features.toarray()
         self.preprocessFeature()
         return self.features.T
 
@@ -57,7 +56,7 @@ class TADW(object):
         self.W = np.random.randn(self.dim, self.node_size)
         self.H = np.random.randn(self.dim, self.feature_size)
         # Update
-        for i in range(10):
+        for i in range(20):
             print 'Iteration ', i
             # Update W
             B = np.dot(self.H, self.T)
@@ -98,7 +97,7 @@ class TADW(object):
                 bt = np.dot(rt.T, rt)/np.dot(rtmp.T, rtmp)
                 dt = rt + bt * dt
             self.H = np.reshape(vecH, (self.dim, self.feature_size))
-        self.Vecs = np.hstack((self.W.T, np.dot(self.T.T, self.H.T)))
+        self.Vecs = np.hstack((normalize(self.W.T), normalize(np.dot(self.T.T, self.H.T))))
         # get embeddings
         self.vectors = {}
         look_back = self.g.look_back_list
