@@ -1,14 +1,14 @@
-# OpenNE: An open source toolkit for Netowrk Embedding
+# OpenNE: An open source toolkit for Netowork Embedding
 
-This repository provide a standard NE/NRL(Network Representation Learning）training and testing framework. In this framework, we unify the input and output interfaces of different NE models and provide scalable options for each model. Moreover, we implment typical NE models under this framework based on tensorflow, which enables these models be trained with GPUs.
+This repository provides a standard NE/NRL(Network Representation Learning）training and testing framework. In this framework, we unify the input and output interfaces of different NE models and provide scalable options for each model. Moreover, we implement typical NE models under this framework based on tensorflow, which enables these models to be trained with GPUs.
 
-We develop this toolkit according to the settings of DeepWalk. The implemented or modified models include [DeepWalk](https://github.com/phanein/deepwalk), [LINE](https://github.com/tangjianpku/LINE), [node2vec](https://github.com/aditya-grover/node2vec), [GraRep](https://github.com/ShelsonCao/GraRep), [TADW](https://github.com/thunlp/TADW) and [GCN](https://github.com/tkipf/gcn). We will implement more representive NE models continuously according to our released [NRL paper list](https://github.com/thunlp/nrlpapers). Specifically, we welcome other researchers to contribute NE models into this toolkit based on our framework. We will announce the contribution in this project.
+We develop this toolkit according to the settings of DeepWalk. The implemented or modified models include [DeepWalk](https://github.com/phanein/deepwalk), [LINE](https://github.com/tangjianpku/LINE), [node2vec](https://github.com/aditya-grover/node2vec), [GraRep](https://github.com/ShelsonCao/GraRep), [TADW](https://github.com/thunlp/TADW) and [GCN](https://github.com/tkipf/gcn). We will implement more representative NE models continuously according to our released [NRL paper list](https://github.com/thunlp/nrlpapers). Specifically, we welcome other researchers to contribute NE models into this toolkit based on our framework. We will announce the contribution in this project.
 
 ## Requirements
 
 -  numpy
 -  networkx==2.0
--  scipy (if you want to use cython to spead up node2vec, please set scipy==0.15.1)
+-  scipy (if you want to use cython to speed up node2vec, please set scipy==0.15.1)
 -  tensorflow
 -  gensim
 -  sklearn
@@ -49,7 +49,7 @@ DeepWalk and node2vec:
 - --number-walks, the number of random walks to start at each node; the default is 10;
 - --walk-length, the length of random walk started at each node; the default is 80;
 - --workers, the number of parallel processes; the default is 8;
-- --window-size, the window size of skipgram model; the default is 10;
+- --window-size, the window size of skip-gram model; the default is 10;
 - --q, only for node2vec; the default is 1.0;
 - --p, only for node2vec; the default is 1.0;
 
@@ -58,7 +58,7 @@ LINE:
 - --epochs, the training epochs of LINE; the default is 5;
 - --negative-ratio, the default is 5;
 - --order, 1 for the 1st-order, 2 for the 2nd-order and 3 for 1st + 2nd; the default is 3;
-- --no-auto-stop, no early stop when training LINE; this is an action; when training LINE, we will calculate micro-F1 every epoch. If current micro-F1 is smaller than last micro-F1, the training process will stop early.
+- --no-auto-stop, no early stop when training LINE; this is an action; when training LINE, we will calculate micro-F1 every epoch. If current micro-F1 is smaller than the last micro-F1, the training process will stop early.
 
 GraRep:
 
@@ -114,7 +114,7 @@ Running environment: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 
 We show the node classification results of various methods in different datasets. We set representation dimension to 128, **kstep=4** in GraRep and **p=1, q=1** in node2vec. 
 
-Note that, both GCN(a semi-supervised NE model) and TADW need additonal text features as inputs. Thus, we evaluate these two models on Cora in which each node has text information. We use 10% labelled data to train GCN.
+Note that, both GCN(a semi-supervised NE model) and TADW need additional text features as inputs. Thus, we evaluate these two models on Cora in which each node has text information. We use 10% labeled data to train GCN.
 
 [BlogCatalog](https://github.com/phanein/deepwalk/tree/master/example_graphs): 10312 nodes, 333983 edges, 39 labels,  undirected:
 
