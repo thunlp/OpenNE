@@ -26,11 +26,11 @@ You can check out the other options available to use with *OpenNE* using:
 - --graph-format, the format of input graph, adjlist or edgelist;
 - --output, the output file of representation;
 - --representation-size, the number of latent dimensions to learn for each node; the default is 128
-- --method, the NE model to learn, including deepwalk, line, node2vec, grerep, tadw and gcn;
-- --directed, treat graph as directed; this is an action;
+- --method, the NE model to learn, including deepwalk, line, node2vec, grarep, tadw and gcn;
+- --directed, treat the graph as directed; this is an action;
 - --weighted, treat the graph as weighted; this is an action;
 - --label-file, the file of node label; ignore this option if not testing;
-- --clf-ratio, the ratio of training data in the classification; the default is 0.5;
+- --clf-ratio, the ratio of training data for node classification; the default is 0.5;
 
 #### Example
 
@@ -60,14 +60,6 @@ LINE:
 - --order, 1 for the 1st-order, 2 for the 2nd-order and 3 for 1st + 2nd; the default is 3;
 - --no-auto-stop, no early stop when training LINE; this is an action; when training LINE, we will calculate micro-F1 every epoch. If current micro-F1 is smaller than last micro-F1, the training process will stop early.
 
-GCN:
-
-- --feature-file, The file of node features;
-- --epochs, the training epochs of GCN; the default is 5;
-- --dropout, dropout rate;
-- --weight-decay, weight for l2-loss of embedding matrix;
-- --hidden, number of units in the first hidden layer.
-
 GraRep:
 
 - --kstep, use k-step transition probability matrix（make sure representation-size%k-step == 0).
@@ -75,6 +67,14 @@ GraRep:
 TADW:
 
 - --lamb, lamb is a hyperparameter in TADW that controls the weight of regularization terms.
+
+GCN:
+
+- --feature-file, The file of node features;
+- --epochs, the training epochs of GCN; the default is 5;
+- --dropout, dropout rate;
+- --weight-decay, weight for l2-loss of embedding matrix;
+- --hidden, number of units in the first hidden layer.
 
 #### Input
 The supported input format is an edgelist or an adjlist:
@@ -110,12 +110,11 @@ The supported input label format is
 
 ## Comparisons with other implementations
 
+Running environment: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 
-We show the node classification results of various methods in different datasets. We set the dimension of vectors = 128, **p=1, q=1** in node2vec and **kstep=4** in GraRep . 
+We show the node classification results of various methods in different datasets. We set representation dimension to 128, **kstep=4** in GraRep and **p=1, q=1** in node2vec. 
 
-GCN is an approach for semi-supervised learning on graph-structured data. GCN performs batch gradient descent using the full dataset for every training iteration, so it can't work with GPU on a large dataset. And GCN is suitable for the dataset whose nodes have features. In Cora, we use 10% data to train our model. For TADW, we use SVM as classifier.
-
-CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
+Note that, both GCN(a semi-supervised NE model) and TADW need additonal text features as inputs. Thus, we evaluate these two models on Cora in which each node has text information. We use 10% labelled data to train GCN.
 
 [BlogCatalog](https://github.com/phanein/deepwalk/tree/master/example_graphs): 10312 nodes, 333983 edges, 39 labels,  undirected:
 
