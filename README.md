@@ -31,6 +31,7 @@ You can check out the other options available to use with *OpenNE* using:
 - --weighted, treat the graph as weighted; this is an action;
 - --label-file, the file of node label; ignore this option if not testing;
 - --clf-ratio, the ratio of training data for node classification; the default is 0.5;
+- --epochs, the training epochs of LINE and GCN; the default is 5;
 
 #### Example
 
@@ -55,7 +56,6 @@ DeepWalk and node2vec:
 
 LINE:
 
-- --epochs, the training epochs of LINE; the default is 5;
 - --negative-ratio, the default is 5;
 - --order, 1 for the 1st-order, 2 for the 2nd-order and 3 for 1st + 2nd; the default is 3;
 - --no-auto-stop, no early stop when training LINE; this is an action; when training LINE, we will calculate micro-F1 every epoch. If current micro-F1 is smaller than the last micro-F1, the training process will stop early.
