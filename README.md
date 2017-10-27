@@ -6,12 +6,12 @@ We develop this toolkit according to the settings of DeepWalk. The implemented o
 
 ## Requirements
 
--  numpy
+-  numpy==1.13.1
 -  networkx==2.0
--  scipy (if you want to use cython to speed up node2vec, please set scipy==0.15.1)
--  tensorflow
--  gensim
--  sklearn
+-  scipy==0.19.1
+-  tensorflow==1.3.0
+-  gensim==3.0.1
+-  scikit-learn==0.19.0
 
 ## Usage
 
@@ -214,27 +214,20 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
     }
 
     @InProceedings{yang2015network,
-    Title                    = {Network representation learning with rich text information},
-    Author                   = {Yang, Cheng and Liu, Zhiyuan and Zhao, Deli and Sun, Maosong and Chang, Edward},
-    Booktitle                = {Proceedings of IJCAI},
-    Year                     = {2015}
-    }
-
-    @InProceedings{yang2015network,
-    Title                    = {Network representation learning with rich text information},
-    Author                   = {Yang, Cheng and Liu, Zhiyuan and Zhao, Deli and Sun, Maosong and Chang, Edward},
-    Booktitle                = {Proceedings of IJCAI},
-    Year                     = {2015}
+      Title                    = {Network representation learning with rich text information},
+      Author                   = {Yang, Cheng and Liu, Zhiyuan and Zhao, Deli and Sun, Maosong and Chang, Edward},
+      Booktitle                = {Proceedings of IJCAI},
+      Year                     = {2015}
     }
 
     @Article{tu2017network,
-    Title                    = {Network representation learning: an overview},
-    Author                   = {TU, Cunchao and YANG, Cheng and LIU, Zhiyuan and SUN, Maosong},
-    Journal                  = {SCIENTIA SINICA Informationis},
-    Volume                   = {47},
-    Number                   = {8},
-    Pages                    = {980--996},
-    Year                     = {2017}
+      Title                    = {Network representation learning: an overview},
+      Author                   = {TU, Cunchao and YANG, Cheng and LIU, Zhiyuan and SUN, Maosong},
+      Journal                  = {SCIENTIA SINICA Informationis},
+      Volume                   = {47},
+      Number                   = {8},
+      Pages                    = {980--996},
+      Year                     = {2017}
     }
 
 ## Sponsor
