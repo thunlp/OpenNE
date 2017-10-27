@@ -91,7 +91,7 @@ def read_node_label(filename):
         if l == '':
             break
         vec = l.strip().split(' ')
-        X.append(vec[0])
+        X.append(int(vec[0]))
         Y.append(vec[1:])
     fin.close()
     return X, Y
