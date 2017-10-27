@@ -147,7 +147,7 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |[LINE 2nd](https://github.com/tangjianpku/LINE) | 103s | 0.584 | 0.396|
 |[node2vec](https://github.com/aditya-grover/node2vec) | 51s  | 0.623 | 0.537|
 |[GraRep](https://github.com/ShelsonCao/GraRep) | - | 0.633 | 0.476|
-|OpenNE(Node2vec) | 49s  | 0.633 | 0.543|
+|OpenNE(DeepWalk) | 49s  | 0.633 | 0.543|
 |OpenNE(LINE 2nd) | 111s | 0.641 | 0.461|
 |OpenNE(Node2vec) | 49s  | 0.633 | 0.543|
 |OpenNE(GraRep) | 75s | 0.654 | 0.509 |
