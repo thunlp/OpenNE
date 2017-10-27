@@ -17,9 +17,6 @@ class _LINE(object):
         self.batch_size = batch_size
         self.negative_ratio = negative_ratio
 
-        self.batch_num = 1e-5
-        self.lr = 0.01 / self.batch_num
-
         self.gen_sampling_table()
         self.sess = tf.Session()
         cur_seed = random.getrandbits(32)
@@ -27,8 +24,6 @@ class _LINE(object):
         with tf.variable_scope("model", reuse=None, initializer=initializer):
             self.build_graph()
         self.sess.run(tf.global_variables_initializer())
-        self.batch_num = 1e5
-        self.lr = 0.01 / self.batch_num
 
     def build_graph(self):
         self.pos_h = tf.placeholder(tf.int32, [None])
@@ -45,28 +40,23 @@ class _LINE(object):
         self.pos_h_v_e = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.embeddings, self.pos_h_v), 2)
         self.neg_t_e = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.embeddings, self.neg_t), 2)
         self.neg_t_e_context = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.context_embeddings, self.neg_t), 2)
-
-        self.second_neg_aff = tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e_context), axis=2)
-        self.second_aff = tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e_context), axis=1)
-        self.second_loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(
-                labels=tf.ones_like(self.second_aff), logits=self.second_aff)) + tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(
-                labels=tf.zeros_like(self.second_neg_aff), logits=self.second_neg_aff)
-        )
-
-        self.first_neg_aff = tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e), axis=2)
-        self.first_aff = tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e), axis=1)
-        self.first_loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(
-                labels=tf.ones_like(self.first_aff), logits=self.first_aff)) + tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(
-                labels=tf.zeros_like(self.first_neg_aff), logits=self.first_neg_aff)
-        )
-
+        # self.sample_sum2 = tf.reduce_sum(tf.log(tf.nn.sigmoid(tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e_context), axis=2))), axis=1)
+        # self.second_loss = tf.reduce_mean(-tf.log(tf.nn.sigmoid(tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e_context), axis=1))) +
+        #                            self.sample_sum2)
+        # self.sample_sum1 = tf.reduce_sum(tf.log(tf.nn.sigmoid(tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e), axis=2))), axis=1)
+        # self.first_loss = tf.reduce_mean(-tf.log(tf.nn.sigmoid(tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e), axis=1))) +
+        #                            self.sample_sum1)
+        self.sample_sum2 = tf.reduce_sum(tf.exp(tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e_context), axis=2)), axis=1)
+        self.second_loss = tf.reduce_mean(-tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e_context), axis=1) +
+                                   tf.log(self.sample_sum2))
+        self.sample_sum1 = tf.reduce_sum(tf.exp(tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e), axis=2)), axis=1)
+        self.first_loss = tf.reduce_mean(-tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e), axis=1) +
+                                   tf.log(self.sample_sum1))
         if self.order == 1:
             self.loss = self.first_loss
         else:
             self.loss = self.second_loss
-        # optimizer = tf.train.AdamOptimizer(0.001)
-        self.learning_rate = tf.placeholder(tf.float32)
-        optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
+        optimizer = tf.train.AdamOptimizer(0.001)
         self.train_op = optimizer.minimize(self.loss)
 
 
@@ -75,17 +65,13 @@ class _LINE(object):
         batches = self.batch_iter()
         batch_id = 0
         for batch in batches:
-            if self.batch_num == 0:
-                break
             pos_h, pos_h_v, pos_t, neg_t = batch
             feed_dict = {
                 self.pos_h : pos_h,
                 self.pos_h_v : pos_h_v,
                 self.pos_t : pos_t,
                 self.neg_t : neg_t,
-                self.learning_rate : self.batch_num * self.lr
             }
-            self.batch_num -= 1
             _, cur_loss = self.sess.run([self.train_op, self.loss],feed_dict)
             sum_loss += cur_loss
             batch_id += 1
