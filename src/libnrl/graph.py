@@ -32,7 +32,7 @@ class Graph(object):
             :param filename: the filename of input file
         """
         self.G = nx.read_adjlist(filename, create_using=nx.DiGraph())
-        for i, j in self.G.edges_iter():
+        for i, j in self.G.edges():
             self.G[i][j]['weight'] = 1.0
         self.encode_node()
 
