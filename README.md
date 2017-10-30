@@ -142,10 +142,10 @@ Running environment: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz
 
 |Algorithm | Time| Micro-F1 | Macro-F1|
 |:------------|-------------:|------------:|-------:|
-|[DeepWalk](https://github.com/phanein/deepwalk) | 50s | 0.667 | 0.566|
-|[LINE 2nd](https://github.com/tangjianpku/LINE) | 103s | 0.584 | 0.396|
-|[node2vec](https://github.com/aditya-grover/node2vec) | 51s  | 0.623 | 0.537|
-|[GraRep](https://github.com/ShelsonCao/GraRep) | - | 0.633 | 0.476|
+|[DeepWalk](https://github.com/phanein/deepwalk) | 52s | 0.669 | 0.560|
+|[LINE 2nd](https://github.com/tangjianpku/LINE) | 70s | 0.576 | 0.387|
+|[node2vec](https://github.com/aditya-grover/node2vec) | 32s  | 0.651 | 0.541|
+|[GraRep](https://github.com/ShelsonCao/GraRep) | 19.6s | 0.633 | 0.476|
 |OpenNE(DeepWalk) | 54s  | 0.660 | 0.570|
 |OpenNE(LINE 2nd) | 95s | 0.629 | 0.465|
 |OpenNE(Node2vec) | 33s  | 0.655 | 0.538|
