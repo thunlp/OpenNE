@@ -87,7 +87,7 @@ def main(args):
     elif args.method == 'deepWalk':
         model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
                                  num_paths=args.number_walks, dim=args.representation_size,
-                                 workers=args.workers, window=args.window_size)
+                                 workers=args.workers, window=args.window_size, dw=True)
     elif args.method == 'tadw':
         assert args.label_file != ''
         assert args.feature_file != ''

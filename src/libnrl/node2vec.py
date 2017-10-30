@@ -5,9 +5,13 @@ import walker
 
 class Node2vec(object):
 
-    def __init__(self, graph, path_length, num_paths, dim, p=1.0, q=1.0, **kwargs):
+    def __init__(self, graph, path_length, num_paths, dim, p=1.0, q=1.0, dw=False, **kwargs):
         
         kwargs["workers"] = kwargs.get("workers", 1)
+        if dw:
+            kwargs["hs"] = 1
+            p = 1.0
+            q = 1.0
 
         self.graph = graph
         self.walker = walker.Walker(graph, p=p, q=q, workers=kwargs["workers"])
