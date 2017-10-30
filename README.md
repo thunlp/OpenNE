@@ -160,9 +160,9 @@ Running environment: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz
 
 |Algorithm | Dropout | Weight_decay | Hidden | Dimension | Time| Accuracy |
 |:------------|-------------:|-------:|-------:|-------:|-------:|-------:|
-| [TADW](https://github.com/thunlp/TADW) | - | - | - | 80*2 | - | 0.780 |
-| [GCN](https://github.com/tkipf/gcn) | 0.5 | 5e-4 | 16 | - | 8.7s | 0.790 |
-| OpenNE(TADW) | - | - | - | 80*2 | 23.0s | 0.785 |
+| [TADW](https://github.com/thunlp/TADW) | - | - | - | 80*2 | 13.9s | 0.780 |
+| [GCN](https://github.com/tkipf/gcn) | 0.5 | 5e-4 | 16 | - | 4.0s | 0.790 |
+| OpenNE(TADW) | - | - | - | 80*2 | 20.8s | 0.791 |
 | OpenNE(GCN) | 0.5 | 5e-4 | 16 | - | 5.5s | 0.789 |
 | OpenNE(GCN) | 0 | 5e-4 | 16 | - | 6.1s | 0.779 |
 | OpenNE(GCN) | 0.5 | 1e-4 | 16 | - | 5.4s | 0.783 |
