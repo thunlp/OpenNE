@@ -110,11 +110,11 @@ The supported input label format is
 
 ## Comparisons with other implementations
 
-Running environment: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
-
 We show the node classification results of various methods in different datasets. We set representation dimension to 128, **kstep=4** in GraRep and **p=1, q=1** in node2vec. 
 
 Note that, both GCN(a semi-supervised NE model) and TADW need additional text features as inputs. Thus, we evaluate these two models on Cora in which each node has text information. We use 10% labeled data to train GCN.
+
+Running environment: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 
 [BlogCatalog](https://github.com/phanein/deepwalk/tree/master/example_graphs): 10312 nodes, 333983 edges, 39 labels,  undirected:
 
@@ -133,8 +133,7 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |OpenNE(node2vec) | 1522s  | 0.403 | 0.268|
 |OpenNE(GraRep) | 4178s | 0.393 | 0.230 |
 
-
-
+Running environment: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz
 
 [Wiki](https://github.com/thunlp/MMDW/tree/master/data): 2405 nodes, 17981 edges, 19 labels, directed:
 
@@ -147,10 +146,10 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |[LINE 2nd](https://github.com/tangjianpku/LINE) | 103s | 0.584 | 0.396|
 |[node2vec](https://github.com/aditya-grover/node2vec) | 51s  | 0.623 | 0.537|
 |[GraRep](https://github.com/ShelsonCao/GraRep) | - | 0.633 | 0.476|
-|OpenNE(DeepWalk) | 49s  | 0.633 | 0.543|
-|OpenNE(LINE 2nd) | 111s | 0.641 | 0.461|
-|OpenNE(Node2vec) | 49s  | 0.633 | 0.543|
-|OpenNE(GraRep) | 75s | 0.654 | 0.509 |
+|OpenNE(DeepWalk) | 54s  | 0.660 | 0.570|
+|OpenNE(LINE 2nd) | 95s | 0.629 | 0.465|
+|OpenNE(Node2vec) | 33s  | 0.655 | 0.538|
+|OpenNE(GraRep) | 23.7s | 0.649 | 0.507 |
 
 
 [cora](https://github.com/tkipf/gcn/tree/master/gcn/data): 2708 nodes, 5429 edges, 7 labels, directed:
@@ -164,10 +163,10 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 | [TADW](https://github.com/thunlp/TADW) | - | - | - | 80*2 | - | 0.780 |
 | [GCN](https://github.com/tkipf/gcn) | 0.5 | 5e-4 | 16 | - | 8.7s | 0.790 |
 | OpenNE(TADW) | - | - | - | 80*2 | 23.0s | 0.785 |
-| OpenNE(GCN) | 0.5 | 5e-4 | 16 | - | 5.7s | 0.780 |
-| OpenNE(GCN) | 0 | 5e-4 | 16 | - | 6.5s | 0.779 |
-| OpenNE(GCN) | 0.5 | 1e-4 | 16 | - | 5.5s | 0.782 |
-| OpenNE(GCN) | 0.5 | 5e-4 | 64 | - | 6.0s | 0.785 |
+| OpenNE(GCN) | 0.5 | 5e-4 | 16 | - | 5.5s | 0.789 |
+| OpenNE(GCN) | 0 | 5e-4 | 16 | - | 6.1s | 0.779 |
+| OpenNE(GCN) | 0.5 | 1e-4 | 16 | - | 5.4s | 0.783 |
+| OpenNE(GCN) | 0.5 | 5e-4 | 64 | - | 6.5s | 0.779 |
 
 
 ## Citing

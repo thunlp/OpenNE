@@ -102,8 +102,8 @@ class TADW(object):
         self.vectors = {}
         look_back = self.g.look_back_list
         for i, embedding in enumerate(self.Vecs):
-            # norm = sum([x*x for x in embedding])
-            norm = math.sqrt(sum([x*x for x in embedding]))
+            norm = sum([x*x for x in embedding])
+            # norm = math.sqrt(sum([x*x for x in embedding]))
             self.vectors[look_back[i]] = embedding/norm
 
 
