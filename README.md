@@ -128,9 +128,9 @@ Running environment: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 |[LINE 1st+2nd](https://github.com/tangjianpku/LINE) | 2008s | 0.398 | 0.235|
 |[Node2vec](https://github.com/aditya-grover/node2vec) | 1687s  | 0.390| 0.230|
 |[GraRep](https://github.com/ShelsonCao/GraRep) | - | - | - |
-|OpenNE(DeepWalk) | 1522s  | 0.403 | 0.268|
+|OpenNE(DeepWalk) | 2000s  | 0.400 | 0.261|
 |OpenNE(LINE 1st+2nd) | 943s | 0.368 | 0.192|
-|OpenNE(node2vec) | 1522s  | 0.403 | 0.268|
+|OpenNE(node2vec) | 3501s  | 0.405 | 0.275|
 |OpenNE(GraRep) | 4178s | 0.393 | 0.230 |
 
 Running environment: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz
