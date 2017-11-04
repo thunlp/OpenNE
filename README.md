@@ -110,11 +110,13 @@ The supported input label format is
 
 ## Comparisons with other implementations
 
+Running environment:  <br />
+BlogCatalog: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz. <br />
+Wiki, Cora: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz. <br />
+
 We show the node classification results of various methods in different datasets. We set representation dimension to 128, **kstep=4** in GraRep and **p=1, q=1** in node2vec. 
 
 Note that, both GCN(a semi-supervised NE model) and TADW need additional text features as inputs. Thus, we evaluate these two models on Cora in which each node has text information. We use 10% labeled data to train GCN.
-
-Running environment: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 
 [BlogCatalog](https://github.com/phanein/deepwalk/tree/master/example_graphs): 10312 nodes, 333983 edges, 39 labels,  undirected:
 
@@ -132,8 +134,6 @@ Running environment: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 |OpenNE(LINE 1st+2nd) | 943s | 0.368 | 0.192|
 |OpenNE(node2vec) | 3501s  | 0.405 | 0.275|
 |OpenNE(GraRep) | 4178s | 0.393 | 0.230 |
-
-Running environment: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz
 
 [Wiki](https://github.com/thunlp/MMDW/tree/master/data): 2405 nodes, 17981 edges, 19 labels, directed:
 
