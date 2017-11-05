@@ -130,7 +130,7 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |[LINE 1st+2nd](https://github.com/tangjianpku/LINE) | 2008s | 0.398 | 0.235|
 |[Node2vec](https://github.com/aditya-grover/node2vec) | 1687s  | 0.390| 0.230|
 |[GraRep](https://github.com/ShelsonCao/GraRep) | - | - | - |
-|OpenNE(DeepWalk) | 2000s  | 0.400 | 0.261|
+|OpenNE(DeepWalk) | 986s  | 0.394 | 0.249|
 |OpenNE(LINE 1st+2nd) | 943s | 0.368 | 0.192|
 |OpenNE(node2vec) | 3501s  | 0.405 | 0.275|
 |OpenNE(GraRep) | 4178s | 0.393 | 0.230 |
@@ -146,7 +146,7 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |[LINE 2nd](https://github.com/tangjianpku/LINE) | 70s | 0.576 | 0.387|
 |[node2vec](https://github.com/aditya-grover/node2vec) | 32s  | 0.651 | 0.541|
 |[GraRep](https://github.com/ShelsonCao/GraRep) | 19.6s | 0.633 | 0.476|
-|OpenNE(DeepWalk) | 54s  | 0.660 | 0.570|
+|OpenNE(DeepWalk) | 42s  | 0.658 | 0.570|
 |OpenNE(LINE 2nd) | 95s | 0.629 | 0.465|
 |OpenNE(Node2vec) | 33s  | 0.655 | 0.538|
 |OpenNE(GraRep) | 23.7s | 0.649 | 0.507 |

@@ -1,6 +1,49 @@
 import random
 import numpy as np
 
+class BasicWalker:
+    def __init__(self, G, workers):
+        self.G = G.G
+        self.node_size = G.node_size
+        self.look_up_dict = G.look_up_dict
+
+    def deepwalk_walk(self, walk_length, start_node):
+        '''
+        Simulate a random walk starting from start node.
+        '''
+        G = self.G
+        look_up_dict = self.look_up_dict
+        node_size = self.node_size
+
+        walk = [start_node]
+
+        while len(walk) < walk_length:
+            cur = walk[-1]
+            cur_nbrs = list(G.neighbors(cur))
+            if len(cur_nbrs) > 0:
+                walk.append(random.choice(cur_nbrs))
+            else:
+                break
+
+        return walk
+
+    def simulate_walks(self, num_walks, walk_length):
+        '''
+        Repeatedly simulate random walks from each node.
+        '''
+        G = self.G
+        walks = []
+        nodes = list(G.nodes())
+        print 'Walk iteration:'
+        for walk_iter in range(num_walks):
+            print str(walk_iter+1), '/', str(num_walks)
+            random.shuffle(nodes)
+            for node in nodes:
+                walks.append(self.deepwalk_walk(walk_length=walk_length, start_node=node))
+
+        return walks
+
+
 class Walker:
     def __init__(self, G, p, q, workers):
         self.G = G.G
