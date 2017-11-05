@@ -110,11 +110,13 @@ The supported input label format is
 
 ## Comparisons with other implementations
 
-We show the node classification results of various methods in different datasets. We set representation dimension to 128, **kstep=4** in GraRep and **p=1, q=1** in node2vec. 
+Running environment:  <br />
+BlogCatalog: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz. <br />
+Wiki, Cora: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz. <br />
+
+We show the node classification results of various methods in different datasets. We set representation dimension to 128, **kstep=4** in GraRep. 
 
 Note that, both GCN(a semi-supervised NE model) and TADW need additional text features as inputs. Thus, we evaluate these two models on Cora in which each node has text information. We use 10% labeled data to train GCN.
-
-Running environment: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 
 [BlogCatalog](https://github.com/phanein/deepwalk/tree/master/example_graphs): 10312 nodes, 333983 edges, 39 labels,  undirected:
 
@@ -126,14 +128,12 @@ Running environment: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz
 |:------------|-------------:|------------:|-------:|
 |[DeepWalk](https://github.com/phanein/deepwalk) | 271s | 0.385 | 0.238|
 |[LINE 1st+2nd](https://github.com/tangjianpku/LINE) | 2008s | 0.398 | 0.235|
-|[Node2vec](https://github.com/aditya-grover/node2vec) | 1687s  | 0.390| 0.230|
+|[Node2vec](https://github.com/aditya-grover/node2vec) | 2623s  | 0.404| 0.264|
 |[GraRep](https://github.com/ShelsonCao/GraRep) | - | - | - |
-|OpenNE(DeepWalk) | 2000s  | 0.400 | 0.261|
+|OpenNE(DeepWalk) | 986s  | 0.394 | 0.249|
 |OpenNE(LINE 1st+2nd) | 943s | 0.368 | 0.192|
 |OpenNE(node2vec) | 3501s  | 0.405 | 0.275|
 |OpenNE(GraRep) | 4178s | 0.393 | 0.230 |
-
-Running environment: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz
 
 [Wiki](https://github.com/thunlp/MMDW/tree/master/data): 2405 nodes, 17981 edges, 19 labels, directed:
 
@@ -146,7 +146,7 @@ Running environment: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz
 |[LINE 2nd](https://github.com/tangjianpku/LINE) | 70s | 0.576 | 0.387|
 |[node2vec](https://github.com/aditya-grover/node2vec) | 32s  | 0.651 | 0.541|
 |[GraRep](https://github.com/ShelsonCao/GraRep) | 19.6s | 0.633 | 0.476|
-|OpenNE(DeepWalk) | 54s  | 0.660 | 0.570|
+|OpenNE(DeepWalk) | 42s  | 0.658 | 0.570|
 |OpenNE(LINE 2nd) | 95s | 0.629 | 0.465|
 |OpenNE(Node2vec) | 33s  | 0.655 | 0.538|
 |OpenNE(GraRep) | 23.7s | 0.649 | 0.507 |
