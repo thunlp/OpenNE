@@ -114,7 +114,7 @@ Running environment:  <br />
 BlogCatalog: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz. <br />
 Wiki, Cora: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz. <br />
 
-We show the node classification results of various methods in different datasets. We set representation dimension to 128, **kstep=4** in GraRep and **p=1, q=1** in node2vec. 
+We show the node classification results of various methods in different datasets. We set representation dimension to 128, **kstep=4** in GraRep. 
 
 Note that, both GCN(a semi-supervised NE model) and TADW need additional text features as inputs. Thus, we evaluate these two models on Cora in which each node has text information. We use 10% labeled data to train GCN.
 
@@ -128,7 +128,7 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |:------------|-------------:|------------:|-------:|
 |[DeepWalk](https://github.com/phanein/deepwalk) | 271s | 0.385 | 0.238|
 |[LINE 1st+2nd](https://github.com/tangjianpku/LINE) | 2008s | 0.398 | 0.235|
-|[Node2vec](https://github.com/aditya-grover/node2vec) | 1687s  | 0.390| 0.230|
+|[Node2vec](https://github.com/aditya-grover/node2vec) | 2623s  | 0.404| 0.264|
 |[GraRep](https://github.com/ShelsonCao/GraRep) | - | - | - |
 |OpenNE(DeepWalk) | 986s  | 0.394 | 0.249|
 |OpenNE(LINE 1st+2nd) | 943s | 0.368 | 0.192|
