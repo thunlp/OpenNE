@@ -118,7 +118,7 @@ We show the node classification results of various methods in different datasets
 
 Note that, both GCN(a semi-supervised NE model) and TADW need additional text features as inputs. Thus, we evaluate these two models on Cora in which each node has text information. We use 10% labeled data to train GCN.
 
-[BlogCatalog](https://github.com/phanein/deepwalk/tree/master/example_graphs): 10312 nodes, 333983 edges, 39 labels,  undirected:
+[BlogCatalog](http://leitang.net/social_dimension.html): 10312 nodes, 333983 edges, 39 labels,  undirected:
 
 - data/blogCatalog/bc_adjlist.txt
 - data/blogCatalog/bc_edgelist.txt
@@ -135,7 +135,7 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |OpenNE(node2vec) | 3501s  | 0.405 | 0.275|
 |OpenNE(GraRep) | 4178s | 0.393 | 0.230 |
 
-[Wiki](https://github.com/thunlp/MMDW/tree/master/data): 2405 nodes, 17981 edges, 19 labels, directed:
+[Wiki](https://github.com/thunlp/MMDW/tree/master/data) (Wiki dataset is provided by [LBC project](http://www.cs.umd.edu/~sen/lbc-proj/LBC.html). But the original link failed.): 2405 nodes, 17981 edges, 19 labels, directed:
 
 - data/wiki/Wiki_edgelist.txt
 - data/wiki/Wiki_category.txt
@@ -152,7 +152,7 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |OpenNE(GraRep) | 23.7s | 0.649 | 0.507 |
 
 
-[cora](https://github.com/tkipf/gcn/tree/master/gcn/data): 2708 nodes, 5429 edges, 7 labels, directed:
+[Cora](https://linqs.soe.ucsc.edu/data): 2708 nodes, 5429 edges, 7 labels, directed:
 
 - data/cora/cora_edgelist.txt
 - data/cora/cora.features
