@@ -40,18 +40,18 @@ class _LINE(object):
         self.pos_h_v_e = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.embeddings, self.pos_h_v), 2)
         self.neg_t_e = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.embeddings, self.neg_t), 2)
         self.neg_t_e_context = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.context_embeddings, self.neg_t), 2)
-        # self.sample_sum2 = tf.reduce_sum(tf.log(tf.nn.sigmoid(tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e_context), axis=2))), axis=1)
-        # self.second_loss = tf.reduce_mean(-tf.log(tf.nn.sigmoid(tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e_context), axis=1))) +
-        #                            self.sample_sum2)
-        # self.sample_sum1 = tf.reduce_sum(tf.log(tf.nn.sigmoid(tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e), axis=2))), axis=1)
-        # self.first_loss = tf.reduce_mean(-tf.log(tf.nn.sigmoid(tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e), axis=1))) +
-        #                            self.sample_sum1)
-        self.sample_sum2 = tf.reduce_sum(tf.exp(tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e_context), axis=2)), axis=1)
-        self.second_loss = tf.reduce_mean(-tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e_context), axis=1) +
-                                   tf.log(self.sample_sum2))
-        self.sample_sum1 = tf.reduce_sum(tf.exp(tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e), axis=2)), axis=1)
-        self.first_loss = tf.reduce_mean(-tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e), axis=1) +
-                                   tf.log(self.sample_sum1))
+        self.sample_sum2 = tf.reduce_sum(tf.log(tf.nn.sigmoid(-tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e_context), axis=2))), axis=1)
+        self.second_loss = -tf.reduce_mean(tf.log(tf.nn.sigmoid(tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e_context), axis=1))) +
+                                   self.sample_sum2)
+        self.sample_sum1 = tf.reduce_sum(tf.log(tf.nn.sigmoid(-tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e), axis=2))), axis=1)
+        self.first_loss = -tf.reduce_mean(tf.log(tf.nn.sigmoid(tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e), axis=1))) +
+                                   self.sample_sum1)
+        # self.sample_sum2 = tf.reduce_sum(tf.exp(tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e_context), axis=2)), axis=1)
+        # self.second_loss = tf.reduce_mean(-tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e_context), axis=1) +
+        #                            tf.log(self.sample_sum2))
+        # self.sample_sum1 = tf.reduce_sum(tf.exp(tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e), axis=2)), axis=1)
+        # self.first_loss = tf.reduce_mean(-tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e), axis=1) +
+        #                            tf.log(self.sample_sum1))
         if self.order == 1:
             self.loss = self.first_loss
         else:
@@ -107,9 +107,10 @@ class _LINE(object):
                 cur_neg_t = []
                 for j in range(self.negative_ratio):
                     rn = self.sampling_table[random.randint(0, table_size-1)]
-                    while head+rn in edge_set or cur_h == rn or rn in cur_neg_t:
-                        rn = self.sampling_table[random.randint(0, table_size-1)]
+                    # while head+rn in edge_set or cur_h == rn or rn in cur_neg_t:
+                    #     rn = self.sampling_table[random.randint(0, table_size-1)]
                     cur_h_v.append(cur_h)
+                    rn = self.sampling_table[random.randint(0, table_size-1)]
                     cur_neg_t.append(rn)
                 pos_h.append(cur_h)
                 pos_h_v.append(cur_h_v)
@@ -214,12 +215,12 @@ class LINE(object):
                     clf = Classifier(vectors=self.vectors, clf=LogisticRegression())
                     result = clf.split_train_evaluate(X, Y, clf_ratio)
 
-                    if result['micro'] < self.best_result and auto_stop:
+                    if result['macro'] < self.best_result and auto_stop:
                         self.vectors = self.last_vectors
                         print 'Auto stop!'
                         return
-                    elif result['micro'] > self.best_result:
-                        self.best_result = result['micro']
+                    elif result['macro'] > self.best_result:
+                        self.best_result = result['macro']
 
         else:
             self.model = _LINE(graph, rep_size, batch_size, negative_ratio, order=self.order)
@@ -232,12 +233,12 @@ class LINE(object):
                     clf = Classifier(vectors=self.vectors, clf=LogisticRegression())
                     result = clf.split_train_evaluate(X, Y, clf_ratio)
 
-                    if result['micro'] < self.best_result and auto_stop:
+                    if result['macro'] < self.best_result and auto_stop:
                         self.vectors = self.last_vectors
                         print 'Auto stop!'
                         return
-                    elif result['micro'] > self.best_result:
-                        self.best_result = result['micro']
+                    elif result['macro'] > self.best_result:
+                        self.best_result = result['macro']
 
         self.get_embeddings()
 
