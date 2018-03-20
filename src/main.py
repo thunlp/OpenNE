@@ -83,7 +83,7 @@ def main(args):
             model = line.LINE(g, epoch = args.epochs, rep_size=args.representation_size, order=args.order, 
                 label_file=args.label_file, clf_ratio=args.clf_ratio)
         else:
-            model = line.LINE(g, epoch = args.epochs, rep_size=args.representation_size, order=3)
+            model = line.LINE(g, epoch = args.epochs, rep_size=args.representation_size, order=args.order)
     elif args.method == 'deepWalk':
         model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
                                  num_paths=args.number_walks, dim=args.representation_size,
