@@ -229,7 +229,7 @@ class LINE(object):
                             self.best_vector = self.vectors
 
         self.get_embeddings()
-        if auto_save:
+        if auto_save and label_file:
             self.vectors = self.best_vector
 
     def get_embeddings(self):
