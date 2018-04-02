@@ -39,8 +39,8 @@ class _LINE(object):
         self.h_e = tf.nn.embedding_lookup(self.embeddings, self.h)
         self.t_e = tf.nn.embedding_lookup(self.embeddings, self.t)
         self.t_e_context = tf.nn.embedding_lookup(self.context_embeddings, self.t)
-        self.second_loss = -tf.reduce_mean(tf.log(tf.nn.sigmoid(self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e_context), axis=1))))
-        self.first_loss = -tf.reduce_mean(tf.log(tf.nn.sigmoid(self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e), axis=1))))
+        self.second_loss = -tf.reduce_mean(tf.log_sigmoid(self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e_context), axis=1)))
+        self.first_loss = -tf.reduce_mean(tf.log_sigmoid(self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e), axis=1)))
         if self.order == 1:
             self.loss = self.first_loss
         else:
