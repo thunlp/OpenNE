@@ -231,8 +231,10 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
 
 ## Sponsor
 
-This research is supported by NSFC and Tencent.
+This research is supported by Tencent, MSRA and NSFC.
 
 <img src="http://logonoid.com/images/tencent-logo.png" width = "300" height = "30" alt="tencent" align=center />
+
+<img src="http://net.pku.edu.cn/~xjl/images/msra.png" width = "200" height = "100" alt="MSRA" align=center />
 
 <img src="http://www.dragon-star.eu/wp-content/uploads/2014/04/NSFC_logo.jpg" width = "100" height = "80" alt="NSFC" align=center />
