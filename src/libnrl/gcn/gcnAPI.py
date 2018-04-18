@@ -1,6 +1,6 @@
 import numpy as np
-from utils import *
-import models
+from .utils import *
+from . import models
 import time
 import scipy.sparse as sp
 import tensorflow as tf
