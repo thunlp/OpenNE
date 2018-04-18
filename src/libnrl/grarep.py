@@ -9,7 +9,7 @@ class GraRep(object):
         self.g = graph
         self.Kstep = Kstep
         assert dim%Kstep == 0
-        self.dim = dim/Kstep
+        self.dim = int(dim/Kstep)
         self.train()
 
     def getAdjMat(self):
@@ -49,7 +49,7 @@ class GraRep(object):
         self.adj = self.getAdjMat()
         self.node_size = self.adj.shape[0]
         self.Ak = np.matrix(np.identity(self.node_size))
-        self.RepMat = np.zeros((self.node_size, self.dim*self.Kstep))
+        self.RepMat = np.zeros((self.node_size, int(self.dim*self.Kstep)))
         for i in range(self.Kstep):
             print 'Kstep =', i
             self.Ak = np.dot(self.Ak, self.adj)
