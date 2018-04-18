@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import random
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
@@ -69,7 +70,7 @@ def parse_args():
 def main(args):
     t1 = time.time()
     g = Graph()
-    print "Reading..."
+    print("Reading...")
     if args.graph_format == 'adjlist':
         g.read_adjlist(filename=args.input)
     elif args.graph_format == 'edgelist':
@@ -105,14 +106,14 @@ def main(args):
     elif args.method == 'grarep':
         model = GraRep(graph=g, Kstep=args.kstep, dim=args.representation_size)
     t2 = time.time()
-    print t2-t1
+    print(t2-t1)
     if args.method != 'gcn':
-        print "Saving embeddings..."
+        print("Saving embeddings...")
         model.save_embeddings(args.output)
     if args.label_file and args.method != 'gcn':
         vectors = model.vectors
         X, Y = read_node_label(args.label_file)
-        print "Training classifier using {:.2f}% nodes...".format(args.clf_ratio*100)
+        print("Training classifier using {:.2f}% nodes...".format(args.clf_ratio*100))
         clf = Classifier(vectors=vectors, clf=LogisticRegression())
         clf.split_train_evaluate(X, Y, args.clf_ratio)
 

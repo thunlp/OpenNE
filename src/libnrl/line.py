@@ -1,9 +1,10 @@
+from __future__ import print_function
 import random
 import math
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 import tensorflow as tf
-from classify import Classifier, read_node_label
+from .classify import Classifier, read_node_label
 
 
 class _LINE(object):
@@ -63,7 +64,7 @@ class _LINE(object):
             _, cur_loss = self.sess.run([self.train_op, self.loss],feed_dict)
             sum_loss += cur_loss
             batch_id += 1
-        print 'epoch:{} sum of loss:{!s}'.format(self.cur_epoch, sum_loss)
+        print('epoch:{} sum of loss:{!s}'.format(self.cur_epoch, sum_loss))
         self.cur_epoch += 1
 
     def batch_iter(self):
@@ -117,7 +118,7 @@ class _LINE(object):
         power = 0.75
         numNodes = self.node_size
 
-        print "Pre-procesing for non-uniform negative sampling!"
+        print("Pre-procesing for non-uniform negative sampling!")
         node_degree = np.zeros(numNodes) # out degree
 
         look_up = self.g.look_up_dict
@@ -203,7 +204,7 @@ class LINE(object):
                 if label_file:
                     self.get_embeddings()
                     X, Y = read_node_label(label_file)
-                    print "Training classifier using {:.2f}% nodes...".format(clf_ratio*100)
+                    print("Training classifier using {:.2f}% nodes...".format(clf_ratio*100))
                     clf = Classifier(vectors=self.vectors, clf=LogisticRegression())
                     result = clf.split_train_evaluate(X, Y, clf_ratio)
 
@@ -219,7 +220,7 @@ class LINE(object):
                 if label_file:
                     self.get_embeddings()
                     X, Y = read_node_label(label_file)
-                    print "Training classifier using {:.2f}% nodes...".format(clf_ratio*100)
+                    print("Training classifier using {:.2f}% nodes...".format(clf_ratio*100))
                     clf = Classifier(vectors=self.vectors, clf=LogisticRegression())
                     result = clf.split_train_evaluate(X, Y, clf_ratio)
 
