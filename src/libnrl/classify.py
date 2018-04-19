@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import f1_score
@@ -39,11 +40,11 @@ class Classifier(object):
         results = {}
         for average in averages:
             results[average] = f1_score(Y, Y_, average=average)
-        # print 'Results, using embeddings of dimensionality', len(self.embeddings[X[0]])
-        # print '-------------------'
-        print results
+        # print('Results, using embeddings of dimensionality', len(self.embeddings[X[0]]))
+        # print('-------------------')
+        print(results)
         return results
-        # print '-------------------'
+        # print('-------------------')
 
     def predict(self, X, top_k_list):
         X_ = numpy.asarray([self.embeddings[x] for x in X])

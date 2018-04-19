@@ -1,3 +1,4 @@
+from __future__ import print_function
 import random
 import numpy as np
 import multiprocessing
@@ -37,17 +38,17 @@ class BasicWalker:
         G = self.G
         walks = []
         nodes = list(G.nodes())
-        print 'Walk iteration:'
+        print('Walk iteration:')
         for walk_iter in range(num_walks):
             # pool = multiprocessing.Pool(processes = 4)
-            print str(walk_iter+1), '/', str(num_walks)
+            print(str(walk_iter+1), '/', str(num_walks))
             random.shuffle(nodes)
             for node in nodes:
                 # walks.append(pool.apply_async(deepwalk_walk_wrapper, (self, walk_length, node, )))
                 walks.append(self.deepwalk_walk(walk_length=walk_length, start_node=node))
             # pool.close()
             # pool.join()
-        # print len(walks)
+        # print(len(walks))
         return walks
 
 
@@ -95,9 +96,9 @@ class Walker:
         G = self.G
         walks = []
         nodes = list(G.nodes())
-        print 'Walk iteration:'
+        print('Walk iteration:')
         for walk_iter in range(num_walks):
-            print str(walk_iter+1), '/', str(num_walks)
+            print(str(walk_iter+1), '/', str(num_walks))
             random.shuffle(nodes)
             for node in nodes:
                 walks.append(self.node2vec_walk(walk_length=walk_length, start_node=node))

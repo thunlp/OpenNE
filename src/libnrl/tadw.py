@@ -1,8 +1,9 @@
+from __future__ import print_function
 import math
 import numpy as np
 from numpy import linalg as la
 from sklearn.preprocessing import normalize
-from gcn.utils import *
+from .gcn.utils import *
 
 class TADW(object):
     
@@ -57,7 +58,7 @@ class TADW(object):
         self.H = np.random.randn(self.dim, self.feature_size)
         # Update
         for i in range(20):
-            print 'Iteration ', i
+            print('Iteration ', i)
             # Update W
             B = np.dot(self.H, self.T)
             drv = 2 * np.dot(np.dot(B, B.T), self.W) - \
