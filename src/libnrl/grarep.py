@@ -51,7 +51,7 @@ class GraRep(object):
         self.Ak = np.matrix(np.identity(self.node_size))
         self.RepMat = np.zeros((self.node_size, int(self.dim*self.Kstep)))
         for i in range(self.Kstep):
-            print 'Kstep =', i
+            print('Kstep =', i)
             self.Ak = np.dot(self.Ak, self.adj)
             probTranMat = self.GetProbTranMat(self.Ak)
             Rk = self.GetRepUseSVD(probTranMat, 0.5)
