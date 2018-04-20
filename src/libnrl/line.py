@@ -1,14 +1,15 @@
+from __future__ import print_function
 import random
 import math
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 import tensorflow as tf
-from classify import Classifier, read_node_label
+from .classify import Classifier, read_node_label
 
 
 class _LINE(object):
 
-    def __init__(self, graph, rep_size=128, batch_size=100, negative_ratio=5, order=3):
+    def __init__(self, graph, rep_size=128, batch_size=1000, negative_ratio=5, order=3):
         self.cur_epoch = 0
         self.order = order
         self.g = graph
@@ -26,32 +27,21 @@ class _LINE(object):
         self.sess.run(tf.global_variables_initializer())
 
     def build_graph(self):
-        self.pos_h = tf.placeholder(tf.int32, [None])
-        self.pos_t = tf.placeholder(tf.int32, [None])
-        self.pos_h_v = tf.placeholder(tf.int32, [None, self.negative_ratio])
-        self.neg_t = tf.placeholder(tf.int32, [None, self.negative_ratio])
+        self.h = tf.placeholder(tf.int32, [None])
+        self.t = tf.placeholder(tf.int32, [None])
+        self.sign = tf.placeholder(tf.float32, [None])
 
         cur_seed = random.getrandbits(32)
         self.embeddings = tf.get_variable(name="embeddings"+str(self.order), shape=[self.node_size, self.rep_size], initializer = tf.contrib.layers.xavier_initializer(uniform = False, seed=cur_seed))
         self.context_embeddings = tf.get_variable(name="context_embeddings"+str(self.order), shape=[self.node_size, self.rep_size], initializer = tf.contrib.layers.xavier_initializer(uniform = False, seed=cur_seed))
-        self.pos_h_e = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.embeddings, self.pos_h), 1)
-        self.pos_t_e = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.embeddings, self.pos_t), 1)
-        self.pos_t_e_context = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.context_embeddings, self.pos_t), 1)
-        self.pos_h_v_e = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.embeddings, self.pos_h_v), 2)
-        self.neg_t_e = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.embeddings, self.neg_t), 2)
-        self.neg_t_e_context = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.context_embeddings, self.neg_t), 2)
-        # self.sample_sum2 = tf.reduce_sum(tf.log(tf.nn.sigmoid(tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e_context), axis=2))), axis=1)
-        # self.second_loss = tf.reduce_mean(-tf.log(tf.nn.sigmoid(tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e_context), axis=1))) +
-        #                            self.sample_sum2)
-        # self.sample_sum1 = tf.reduce_sum(tf.log(tf.nn.sigmoid(tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e), axis=2))), axis=1)
-        # self.first_loss = tf.reduce_mean(-tf.log(tf.nn.sigmoid(tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e), axis=1))) +
-        #                            self.sample_sum1)
-        self.sample_sum2 = tf.reduce_sum(tf.exp(tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e_context), axis=2)), axis=1)
-        self.second_loss = tf.reduce_mean(-tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e_context), axis=1) +
-                                   tf.log(self.sample_sum2))
-        self.sample_sum1 = tf.reduce_sum(tf.exp(tf.reduce_sum(tf.multiply(self.pos_h_v_e, self.neg_t_e), axis=2)), axis=1)
-        self.first_loss = tf.reduce_mean(-tf.reduce_sum(tf.multiply(self.pos_h_e, self.pos_t_e), axis=1) +
-                                   tf.log(self.sample_sum1))
+        # self.h_e = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.embeddings, self.h), 1)
+        # self.t_e = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.embeddings, self.t), 1)
+        # self.t_e_context = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.context_embeddings, self.t), 1)
+        self.h_e = tf.nn.embedding_lookup(self.embeddings, self.h)
+        self.t_e = tf.nn.embedding_lookup(self.embeddings, self.t)
+        self.t_e_context = tf.nn.embedding_lookup(self.context_embeddings, self.t)
+        self.second_loss = -tf.reduce_mean(tf.log_sigmoid(self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e_context), axis=1)))
+        self.first_loss = -tf.reduce_mean(tf.log_sigmoid(self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e), axis=1)))
         if self.order == 1:
             self.loss = self.first_loss
         else:
@@ -65,17 +55,16 @@ class _LINE(object):
         batches = self.batch_iter()
         batch_id = 0
         for batch in batches:
-            pos_h, pos_h_v, pos_t, neg_t = batch
+            h, t, sign = batch
             feed_dict = {
-                self.pos_h : pos_h,
-                self.pos_h_v : pos_h_v,
-                self.pos_t : pos_t,
-                self.neg_t : neg_t,
+                self.h : h,
+                self.t : t,
+                self.sign : sign,
             }
             _, cur_loss = self.sess.run([self.train_op, self.loss],feed_dict)
             sum_loss += cur_loss
             batch_id += 1
-        print 'epoch:{} sum of loss:{!s}'.format(self.cur_epoch, sum_loss)
+        print('epoch:{} sum of loss:{!s}'.format(self.cur_epoch, sum_loss))
         self.cur_epoch += 1
 
     def batch_iter(self):
@@ -89,43 +78,47 @@ class _LINE(object):
         data_size = self.g.G.number_of_edges()
         edge_set = set([x[0]*numNodes+x[1] for x in edges])
         shuffle_indices = np.random.permutation(np.arange(data_size))
+
+        # positive or negative mod
+        mod = 0
+        mod_size = 1 + self.negative_ratio
+        h = []
+        t = []
+        sign = 0
+
         start_index = 0
         end_index = min(start_index+self.batch_size, data_size)
         while start_index < data_size:
-            pos_h = []
-            pos_h_v = []
-            pos_t = []
-            neg_t = []
+            if mod == 0:
+                sign = 1.
+                h = []
+                t = []
+                for i in range(start_index, end_index):
+                    if not random.random() < self.edge_prob[shuffle_indices[i]]:
+                        shuffle_indices[i] = self.edge_alias[shuffle_indices[i]]
+                    cur_h = edges[shuffle_indices[i]][0]
+                    cur_t = edges[shuffle_indices[i]][1]
+                    h.append(cur_h)
+                    t.append(cur_t)
+            else:
+                sign = -1.
+                t = []
+                for i in range(len(h)):
+                    t.append(self.sampling_table[random.randint(0, table_size-1)])
 
-            for i in range(start_index, end_index):
-                if not random.random() < self.edge_prob[shuffle_indices[i]]:
-                    shuffle_indices[i] = self.edge_alias[shuffle_indices[i]]
-                cur_h = edges[shuffle_indices[i]][0]
-                head = cur_h*numNodes
-                cur_t = edges[shuffle_indices[i]][1]
-                cur_h_v = []
-                cur_neg_t = []
-                for j in range(self.negative_ratio):
-                    rn = self.sampling_table[random.randint(0, table_size-1)]
-                    while head+rn in edge_set or cur_h == rn or rn in cur_neg_t:
-                        rn = self.sampling_table[random.randint(0, table_size-1)]
-                    cur_h_v.append(cur_h)
-                    cur_neg_t.append(rn)
-                pos_h.append(cur_h)
-                pos_h_v.append(cur_h_v)
-                pos_t.append(cur_t)
-                neg_t.append(cur_neg_t)
-
-            yield pos_h, pos_h_v, pos_t, neg_t
-            start_index = end_index
-            end_index = min(start_index+self.batch_size, data_size)
+            yield h, t, [sign]
+            mod += 1
+            mod %= mod_size
+            if mod == 0:
+                start_index = end_index
+                end_index = min(start_index+self.batch_size, data_size)
 
     def gen_sampling_table(self):
         table_size = 1e8
         power = 0.75
         numNodes = self.node_size
 
-        print "Pre-procesing for non-uniform negative sampling!"
+        print("Pre-procesing for non-uniform negative sampling!")
         node_degree = np.zeros(numNodes) # out degree
 
         look_up = self.g.look_up_dict
@@ -188,7 +181,8 @@ class _LINE(object):
 
     def get_embeddings(self):
         vectors = {}
-        embeddings = self.sess.run(tf.nn.l2_normalize(self.embeddings.eval(session=self.sess), 1))
+        embeddings = self.embeddings.eval(session=self.sess)
+        # embeddings = self.sess.run(tf.nn.l2_normalize(self.embeddings.eval(session=self.sess), 1))
         look_back = self.g.look_back_list
         for i, embedding in enumerate(embeddings):
             vectors[look_back[i]] = embedding
@@ -196,7 +190,7 @@ class _LINE(object):
 
 class LINE(object):
 
-    def __init__(self, graph, rep_size=128, batch_size=1000, epoch=10, negative_ratio=5, order=3, label_file = None, clf_ratio = 0.5, auto_stop = True):
+    def __init__(self, graph, rep_size=128, batch_size=1000, epoch=10, negative_ratio=5, order=3, label_file = None, clf_ratio = 0.5, auto_save = True):
         self.rep_size = rep_size
         self.order = order
         self.best_result = 0
@@ -210,16 +204,14 @@ class LINE(object):
                 if label_file:
                     self.get_embeddings()
                     X, Y = read_node_label(label_file)
-                    print "Training classifier using {:.2f}% nodes...".format(clf_ratio*100)
+                    print("Training classifier using {:.2f}% nodes...".format(clf_ratio*100))
                     clf = Classifier(vectors=self.vectors, clf=LogisticRegression())
                     result = clf.split_train_evaluate(X, Y, clf_ratio)
 
-                    if result['micro'] < self.best_result and auto_stop:
-                        self.vectors = self.last_vectors
-                        print 'Auto stop!'
-                        return
-                    elif result['micro'] > self.best_result:
-                        self.best_result = result['micro']
+                    if result['macro'] > self.best_result:
+                        self.best_result = result['macro']
+                        if auto_save:
+                            self.best_vector = self.vectors
 
         else:
             self.model = _LINE(graph, rep_size, batch_size, negative_ratio, order=self.order)
@@ -228,18 +220,18 @@ class LINE(object):
                 if label_file:
                     self.get_embeddings()
                     X, Y = read_node_label(label_file)
-                    print "Training classifier using {:.2f}% nodes...".format(clf_ratio*100)
+                    print("Training classifier using {:.2f}% nodes...".format(clf_ratio*100))
                     clf = Classifier(vectors=self.vectors, clf=LogisticRegression())
                     result = clf.split_train_evaluate(X, Y, clf_ratio)
 
-                    if result['micro'] < self.best_result and auto_stop:
-                        self.vectors = self.last_vectors
-                        print 'Auto stop!'
-                        return
-                    elif result['micro'] > self.best_result:
-                        self.best_result = result['micro']
+                    if result['macro'] > self.best_result:
+                        self.best_result = result['macro']
+                        if auto_save:
+                            self.best_vector = self.vectors
 
         self.get_embeddings()
+        if auto_save and label_file:
+            self.vectors = self.best_vector
 
     def get_embeddings(self):
         self.last_vectors = self.vectors

@@ -58,7 +58,7 @@ LINE:
 
 - --negative-ratio, the default is 5;
 - --order, 1 for the 1st-order, 2 for the 2nd-order and 3 for 1st + 2nd; the default is 3;
-- --no-auto-stop, no early stop when training LINE; this is an action; when training LINE, we will calculate micro-F1 every epoch. If current micro-F1 is smaller than the last micro-F1, the training process will stop early.
+- --no-auto-save, no early save when training LINE; this is an action; when training LINE, we will calculate F1 scores every epoch. If current F1 is the best F1, the embeddings will be saved.
 
 GraRep:
 
@@ -131,7 +131,7 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |[Node2vec](https://github.com/aditya-grover/node2vec) | 2623s  | 0.404| 0.264|
 |[GraRep](https://github.com/ShelsonCao/GraRep) | - | - | - |
 |OpenNE(DeepWalk) | 986s  | 0.394 | 0.249|
-|OpenNE(LINE 1st+2nd) | 943s | 0.368 | 0.192|
+|OpenNE(LINE 1st+2nd) | 1555s | 0.390 | 0.253|
 |OpenNE(node2vec) | 3501s  | 0.405 | 0.275|
 |OpenNE(GraRep) | 4178s | 0.393 | 0.230 |
 
@@ -147,7 +147,7 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |[node2vec](https://github.com/aditya-grover/node2vec) | 32s  | 0.651 | 0.541|
 |[GraRep](https://github.com/ShelsonCao/GraRep) | 19.6s | 0.633 | 0.476|
 |OpenNE(DeepWalk) | 42s  | 0.658 | 0.570|
-|OpenNE(LINE 2nd) | 95s | 0.629 | 0.465|
+|OpenNE(LINE 2nd) | 90s | 0.661 | 0.521|
 |OpenNE(Node2vec) | 33s  | 0.655 | 0.538|
 |OpenNE(GraRep) | 23.7s | 0.649 | 0.507 |
 
@@ -231,8 +231,10 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
 
 ## Sponsor
 
-This research is supported by NSFC and Tencent.
+This research is supported by Tencent, MSRA and NSFC.
 
 <img src="http://logonoid.com/images/tencent-logo.png" width = "300" height = "30" alt="tencent" align=center />
+
+<img src="http://net.pku.edu.cn/~xjl/images/msra.png" width = "200" height = "100" alt="MSRA" align=center />
 
 <img src="http://www.dragon-star.eu/wp-content/uploads/2014/04/NSFC_logo.jpg" width = "100" height = "80" alt="NSFC" align=center />

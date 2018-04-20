@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import random
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
@@ -50,8 +51,8 @@ def parse_args():
                         help='The ratio of training data in the classification')
     parser.add_argument('--order', default=3, type=int,
                         help='Choose the order of LINE, 1 means first order, 2 means second order, 3 means first order + second order')
-    parser.add_argument('--no-auto-stop', action='store_true',
-                        help='no early stop when training LINE')
+    parser.add_argument('--no-auto-save', action='store_true',
+                        help='no save the best embeddings when training LINE')
     parser.add_argument('--dropout', default=0.5, type=float, 
                         help='Dropout rate (1 - keep probability)')
     parser.add_argument('--weight-decay', type=float, default=5e-4,
@@ -69,7 +70,7 @@ def parse_args():
 def main(args):
     t1 = time.time()
     g = Graph()
-    print "Reading..."
+    print("Reading...")
     if args.graph_format == 'adjlist':
         g.read_adjlist(filename=args.input)
     elif args.graph_format == 'edgelist':
@@ -79,11 +80,11 @@ def main(args):
                                  num_paths=args.number_walks, dim=args.representation_size,
                                  workers=args.workers, p=args.p, q=args.q, window=args.window_size)
     elif args.method == 'line':
-        if args.label_file and not args.no_auto_stop:
+        if args.label_file and not args.no_auto_save:
             model = line.LINE(g, epoch = args.epochs, rep_size=args.representation_size, order=args.order, 
                 label_file=args.label_file, clf_ratio=args.clf_ratio)
         else:
-            model = line.LINE(g, epoch = args.epochs, rep_size=args.representation_size, order=3)
+            model = line.LINE(g, epoch = args.epochs, rep_size=args.representation_size, order=args.order)
     elif args.method == 'deepWalk':
         model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
                                  num_paths=args.number_walks, dim=args.representation_size,
@@ -105,14 +106,14 @@ def main(args):
     elif args.method == 'grarep':
         model = GraRep(graph=g, Kstep=args.kstep, dim=args.representation_size)
     t2 = time.time()
-    print t2-t1
+    print(t2-t1)
     if args.method != 'gcn':
-        print "Saving embeddings..."
+        print("Saving embeddings...")
         model.save_embeddings(args.output)
     if args.label_file and args.method != 'gcn':
         vectors = model.vectors
         X, Y = read_node_label(args.label_file)
-        print "Training classifier using {:.2f}% nodes...".format(args.clf_ratio*100)
+        print("Training classifier using {:.2f}% nodes...".format(args.clf_ratio*100))
         clf = Classifier(vectors=vectors, clf=LogisticRegression())
         clf.split_train_evaluate(X, Y, args.clf_ratio)
 
