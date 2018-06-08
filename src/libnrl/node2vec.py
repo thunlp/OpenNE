@@ -32,7 +32,7 @@ class Node2vec(object):
         word2vec = Word2Vec(**kwargs)
         self.vectors = {}
         for word in graph.G.nodes():
-            self.vectors[word] = word2vec[word]
+            self.vectors[word] = word2vec.wv[word]
         del word2vec
 
     def save_embeddings(self, filename):
