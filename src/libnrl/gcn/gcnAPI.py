@@ -98,8 +98,8 @@ class GCN(object):
         label_dict = {}
         label_id = 0
         for node in g.nodes():
-            labels.append((node, g.nodes[node]['label']))
-            for l in g.nodes[node]['label']:
+            labels.append((node, g.node[node]['label']))
+            for l in g.node[node]['label']:
                 if l not in label_dict:
                     label_dict[l] = label_id
                     label_id += 1
@@ -145,7 +145,7 @@ class GCN(object):
         """
         g = self.graph.G
         look_back = self.graph.look_back_list
-        self.features = np.vstack([g.nodes[look_back[i]]['feature']
+        self.features = np.vstack([g.node[look_back[i]]['feature']
             for i in range(g.number_of_nodes())]) 
         self.features = preprocess_features(self.features)
         self.build_label()
