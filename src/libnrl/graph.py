@@ -24,7 +24,7 @@ class Graph(object):
             look_up[node] = self.node_size
             look_back.append(node)
             self.node_size += 1
-            self.G.nodes[node]['status'] = ''
+            self.G.node[node]['status'] = ''
 
     def read_adjlist(self, filename):
         """ Read graph from adjacency file in which the edge must be unweighted
@@ -82,14 +82,14 @@ class Graph(object):
             if l == '':
                 break
             vec = l.split()
-            self.G.nodes[vec[0]]['label'] = vec[1:]
+            self.G.node[vec[0]]['label'] = vec[1:]
         fin.close()
 
     def read_node_features(self, filename):
         fin = open(filename, 'r')
         for l in fin.readlines():
             vec = l.split()
-            self.G.nodes[vec[0]]['feature'] = np.array([float(x) for x in vec[1:]])
+            self.G.node[vec[0]]['feature'] = np.array([float(x) for x in vec[1:]])
         fin.close()
 
     def read_node_status(self, filename):
@@ -99,7 +99,7 @@ class Graph(object):
             if l == '':
                 break
             vec = l.split()
-            self.G.nodes[vec[0]]['status'] = vec[1] # train test valid
+            self.G.node[vec[0]]['status'] = vec[1] # train test valid
         fin.close()
 
     def read_edge_label(self, filename):
