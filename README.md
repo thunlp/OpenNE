@@ -24,7 +24,7 @@ You can check out the other options available to use with *OpenNE* using:
 
 - --input, the input file of a network;
 - --graph-format, the format of input graph, adjlist or edgelist;
-- --output, the output file of representation;
+- --output, the output file of representation (GCN doesn't need it);
 - --representation-size, the number of latent dimensions to learn for each node; the default is 128
 - --method, the NE model to learn, including deepwalk, line, node2vec, grarep, tadw and gcn;
 - --directed, treat the graph as directed; this is an action;

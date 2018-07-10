@@ -17,7 +17,7 @@ def parse_args():
                             conflict_handler='resolve')
     parser.add_argument('--input', required=True,
                         help='Input graph file')
-    parser.add_argument('--output', required=True,
+    parser.add_argument('--output',
                         help='Output representation file')
     parser.add_argument('--number-walks', default=10, type=int,
                         help='Number of random walks to start at each node')
@@ -64,6 +64,11 @@ def parse_args():
     parser.add_argument('--lamb', default=0.2, type=float,
                         help='lambda is a hyperparameter in TADW')
     args = parser.parse_args()
+
+    if args.method != 'gcn' and not args.output:
+        print("No output filename. Exit.")
+        exit(1)
+
     return args
 
 
@@ -71,6 +76,7 @@ def main(args):
     t1 = time.time()
     g = Graph()
     print("Reading...")
+
     if args.graph_format == 'adjlist':
         g.read_adjlist(filename=args.input)
     elif args.graph_format == 'edgelist':
