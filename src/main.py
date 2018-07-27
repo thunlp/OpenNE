@@ -96,7 +96,7 @@ def main(args):
                                  num_paths=args.number_walks, dim=args.representation_size,
                                  workers=args.workers, window=args.window_size, dw=True)
     elif args.method == 'tadw':
-        assert args.label_file != ''
+        # assert args.label_file != ''
         assert args.feature_file != ''
         g.read_node_label(args.label_file)
         g.read_node_features(args.feature_file)
