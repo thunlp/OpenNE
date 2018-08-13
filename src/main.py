@@ -9,6 +9,8 @@ from libnrl.classify import Classifier, read_node_label
 from libnrl import line
 from libnrl import tadw
 from libnrl.gcn import gcnAPI
+from libnrl import lle
+from libnrl import hope
 from libnrl.grarep import GraRep
 import time
 
@@ -63,6 +65,8 @@ def parse_args():
                         help='Use k-step transition probability matrix')
     parser.add_argument('--lamb', default=0.2, type=float,
                         help='lambda is a hyperparameter in TADW')
+    parser.add_argument("--beta", default=0.01, type=float,
+                        help="beta is a hyperparameter in HOPE")
     args = parser.parse_args()
 
     if args.method != 'gcn' and not args.output:
@@ -111,6 +115,10 @@ def main(args):
                             epochs=args.epochs, clf_ratio=args.clf_ratio)
     elif args.method == 'grarep':
         model = GraRep(graph=g, Kstep=args.kstep, dim=args.representation_size)
+    elif args.method == 'lle':
+        model = lle.LLE(graph=g, d=args.representation_sizem)
+    elif args.method == 'hope':
+        model = hope.HOPE(graph=g, d=args.representation_size, beta=args.beta)
     t2 = time.time()
     print(t2-t1)
     if args.method != 'gcn':
