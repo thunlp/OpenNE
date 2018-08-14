@@ -1,9 +1,0 @@
-.DS_Store
-.vscode/
-*.pyc
-.idea/
-.txt
-**/*.pkz
-**/*.npy
-**/log/*
-!**/.nothing
