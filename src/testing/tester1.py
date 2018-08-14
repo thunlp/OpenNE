@@ -1,5 +1,11 @@
+# pylint: disable=E1101, E0611, E0401
+import sys
+sys.path.insert(0,"/home/alan/Projects/VsCode/OpenNE/src")
 import pandas as pd
 import tensorflow as tf
+import libnrl.lle as lle
+import libnrl.hope as hope
+import libnrl.graph as gh
 from tensorflow.contrib.tensorboard.plugins import projector
 import os
 
@@ -34,8 +40,17 @@ graph, adj_mat = text_to_graph(dataset.data)
 
 labels = dataset.target
 
+
+
 ############# INSERT YOUR CODE HERE (≈1 line) #############
-embeddings = None  # numpy array
+g = gh.Graph()
+g.G = graph
+g.node_size = graph.number_of_nodes
+# model = lle.LLE(graph=g, d=256)
+model = hope.HOPE(graph=g, d=128)
+import numpy as np
+# embeddings = np.load("src/testing/lle_vec.npy")  # numpy array
+embeddings = model._X  # numpy array
 ########################## END ############################
 
 LOG_DIR = 'log'
@@ -62,5 +77,4 @@ embedding.tensor_name = 'embeddings'
 embedding.metadata_path = 'node_labels.tsv'
 
 projector.visualize_embeddings(tf.summary.FileWriter(LOG_DIR), config)
-
 # type "tensorboard --logdir=log" in CMD and have fun :)
