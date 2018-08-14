@@ -2,9 +2,6 @@
 
 import pandas as pd
 import tensorflow as tf
-import libnrl.lle as lle
-import libnrl.hope as hope
-import libnrl.graph as gh
 from tensorflow.contrib.tensorboard.plugins import projector
 import os
 

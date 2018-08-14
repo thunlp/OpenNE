@@ -11,6 +11,9 @@ from libnrl import tadw
 from libnrl.gcn import gcnAPI
 from libnrl import lle
 from libnrl import hope
+from libnrl import lap
+from libnrl import gf
+from libnrl import sdne
 from libnrl.grarep import GraRep
 import time
 
@@ -38,8 +41,19 @@ def parse_args():
                         help='The training epochs of LINE and GCN')
     parser.add_argument('--p', default=1.0, type=float)
     parser.add_argument('--q', default=1.0, type=float)
-    parser.add_argument('--method', required=True, choices=['node2vec', 'deepWalk', 'line', 'gcn', 'grarep', 'tadw', 'lle', 'hope'],
-                        help='The learning method')
+    parser.add_argument('--method', required=True, choices=[
+        'node2vec',
+        'deepWalk',
+        'line',
+        'gcn',
+        'grarep',
+        'tadw',
+        'lle',
+        'hope',
+        'lap',
+        'gf',
+        'sdne'
+    ], help='The learning method')
     parser.add_argument('--label-file', default='',
                         help='The file of node label')
     parser.add_argument('--feature-file', default='',
@@ -66,8 +80,7 @@ def parse_args():
                         help='Use k-step transition probability matrix')
     parser.add_argument('--lamb', default=0.2, type=float,
                         help='lambda is a hyperparameter in TADW')
-    parser.add_argument("--beta", default=0.01, type=float,
-                        help="beta is a hyperparameter in HOPE")
+    parser.add_argument()
     args = parser.parse_args()
 
     if args.method != 'gcn' and not args.output:
@@ -122,7 +135,13 @@ def main(args):
     elif args.method == 'lle':
         model = lle.LLE(graph=g, d=args.representation_size)
     elif args.method == 'hope':
-        model = hope.HOPE(graph=g, d=args.representation_size, beta=args.beta)
+        model = hope.HOPE(graph=g, d=args.representation_size)
+    elif args.method == 'sdne':
+        model = sdne.SDNE(graph=g, d=args.representation_size, beta=args.beta)
+    elif args.method == 'lap':
+        model = lap.LaplacianEigenmaps(graph=g, d=args.representation_size, beta=args.beta)
+    elif args.method == 'gf':
+        model = gf.GraphFactorization(graph=g, d=args.representation_size, beta=args.beta)
     t2 = time.time()
     print(t2-t1)
     if args.method != 'gcn':
