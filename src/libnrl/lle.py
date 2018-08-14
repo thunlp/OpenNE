@@ -71,8 +71,8 @@ class LLE(object):
     node_num = len(self.vectors.keys())
     fout.write("{} {}\n".format(node_num, self._d))
     for node, vec in self.vectors.items():
-        fout.write("{} {}\n".format(node,
-                                    ' '.join([str(x) for x in vec])))
+      fout.write("{} {}\n".format(node,
+                                  ' '.join([str(x) for x in vec])))
     fout.close()
 
   def getAdj(self):
@@ -80,7 +80,7 @@ class LLE(object):
     look_up = self.g.look_up_dict
     adj = np.zeros((node_size, node_size))
     for edge in self.g.G.edges():
-        adj[look_up[edge[0]]][look_up[edge[1]]] += 1.0
-        adj[look_up[edge[1]]][look_up[edge[0]]] += 1.0
+      adj[look_up[edge[0]]][look_up[edge[1]]] += 1.0
+      adj[look_up[edge[1]]][look_up[edge[0]]] += 1.0
     # ScaleSimMat
     return adj/np.sum(adj, axis=1)

@@ -1,6 +1,5 @@
 # pylint: disable=E1101, E0611, E0401
-import sys
-sys.path.insert(0,"/home/alan/Projects/VsCode/OpenNE/src")
+
 import pandas as pd
 import tensorflow as tf
 import libnrl.lle as lle
@@ -11,35 +10,36 @@ import os
 
 
 def fetch_data(path):
-    from sklearn.datasets import fetch_20newsgroups
-    categories = ['comp.graphics', 'rec.sport.baseball', 'talk.politics.guns']
-    dataset = fetch_20newsgroups(path, categories=categories)
-    return dataset
+  from sklearn.datasets import fetch_20newsgroups
+  categories = ['comp.graphics', 'rec.sport.baseball', 'talk.politics.guns']
+  dataset = fetch_20newsgroups(path, categories=categories)
+  return dataset
 
 
 def text_to_graph(text):
-    import networkx as nx
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.neighbors import kneighbors_graph
+  import networkx as nx
+  from sklearn.feature_extraction.text import TfidfVectorizer
+  from sklearn.neighbors import kneighbors_graph
 
-    # use tfidf to transform texts into feature vectors
-    vectorizer = TfidfVectorizer()
-    vectors = vectorizer.fit_transform(text)
+  # use tfidf to transform texts into feature vectors
+  vectorizer = TfidfVectorizer()
+  vectors = vectorizer.fit_transform(text)
 
-    # build the graph which is full-connected
-    N = vectors.shape[0]
-    mat = kneighbors_graph(vectors, N, metric='cosine', mode='distance', include_self=True)
-    mat.data = 1 - mat.data  # to similarity
+  # build the graph which is full-connected
+  N = vectors.shape[0]
+  mat = kneighbors_graph(vectors, N, metric='cosine',
+                         mode='distance', include_self=True)
+  mat.data = 1 - mat.data  # to similarity
 
-    g = nx.from_scipy_sparse_matrix(mat, create_using=nx.Graph())
+  g = nx.from_scipy_sparse_matrix(mat, create_using=nx.Graph())
 
-    return g, mat.toarray()
+  return g, mat.toarray()
+
 
 dataset = fetch_data('data')
 graph, adj_mat = text_to_graph(dataset.data)
 
 labels = dataset.target
-
 
 
 ############# INSERT YOUR CODE HERE (≈1 line) #############

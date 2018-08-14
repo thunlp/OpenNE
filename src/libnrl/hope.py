@@ -18,7 +18,7 @@ class HOPE(object):
   #         d: dimension of the embedding
   #         beta: higher order coefficient
   #     '''
-  #     hyper_params = {  
+  #     hyper_params = {
   #         'method_name': 'hope_gsvd'
   #     }
   def __init__(self, graph: g.Graph, d: int, beta=0.1):
@@ -36,14 +36,14 @@ class HOPE(object):
     # M_l = self._beta*A
     graph = self.g.G
     A = nx.to_numpy_matrix(graph)
-    ## Katz
+    # Katz
     # M_g = np.eye(graph.number_of_nodes()) - self._beta * A
     # M_l = self._beta * A
 
     M_g = np.eye(graph.number_of_nodes())
     M_l = np.dot(A, A)
 
-    ## AA
+    # AA
     # d = np.mean(A + A.T, axis=0)
     # D = np.diagflat(d)
     # M_g = np.eye(graph.number_of_nodes())
