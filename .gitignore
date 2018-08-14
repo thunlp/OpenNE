@@ -1,4 +1,9 @@
 .DS_Store
+.vscode/
 *.pyc
-.pkz
-.idea
+.idea/
+.txt
+**/*.pkz
+**/*.npy
+**/log/*
+!**/.nothing
