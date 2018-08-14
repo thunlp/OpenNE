@@ -37,7 +37,7 @@ def parse_args():
                         help='The training epochs of LINE and GCN')
     parser.add_argument('--p', default=1.0, type=float)
     parser.add_argument('--q', default=1.0, type=float)
-    parser.add_argument('--method', required=True, choices=['node2vec', 'deepWalk', 'line', 'gcn', 'grarep', 'tadw'],
+    parser.add_argument('--method', required=True, choices=['node2vec', 'deepWalk', 'line', 'gcn', 'grarep', 'tadw', 'lle', 'hope'],
                         help='The learning method')
     parser.add_argument('--label-file', default='',
                         help='The file of node label')
@@ -116,7 +116,7 @@ def main(args):
     elif args.method == 'grarep':
         model = GraRep(graph=g, Kstep=args.kstep, dim=args.representation_size)
     elif args.method == 'lle':
-        model = lle.LLE(graph=g, d=args.representation_sizem)
+        model = lle.LLE(graph=g, d=args.representation_size)
     elif args.method == 'hope':
         model = hope.HOPE(graph=g, d=args.representation_size, beta=args.beta)
     t2 = time.time()
