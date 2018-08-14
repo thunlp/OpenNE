@@ -9,7 +9,7 @@ class LaplacianEigenmaps(object):
         self.rep_size = rep_size
         self.adj_mat = nx.to_numpy_array(self.g.G)
         self.vectors = {}
-        self.embeddings = self._get_embeddings()
+        self.embeddings = self.get_train()
         look_back = self.g.look_back_list
 
         for i, embedding in enumerate(self.embeddings):
@@ -32,10 +32,7 @@ class LaplacianEigenmaps(object):
         norm_lap_mat = np.matmul(np.matmul(deg_trans, L), deg_trans)
         return norm_lap_mat
 
-    def _get_embeddings(self):
-        # lap_mat = nx.normalized_laplacian_matrix(self.g.G)
-        # lap_mat = lap_mat.toarray()
-
+    def get_train(self):
         print(np.sum(self.adj_mat, axis=1))
         print(np.sum(self.adj_mat, axis=0))
 
@@ -46,9 +43,13 @@ class LaplacianEigenmaps(object):
         w = np.diagflat(np.sqrt(w[self.node_size-self.rep_size:]))
         vec = vec[:, self.node_size-self.rep_size:]
 
-        # ret = vec[:, self.node_size-self.rep_size:]
-        # ret = vec[:, :self.rep_size]
-        # ret = vec[:self.rep_size, :].T
-        # ret = vec[self.node_size-self.rep_size:, :].T
         return np.matmul(vec, w)
+
+    def save_embeddings(self, filename):
+        fout = open(filename, 'w')
+        node_num = len(self.vectors)
+        fout.write("{} {}\n".format(node_num, self.rep_size))
+        for node, vec in self.vectors.items():
+            fout.write("{} {}\n".format(node, ' '.join([str(x) for x in vec])))
+        fout.close()
 
