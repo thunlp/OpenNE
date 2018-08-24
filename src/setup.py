@@ -10,5 +10,11 @@ setup(
     packages= find_packages(),
     long_description=open("../README.md").read(),
     zip_safe=False,
-    setup_requires=[]
+    install_requires=[
+        'gemsim==3.0.1',
+        'networkx==2.0',
+        'pandas==0.23.4', 
+        'scikit-learn==0.19.0',
+        'tensorflow==1.10.0'
+    ]
 )
