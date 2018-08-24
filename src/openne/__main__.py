@@ -80,7 +80,6 @@ def parse_args():
                         help='Use k-step transition probability matrix')
     parser.add_argument('--lamb', default=0.2, type=float,
                         help='lambda is a hyperparameter in TADW')
-    parser.add_argument()
     args = parser.parse_args()
 
     if args.method != 'gcn' and not args.output:

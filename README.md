@@ -20,7 +20,8 @@ We develop this toolkit according to the settings of DeepWalk. The implemented o
 - Clone this repo.
 - `cd` in where you clone it, and exec
     ```bash
-    pip install -e src/openne
+    cd src
+    python setup.py install
     ```
 
 #### General Options
