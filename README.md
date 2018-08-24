@@ -162,6 +162,7 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |OpenNE(LINE 2nd) | 90s | 0.661 | 0.521|
 |OpenNE(Node2vec) | 33s  | 0.655 | 0.538|
 |OpenNE(GraRep) | 23.7s | 0.649 | 0.507 |
+|OpenNE(HOPE) | 16.8s| 0.623 | 0.513 |
 
 
 [Cora](https://linqs.soe.ucsc.edu/data): 2708 nodes, 5429 edges, 7 labels, directed:
