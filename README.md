@@ -9,7 +9,7 @@ We develop this toolkit according to the settings of DeepWalk. The implemented o
 -  numpy==1.13.1
 -  networkx==2.0
 -  scipy==0.19.1
--  tensorflow==1.3.0
+-  tensorflow==1.10.0
 -  gensim==3.0.1
 -  scikit-learn==0.19.0
 
@@ -23,11 +23,21 @@ pip install -r requirements.txt
 
 ## Usage
 
+#### Installation
+
+- Clone this repo.
+- `cd` in where you clone it, and exec
+    ```bash
+    cd src
+    python setup.py install
+    ```
+
 #### General Options
 
-You can check out the other options available to use with *OpenNE* using:
-
-    python src/main.py --help
+Once installed, You can use it as standalone program or check out the other options available to use with *OpenNE* using:
+``` bash
+    python -m openne --help
+```
 
 
 - --input, the input file of a network;
@@ -44,12 +54,14 @@ You can check out the other options available to use with *OpenNE* using:
 #### Example
 
 To run "node2vec" on BlogCatalog network and evaluate the learned representations on multi-label node classification task, run the following command in the home directory of this project:
-
-    python src/main.py --method node2vec --label-file data/blogCatalog/bc_labels.txt --input data/blogCatalog/bc_adjlist.txt --graph-format adjlist --output vec_all.txt --q 0.25 --p 0.25
+``` bash
+    python -m openne --method node2vec --label-file data/blogCatalog/bc_labels.txt --input data/blogCatalog/bc_adjlist.txt --graph-format adjlist --output vec_all.txt --q 0.25 --p 0.25
+```
 
 To run "gcn" on Cora network and evaluate the learned representations on multi-label node classification task, run the following command in the home directory of this project:
-
-    python src/main.py --method gcn --label-file data/cora/cora_labels.txt --input data/cora/cora_edgelist.txt --graph-format edgelist --feature-file data/cora/cora.features  --epochs 200 --output vec_all.txt --clf-ratio 0.1
+``` bash
+    python -m openne --method gcn --label-file data/cora/cora_labels.txt --input data/cora/cora_edgelist.txt --graph-format edgelist --feature-file data/cora/cora.features  --epochs 200 --output vec_all.txt --clf-ratio 0.1
+```
 
 #### Specific Options
 
@@ -158,6 +170,7 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |OpenNE(LINE 2nd) | 90s | 0.661 | 0.521|
 |OpenNE(Node2vec) | 33s  | 0.655 | 0.538|
 |OpenNE(GraRep) | 23.7s | 0.649 | 0.507 |
+|OpenNE(HOPE) | 16.8s| 0.623 | 0.513 |
 
 
 [Cora](https://linqs.soe.ucsc.edu/data): 2708 nodes, 5429 edges, 7 labels, directed:
@@ -235,6 +248,17 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       Number                   = {8},
       Pages                    = {980--996},
       Year                     = {2017}
+    }
+
+    @article{goyal2017graph,
+        title                  = {Graph embedding techniques, applications, and performance: A survey}
+        journal                = {Knowledge-Based Systems}
+        year                   = {2018}
+        issn                   = {0950-7051}
+        doi                    = {https://doi.org/10.1016/j.knosys.2018.03.022}
+        url                    = {http://www.sciencedirect.com/science/article/pii/S0950705118301540}
+        author                 = {Palash Goyal and Emilio Ferrara}
+        keywords               = {Graph embedding techniques, Graph embedding applications, Python graph embedding methods GEM library}
     }
 
 ## Sponsor

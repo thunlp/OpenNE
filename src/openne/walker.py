@@ -3,8 +3,10 @@ import random
 import numpy as np
 import multiprocessing
 
+
 def deepwalk_walk_wrapper(class_instance, walk_length, start_node):
     class_instance.deepwalk_walk(walk_length, start_node)
+
 
 class BasicWalker:
     def __init__(self, G, workers):
@@ -45,7 +47,8 @@ class BasicWalker:
             random.shuffle(nodes)
             for node in nodes:
                 # walks.append(pool.apply_async(deepwalk_walk_wrapper, (self, walk_length, node, )))
-                walks.append(self.deepwalk_walk(walk_length=walk_length, start_node=node))
+                walks.append(self.deepwalk_walk(
+                    walk_length=walk_length, start_node=node))
             # pool.close()
             # pool.join()
         # print(len(walks))
@@ -77,12 +80,13 @@ class Walker:
             cur_nbrs = list(G.neighbors(cur))
             if len(cur_nbrs) > 0:
                 if len(walk) == 1:
-                    walk.append(cur_nbrs[alias_draw(alias_nodes[cur][0], alias_nodes[cur][1])])
+                    walk.append(
+                        cur_nbrs[alias_draw(alias_nodes[cur][0], alias_nodes[cur][1])])
                 else:
                     prev = walk[-2]
                     pos = (prev, cur)
-                    next = cur_nbrs[alias_draw(alias_edges[pos][0], 
-                        alias_edges[pos][1])]
+                    next = cur_nbrs[alias_draw(alias_edges[pos][0],
+                                               alias_edges[pos][1])]
                     walk.append(next)
             else:
                 break
@@ -101,7 +105,8 @@ class Walker:
             print(str(walk_iter+1), '/', str(num_walks))
             random.shuffle(nodes)
             for node in nodes:
-                walks.append(self.node2vec_walk(walk_length=walk_length, start_node=node))
+                walks.append(self.node2vec_walk(
+                    walk_length=walk_length, start_node=node))
 
         return walks
 
@@ -122,7 +127,8 @@ class Walker:
             else:
                 unnormalized_probs.append(G[dst][dst_nbr]['weight']/q)
         norm_const = sum(unnormalized_probs)
-        normalized_probs =  [float(u_prob)/norm_const for u_prob in unnormalized_probs]
+        normalized_probs = [
+            float(u_prob)/norm_const for u_prob in unnormalized_probs]
 
         return alias_setup(normalized_probs)
 
@@ -134,9 +140,11 @@ class Walker:
 
         alias_nodes = {}
         for node in G.nodes():
-            unnormalized_probs = [G[node][nbr]['weight'] for nbr in G.neighbors(node)]
+            unnormalized_probs = [G[node][nbr]['weight']
+                                  for nbr in G.neighbors(node)]
             norm_const = sum(unnormalized_probs)
-            normalized_probs =  [float(u_prob)/norm_const for u_prob in unnormalized_probs]
+            normalized_probs = [
+                float(u_prob)/norm_const for u_prob in unnormalized_probs]
             alias_nodes[node] = alias_setup(normalized_probs)
 
         alias_edges = {}
@@ -184,6 +192,7 @@ def alias_setup(probs):
             larger.append(large)
 
     return J, q
+
 
 def alias_draw(J, q):
     '''
