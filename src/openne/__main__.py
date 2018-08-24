@@ -3,18 +3,18 @@ import numpy as np
 import random
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from sklearn.linear_model import LogisticRegression
-from libnrl.graph import *
-from libnrl import node2vec
-from libnrl.classify import Classifier, read_node_label
-from libnrl import line
-from libnrl import tadw
-from libnrl.gcn import gcnAPI
-from libnrl import lle
-from libnrl import hope
-from libnrl import lap
-from libnrl import gf
-from libnrl import sdne
-from libnrl.grarep import GraRep
+from .graph import *
+import node2vec
+from .classify import Classifier, read_node_label
+import line
+import tadw
+from .gcn import gcnAPI
+import lle
+import hope
+import lap
+import gf
+import sdne
+from .grarep import GraRep
 import time
 
 
