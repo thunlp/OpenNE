@@ -7,7 +7,7 @@ setup(
     author="Freyr, Alan",
     author_email="alan1995wang@outlook.com",
     description="Open Source Network Embedding toolkit",
-    packages= find_packages(),
+    packages=find_packages(),
     long_description=open("../README.md").read(),
     zip_safe=False,
     setup_requires=[]
