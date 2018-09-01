@@ -20,7 +20,7 @@ class LaplacianEigenmaps(object):
         look_up = self.g.look_up_dict
         adj = np.zeros((node_size, node_size))
         for edge in self.g.G.edges():
-            adj[look_up[edge[0]]][look_up[edge[1]]] = 1.0
+            adj[look_up[edge[0]]][look_up[edge[1]]] = self.g.G[edge[0]][edge[1]]['weight']
         return adj
 
     def getLap(self):

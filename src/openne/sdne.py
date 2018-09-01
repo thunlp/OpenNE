@@ -17,7 +17,7 @@ def fc_op(input_op, name, n_out, layer_collector, act_func=tf.nn.leaky_relu):
 
 
 class SDNE(object):
-    def __init__(self, graph, encoder_layer_list, alpha=1e-3, beta=5., nu1=1e-5, nu2=1e-5,
+    def __init__(self, graph, encoder_layer_list, alpha=1e-6, beta=5., nu1=1e-5, nu2=1e-4,
                  batch_size=200, epoch=100, learning_rate=None):
         """
         encoder_layer_list: a list of numbers of the neuron at each ecdoer layer, the last number is the
