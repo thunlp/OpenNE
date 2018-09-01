@@ -5,7 +5,7 @@ import networkx as nx
 
 
 class GraphFactorization(object):
-    def __init__(self, graph, rep_size=128, max_iter=100, learning_rate=0.01, lamb=1., adj_mat=None):
+    def __init__(self, graph, rep_size=128, max_iter=100, learning_rate=0.01, lamb=1.):
         self.g = graph
 
         self.node_size = graph.G.number_of_nodes()
@@ -14,7 +14,7 @@ class GraphFactorization(object):
         self.lr = learning_rate
         self.lamb = lamb
         self.sess = tf.Session()
-        self.adj_mat = nx.to_numpy_array(self.g.G)
+        self.adj_mat = self.getAdj()
         self.vectors = {}
 
         self.embeddings = self.get_train()
@@ -29,15 +29,12 @@ class GraphFactorization(object):
         look_up = self.g.look_up_dict
         adj = np.zeros((node_size, node_size))
         for edge in self.g.G.edges():
-            adj[look_up[edge[0]]][look_up[edge[1]]] = 1.0
+            adj[look_up[edge[0]]][look_up[edge[1]]] = self.g.G[edge[0]][edge[1]]['weight']
         return adj
 
     def get_train(self):
 
         adj_mat = self.adj_mat
-
-        print(np.sum(adj_mat, axis=1))
-        print(np.sum(adj_mat, axis=0))
 
         mat_mask = 1.*(adj_mat > 0)
 
@@ -57,10 +54,11 @@ class GraphFactorization(object):
         init = tf.global_variables_initializer()
         self.sess.run(init)
 
+        print("total iter: %i" % self.max_iter)
         for step in range(self.max_iter):
             self.sess.run(train_op, feed_dict={Adj: adj_mat, AdjMask: mat_mask})
             if step % 50 == 0:
-                print("step %i: %g" % (step, self.sess.run(cost, feed_dict={Adj: adj_mat, AdjMask: mat_mask})))
+                print("step %i: cost: %g" % (step, self.sess.run(cost, feed_dict={Adj: adj_mat, AdjMask: mat_mask})))
         return self.sess.run(_embeddings)
 
     def save_embeddings(self, filename):
