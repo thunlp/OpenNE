@@ -33,17 +33,17 @@ class LaplacianEigenmaps(object):
         return norm_lap_mat
 
     def get_train(self):
-        print(np.sum(self.adj_mat, axis=1))
-        print(np.sum(self.adj_mat, axis=0))
-
-        lap_mat = np.diagflat(np.sum(self.adj_mat, axis=1)) - self.adj_mat
-
-        # lap_mat = self.getLap()
+        lap_mat = self.getLap()
         w, vec = np.linalg.eigh(lap_mat)
-        w = np.diagflat(np.sqrt(w[self.node_size-self.rep_size:]))
-        vec = vec[:, self.node_size-self.rep_size:]
 
-        return np.matmul(vec, w)
+        start = 0
+        for i in range(self.node_size):
+            if w[i] > 1e-10:
+                start = i
+                break
+        vec = vec[:, start:start+self.rep_size]
+
+        return vec
 
     def save_embeddings(self, filename):
         fout = open(filename, 'w')
