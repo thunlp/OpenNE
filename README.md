@@ -167,7 +167,7 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |OpenNE(Node2vec) | 33s  | 0.655 | 0.538|
 |OpenNE(GraRep) | 23.7s | 0.649 | 0.507 |
 |OpenNE(GraphFactorization) | 12.5s | 0.637 | 0.450 |
-|OpenNE(HOPE) | 3.2s | 0.599 | 0.436 |
+|OpenNE(HOPE) | 3.2s | 0.601 | 0.438 |
 |OpenNE(LaplacianEigenmaps) | 4.9s | 0.277 | 0.073 |
 |OpenNE(SDNE) | 39.6s | 0.643 | 0.498 |
 
