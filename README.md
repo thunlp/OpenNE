@@ -257,6 +257,7 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       Pages                    = {980--996},
       Year                     = {2017}
     }
+    
     @article{goyal2017graph,
       Title                    = {Graph embedding techniques, applications, and performance: A survey},
       Author                   = {Palash Goyal and Emilio Ferrara},
