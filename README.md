@@ -15,6 +15,15 @@ We develop this toolkit according to the settings of DeepWalk. The implemented o
 
 ## Usage
 
+#### Installation
+
+- Clone this repo.
+- enter the directory where you clone it, and run the following code
+    ```bash
+    cd src
+    python setup.py install
+    ```
+
 #### General Options
 
 You can check out the other options available to use with *OpenNE* using:
@@ -247,6 +256,12 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       Number                   = {8},
       Pages                    = {980--996},
       Year                     = {2017}
+    }
+    @article{goyal2017graph,
+      Title                    = {Graph embedding techniques, applications, and performance: A survey},
+      Author                   = {Palash Goyal and Emilio Ferrara},
+      Journal                  = {Knowledge-Based Systems},
+      Year                     = {2018}
     }
 
 ## Sponsor
