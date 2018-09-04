@@ -16,6 +16,7 @@ import gf
 import sdne
 from .grarep import GraRep
 import time
+import ast
 
 
 def parse_args():
@@ -80,6 +81,21 @@ def parse_args():
                         help='Use k-step transition probability matrix')
     parser.add_argument('--lamb', default=0.2, type=float,
                         help='lambda is a hyperparameter in TADW')
+    parser.add_argument('--lr', default=0.01, type=float,
+                        help='learning rate')
+    parser.add_argument('--alpha', default=1e-6, type=float,
+                        help='alhpa is a hyperparameter in SDNE')
+    parser.add_argument('--beta', default=5., type=float,
+                        help='beta is a hyperparameter in SDNE')
+    parser.add_argument('--nu1', default=1e-5, type=float,
+                        help='nu1 is a hyperparameter in SDNE')
+    parser.add_argument('--nu2', default=1e-4, type=float,
+                        help='nu2 is a hyperparameter in SDNE')
+    parser.add_argument('--bs', default=200, type=int,
+                        help='batch size of SDNE')
+    parser.add_argument('--encoder-list', default='[1000, 128]', type=str,
+                        help='a list of numbers of the neuron at each encoder layer, the last number is the '
+                             'dimension of the output node representation')
     parser.add_argument()
     args = parser.parse_args()
 
@@ -137,11 +153,15 @@ def main(args):
     elif args.method == 'hope':
         model = hope.HOPE(graph=g, d=args.representation_size)
     elif args.method == 'sdne':
-        model = sdne.SDNE(graph=g, d=args.representation_size, beta=args.beta)
+        encoder_layer_list = ast.literal_eval(args.encoder_list)
+        model = sdne.SDNE(g, encoder_layer_list=encoder_layer_list,
+                          alpha=args.alpha, beta=args.beta, nu1=args.nu1, nu2=args.nu2,
+                          batch_size=args.bs, epoch=args.epochs, learning_rate=args.lr)
     elif args.method == 'lap':
-        model = lap.LaplacianEigenmaps(graph=g, d=args.representation_size, beta=args.beta)
+        model = lap.LaplacianEigenmaps(g, rep_size=args.representation_size)
     elif args.method == 'gf':
-        model = gf.GraphFactorization(graph=g, d=args.representation_size, beta=args.beta)
+        model = gf.GraphFactorization(g, rep_size=args.representation_size,
+                                      epoch=args.epochs, learning_rate=args.lr, weight_decay=args.weight_decay)
     t2 = time.time()
     print(t2-t1)
     if args.method != 'gcn':

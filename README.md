@@ -76,6 +76,22 @@ GCN:
 - --weight-decay, weight for l2-loss of embedding matrix;
 - --hidden, number of units in the first hidden layer.
 
+GraphFactorization:
+
+- --epochs, the training epochs of GraphFactorization; the default is 5;
+- --weight-decay, weight for l2-loss of embedding matrix;
+- --lr, learning rate, the default is 0.01
+
+SDNE:
+
+- --encoder-list, a list of numbers of the neuron at each encoder layer, the last number is the dimension of the output node representation, the default is [1000, 128]
+- --alpha, alpha is a hyperparameter in SDNE that controls the first order proximity loss, the default is 1e-6
+- --beta, beta is used for construct matrix B, the default is 5
+- --nu1, parameter controls l1-loss of weights in autoencoder, the default is 1e-5
+- --nu2, parameter controls l2-loss of weights in autoencoder, the default is 1e-4
+- --bs, batch size, the default is 200
+- --lr, learning rate, the default is 0.01
+
 #### Input
 The supported input format is an edgelist or an adjlist:
 
@@ -150,6 +166,10 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |OpenNE(LINE 2nd) | 90s | 0.661 | 0.521|
 |OpenNE(Node2vec) | 33s  | 0.655 | 0.538|
 |OpenNE(GraRep) | 23.7s | 0.649 | 0.507 |
+|OpenNE(GraphFactorization) | 12.5s | 0.637 | 0.450 |
+|OpenNE(HOPE) | 3.2s | 0.599 | 0.436 |
+|OpenNE(LaplacianEigenmaps) | 4.9s | 0.277 | 0.073 |
+|OpenNE(SDNE) | 39.6s | 0.643 | 0.498 |
 
 
 [Cora](https://linqs.soe.ucsc.edu/data): 2708 nodes, 5429 edges, 7 labels, directed:
@@ -180,7 +200,7 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       Year                     = {2014},
       Pages                    = {701--710}
     }
-
+    
     @InProceedings{tang2015line,
       Title                    = {Line: Large-scale information network embedding},
       Author                   = {Tang, Jian and Qu, Meng and Wang, Mingzhe and Zhang, Ming and Yan, Jun and Mei, Qiaozhu},
@@ -188,7 +208,7 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       Year                     = {2015},
       Pages                    = {1067--1077}
     }
-
+    
     @InProceedings{grover2016node2vec,
       Title                    = {node2vec: Scalable feature learning for networks},
       Author                   = {Grover, Aditya and Leskovec, Jure},
@@ -196,14 +216,14 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       Year                     = {2016},
       Pages                    = {855--864}
     }
-
+    
     @article{kipf2016semi,
       Title                    = {Semi-Supervised Classification with Graph Convolutional Networks},
       Author                   = {Kipf, Thomas N and Welling, Max},
       journal                  = {arXiv preprint arXiv:1609.02907},
       Year                     = {2016}
     }
-
+    
     @InProceedings{cao2015grarep,
       Title                    = {Grarep: Learning graph representations with global structural information},
       Author                   = {Cao, Shaosheng and Lu, Wei and Xu, Qiongkai},
@@ -211,14 +231,14 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       Year                     = {2015},
       Pages                    = {891--900}
     }
-
+    
     @InProceedings{yang2015network,
       Title                    = {Network representation learning with rich text information},
       Author                   = {Yang, Cheng and Liu, Zhiyuan and Zhao, Deli and Sun, Maosong and Chang, Edward},
       Booktitle                = {Proceedings of IJCAI},
       Year                     = {2015}
     }
-
+    
     @Article{tu2017network,
       Title                    = {Network representation learning: an overview},
       Author                   = {TU, Cunchao and YANG, Cheng and LIU, Zhiyuan and SUN, Maosong},
