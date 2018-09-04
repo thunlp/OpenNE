@@ -9,7 +9,7 @@ We develop this toolkit according to the settings of DeepWalk. The implemented o
 -  numpy==1.13.1
 -  networkx==2.0
 -  scipy==0.19.1
--  tensorflow==1.3.0
+-  tensorflow==1.10.0
 -  gensim==3.0.1
 -  scikit-learn==0.19.0
 
