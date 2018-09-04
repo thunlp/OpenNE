@@ -5,14 +5,14 @@ import networkx as nx
 
 
 class GraphFactorization(object):
-    def __init__(self, graph, rep_size=128, max_iter=100, learning_rate=0.01, lamb=1.):
+    def __init__(self, graph, rep_size=128, epoch=120, learning_rate=0.003, weight_decay=1.):
         self.g = graph
 
         self.node_size = graph.G.number_of_nodes()
         self.rep_size = rep_size
-        self.max_iter = max_iter
+        self.max_iter = epoch
         self.lr = learning_rate
-        self.lamb = lamb
+        self.lamb = weight_decay
         self.sess = tf.Session()
         self.adj_mat = self.getAdj()
         self.vectors = {}
@@ -38,8 +38,8 @@ class GraphFactorization(object):
 
         mat_mask = 1.*(adj_mat > 0)
 
-        _embeddings = tf.get_variable('embeddings', shape=[self.node_size, self.rep_size],
-                                      dtype=tf.float32, initializer=tf.contrib.layers.xavier_initializer())
+        _embeddings = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_size, self.rep_size]),
+                                  dtype=tf.float32, name='embeddings')
 
         Adj = tf.placeholder(tf.float32, [self.node_size, self.node_size], name='adj_mat')
         AdjMask = tf.placeholder(tf.float32, [self.node_size, self.node_size], name='adj_mask')
