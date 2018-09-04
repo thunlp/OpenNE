@@ -10,7 +10,7 @@ class TADW(object):
     def __init__(self, graph, dim, lamb=0.2):
         self.g = graph
         self.lamb = lamb
-        self.dim = dim
+        self.dim = int(dim/2)
         self.train()
 
     def getAdj(self):
@@ -27,7 +27,7 @@ class TADW(object):
     def save_embeddings(self, filename):
         fout = open(filename, 'w')
         node_num = len(self.vectors.keys())
-        fout.write("{} {}\n".format(node_num, self.dim))
+        fout.write("{} {}\n".format(node_num, self.dim*2))
         for node, vec in self.vectors.items():
             fout.write("{} {}\n".format(node,' '.join([str(x) for x in vec])))
         fout.close()
@@ -41,10 +41,11 @@ class TADW(object):
         return self.features.T
 
     def preprocessFeature(self):
-        U, S, VT = la.svd(self.features)
-        Ud = U[:, 0:200]
-        Sd = S[0:200]
-        self.features = np.array(Ud)*Sd.reshape(200)
+        if self.features.shape[1] > 200:
+            U, S, VT = la.svd(self.features)
+            Ud = U[:, 0:200]
+            Sd = S[0:200]
+            self.features = np.array(Ud)*Sd.reshape(200)
 
     def train(self):
         self.adj = self.getAdj()
