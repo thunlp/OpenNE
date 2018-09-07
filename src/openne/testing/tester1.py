@@ -1,7 +1,6 @@
-# pylint: disable=E1101, E0611, E0401
-
 import pandas as pd
 import tensorflow as tf
+import numpy as np
 from tensorflow.contrib.tensorboard.plugins import projector
 import os
 
@@ -24,30 +23,30 @@ def text_to_graph(text):
 
     # build the graph which is full-connected
     N = vectors.shape[0]
-    mat = kneighbors_graph(vectors, N, metric='cosine',
-                           mode='distance', include_self=True)
+    mat = kneighbors_graph(vectors, N, metric='cosine', mode='distance', include_self=True)
     mat.data = 1 - mat.data  # to similarity
 
     g = nx.from_scipy_sparse_matrix(mat, create_using=nx.Graph())
 
     return g, mat.toarray()
 
-
 dataset = fetch_data('data')
 graph, adj_mat = text_to_graph(dataset.data)
+graph = graph.to_directed()
 
 labels = dataset.target
 
-
-############# INSERT YOUR CODE HERE (≈1 line) #############
-g = gh.Graph()
-g.G = graph
-g.node_size = graph.number_of_nodes
-# model = lle.LLE(graph=g, d=256)
-model = hope.HOPE(graph=g, d=128)
-import numpy as np
-# embeddings = np.load("src/testing/lle_vec.npy")  # numpy array
-embeddings = model._X  # numpy array
+############# CHANGE YOUR CODE HERE (≈6 line) #############
+from libsrc.lap import LaplacianEigenmaps
+from libsrc.graph import Graph
+g = Graph()
+g.read_g(graph)
+model = LaplacianEigenmaps(g)
+vectors = model.vectors
+embeddings = np.zeros((graph.number_of_nodes(), 128))
+for i, embedding in vectors.items():
+    embeddings[int(i), :] = embedding
+# embeddings = model.num_embeddings  # numpy array
 ########################## END ############################
 
 LOG_DIR = 'log'
@@ -74,4 +73,5 @@ embedding.tensor_name = 'embeddings'
 embedding.metadata_path = 'node_labels.tsv'
 
 projector.visualize_embeddings(tf.summary.FileWriter(LOG_DIR), config)
+
 # type "tensorboard --logdir=log" in CMD and have fun :)

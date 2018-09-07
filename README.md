@@ -267,7 +267,7 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
 
 ## Sponsor
 
-This research is supported by Tencent, MSRA and NSFC.
+This research is supported by Tencent, MSRA, NSFC and [BBDM-Lab](http://www.bioinfotech.cn).
 
 <img src="http://logonoid.com/images/tencent-logo.png" width = "300" height = "30" alt="tencent" align=center />
 
