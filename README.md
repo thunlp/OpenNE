@@ -9,7 +9,7 @@ We develop this toolkit according to the settings of DeepWalk. The implemented o
 -  numpy==1.13.1
 -  networkx==2.0
 -  scipy==0.19.1
--  tensorflow==1.3.0
+-  tensorflow==1.10.0
 -  gensim==3.0.1
 -  scikit-learn==0.19.0
 
@@ -22,6 +22,15 @@ pip install -r requirements.txt
 
 
 ## Usage
+
+#### Installation
+
+- Clone this repo.
+- enter the directory where you clone it, and run the following code
+    ```bash
+    cd src
+    python setup.py install
+    ```
 
 #### General Options
 
@@ -83,6 +92,22 @@ GCN:
 - --dropout, dropout rate;
 - --weight-decay, weight for l2-loss of embedding matrix;
 - --hidden, number of units in the first hidden layer.
+
+GraphFactorization:
+
+- --epochs, the training epochs of GraphFactorization; the default is 5;
+- --weight-decay, weight for l2-loss of embedding matrix;
+- --lr, learning rate, the default is 0.01
+
+SDNE:
+
+- --encoder-list, a list of numbers of the neuron at each encoder layer, the last number is the dimension of the output node representation, the default is [1000, 128]
+- --alpha, alpha is a hyperparameter in SDNE that controls the first order proximity loss, the default is 1e-6
+- --beta, beta is used for construct matrix B, the default is 5
+- --nu1, parameter controls l1-loss of weights in autoencoder, the default is 1e-5
+- --nu2, parameter controls l2-loss of weights in autoencoder, the default is 1e-4
+- --bs, batch size, the default is 200
+- --lr, learning rate, the default is 0.01
 
 #### Input
 The supported input format is an edgelist or an adjlist:
@@ -158,6 +183,10 @@ Note that, both GCN(a semi-supervised NE model) and TADW need additional text fe
 |OpenNE(LINE 2nd) | 90s | 0.661 | 0.521|
 |OpenNE(Node2vec) | 33s  | 0.655 | 0.538|
 |OpenNE(GraRep) | 23.7s | 0.649 | 0.507 |
+|OpenNE(GraphFactorization) | 12.5s | 0.637 | 0.450 |
+|OpenNE(HOPE) | 3.2s | 0.601 | 0.438 |
+|OpenNE(LaplacianEigenmaps) | 4.9s | 0.277 | 0.073 |
+|OpenNE(SDNE) | 39.6s | 0.643 | 0.498 |
 
 
 [Cora](https://linqs.soe.ucsc.edu/data): 2708 nodes, 5429 edges, 7 labels, directed:
@@ -236,10 +265,17 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       Pages                    = {980--996},
       Year                     = {2017}
     }
+    
+    @article{goyal2017graph,
+      Title                    = {Graph embedding techniques, applications, and performance: A survey},
+      Author                   = {Palash Goyal and Emilio Ferrara},
+      Journal                  = {Knowledge-Based Systems},
+      Year                     = {2018}
+    }
 
 ## Sponsor
 
-This research is supported by Tencent, MSRA and NSFC.
+This research is supported by Tencent, MSRA, NSFC and [BBDM-Lab](http://www.bioinfotech.cn).
 
 <img src="http://logonoid.com/images/tencent-logo.png" width = "300" height = "30" alt="tencent" align=center />
 

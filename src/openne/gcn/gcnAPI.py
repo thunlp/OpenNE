@@ -5,6 +5,7 @@ import time
 import scipy.sparse as sp
 import tensorflow as tf
 
+
 class GCN(object):
 
     def __init__(self, graph, learning_rate=0.01, epochs=200,
@@ -32,7 +33,8 @@ class GCN(object):
         self.preprocess_data()
         self.build_placeholders()
         # Create model
-        self.model = models.GCN(self.placeholders, input_dim=self.features[2][1], hidden1=self.hidden1, weight_decay=self.weight_decay, logging=True)
+        self.model = models.GCN(
+            self.placeholders, input_dim=self.features[2][1], hidden1=self.hidden1, weight_decay=self.weight_decay, logging=True)
         # Initialize session
         self.sess = tf.Session()
         # Init variables
@@ -49,7 +51,8 @@ class GCN(object):
             feed_dict.update({self.placeholders['dropout']: self.dropout})
 
             # Training step
-            outs = self.sess.run([self.model.opt_op, self.model.loss, self.model.accuracy], feed_dict=feed_dict)
+            outs = self.sess.run(
+                [self.model.opt_op, self.model.loss, self.model.accuracy], feed_dict=feed_dict)
 
             # Validation
             cost, acc, duration = self.evaluate(self.val_mask)
@@ -57,8 +60,9 @@ class GCN(object):
 
             # Print results
             print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
-                  "train_acc=", "{:.5f}".format(outs[2]), "val_loss=", "{:.5f}".format(cost),
-                  "val_acc=", "{:.5f}".format(acc), "time=", "{:.5f}".format(time.time() - t))
+                  "train_acc=", "{:.5f}".format(
+                outs[2]), "val_loss=", "{:.5f}".format(cost),
+                "val_acc=", "{:.5f}".format(acc), "time=", "{:.5f}".format(time.time() - t))
 
             if epoch > self.early_stopping and cost_val[-1] > np.mean(cost_val[-(self.early_stopping+1):-1]):
                 print("Early stopping...")
@@ -70,13 +74,13 @@ class GCN(object):
         print("Test set results:", "cost=", "{:.5f}".format(test_cost),
               "accuracy=", "{:.5f}".format(test_acc), "time=", "{:.5f}".format(test_duration))
 
-
-
     # Define model evaluation function
+
     def evaluate(self, mask):
         t_test = time.time()
         feed_dict_val = self.construct_feed_dict(mask)
-        outs_val = self.sess.run([self.model.loss, self.model.accuracy], feed_dict=feed_dict_val)
+        outs_val = self.sess.run(
+            [self.model.loss, self.model.accuracy], feed_dict=feed_dict_val)
         return outs_val[0], outs_val[1], (time.time() - t_test)
 
     def build_placeholders(self):
@@ -119,11 +123,13 @@ class GCN(object):
         training_size = int(train_precent * self.graph.G.number_of_nodes())
         state = np.random.get_state()
         np.random.seed(0)
-        shuffle_indices = np.random.permutation(np.arange(self.graph.G.number_of_nodes()))
+        shuffle_indices = np.random.permutation(
+            np.arange(self.graph.G.number_of_nodes()))
         np.random.set_state(state)
 
         look_up = self.graph.look_up_dict
         g = self.graph.G
+
         def sample_mask(begin, end):
             mask = np.zeros(g.number_of_nodes())
             for i in range(begin, end):
@@ -146,13 +152,12 @@ class GCN(object):
         g = self.graph.G
         look_back = self.graph.look_back_list
         self.features = np.vstack([g.nodes[look_back[i]]['feature']
-            for i in range(g.number_of_nodes())]) 
+                                   for i in range(g.number_of_nodes())])
         self.features = preprocess_features(self.features)
         self.build_label()
         self.build_train_val_test()
-        adj = nx.adjacency_matrix(g) # the type of graph
+        adj = nx.adjacency_matrix(g)  # the type of graph
         self.support = [preprocess_adj(adj)]
-
 
     def construct_feed_dict(self, labels_mask):
         """Construct feed dictionary."""
@@ -160,8 +165,8 @@ class GCN(object):
         feed_dict.update({self.placeholders['labels']: self.labels})
         feed_dict.update({self.placeholders['labels_mask']: labels_mask})
         feed_dict.update({self.placeholders['features']: self.features})
-        feed_dict.update({self.placeholders['support'][i]: self.support[i] for i in range(len(self.support))})
-        feed_dict.update({self.placeholders['num_features_nonzero']: self.features[1].shape})
+        feed_dict.update(
+            {self.placeholders['support'][i]: self.support[i] for i in range(len(self.support))})
+        feed_dict.update(
+            {self.placeholders['num_features_nonzero']: self.features[1].shape})
         return feed_dict
-
-
