@@ -3,14 +3,21 @@ import numpy as np
 import random
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from sklearn.linear_model import LogisticRegression
-from libnrl.graph import *
-from libnrl import node2vec
-from libnrl.classify import Classifier, read_node_label
-from libnrl import line
-from libnrl import tadw
-from libnrl.gcn import gcnAPI
-from libnrl.grarep import GraRep
+from .graph import *
+import node2vec
+from .classify import Classifier, read_node_label
+import line
+import tadw
+from .gcn import gcnAPI
+import lle
+import hope
+import lap
+import gf
+import sdne
+from .grarep import GraRep
 import time
+import ast
+
 
 def parse_args():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
@@ -35,8 +42,19 @@ def parse_args():
                         help='The training epochs of LINE and GCN')
     parser.add_argument('--p', default=1.0, type=float)
     parser.add_argument('--q', default=1.0, type=float)
-    parser.add_argument('--method', required=True, choices=['node2vec', 'deepWalk', 'line', 'gcn', 'grarep', 'tadw'],
-                        help='The learning method')
+    parser.add_argument('--method', required=True, choices=[
+        'node2vec',
+        'deepWalk',
+        'line',
+        'gcn',
+        'grarep',
+        'tadw',
+        'lle',
+        'hope',
+        'lap',
+        'gf',
+        'sdne'
+    ], help='The learning method')
     parser.add_argument('--label-file', default='',
                         help='The file of node label')
     parser.add_argument('--feature-file', default='',
@@ -53,7 +71,7 @@ def parse_args():
                         help='Choose the order of LINE, 1 means first order, 2 means second order, 3 means first order + second order')
     parser.add_argument('--no-auto-save', action='store_true',
                         help='no save the best embeddings when training LINE')
-    parser.add_argument('--dropout', default=0.5, type=float, 
+    parser.add_argument('--dropout', default=0.5, type=float,
                         help='Dropout rate (1 - keep probability)')
     parser.add_argument('--weight-decay', type=float, default=5e-4,
                         help='Weight for L2 loss on embedding matrix')
@@ -63,6 +81,22 @@ def parse_args():
                         help='Use k-step transition probability matrix')
     parser.add_argument('--lamb', default=0.2, type=float,
                         help='lambda is a hyperparameter in TADW')
+    parser.add_argument('--lr', default=0.01, type=float,
+                        help='learning rate')
+    parser.add_argument('--alpha', default=1e-6, type=float,
+                        help='alhpa is a hyperparameter in SDNE')
+    parser.add_argument('--beta', default=5., type=float,
+                        help='beta is a hyperparameter in SDNE')
+    parser.add_argument('--nu1', default=1e-5, type=float,
+                        help='nu1 is a hyperparameter in SDNE')
+    parser.add_argument('--nu2', default=1e-4, type=float,
+                        help='nu2 is a hyperparameter in SDNE')
+    parser.add_argument('--bs', default=200, type=int,
+                        help='batch size of SDNE')
+    parser.add_argument('--encoder-list', default='[1000, 128]', type=str,
+                        help='a list of numbers of the neuron at each encoder layer, the last number is the '
+                             'dimension of the output node representation')
+    parser.add_argument()
     args = parser.parse_args()
 
     if args.method != 'gcn' and not args.output:
@@ -80,37 +114,54 @@ def main(args):
     if args.graph_format == 'adjlist':
         g.read_adjlist(filename=args.input)
     elif args.graph_format == 'edgelist':
-        g.read_edgelist(filename=args.input, weighted=args.weighted, directed=args.directed)
+        g.read_edgelist(filename=args.input, weighted=args.weighted,
+                        directed=args.directed)
     if args.method == 'node2vec':
         model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
-                                 num_paths=args.number_walks, dim=args.representation_size,
-                                 workers=args.workers, p=args.p, q=args.q, window=args.window_size)
+                                  num_paths=args.number_walks, dim=args.representation_size,
+                                  workers=args.workers, p=args.p, q=args.q, window=args.window_size)
     elif args.method == 'line':
         if args.label_file and not args.no_auto_save:
-            model = line.LINE(g, epoch = args.epochs, rep_size=args.representation_size, order=args.order, 
-                label_file=args.label_file, clf_ratio=args.clf_ratio)
+            model = line.LINE(g, epoch=args.epochs, rep_size=args.representation_size, order=args.order,
+                              label_file=args.label_file, clf_ratio=args.clf_ratio)
         else:
-            model = line.LINE(g, epoch = args.epochs, rep_size=args.representation_size, order=args.order)
+            model = line.LINE(g, epoch=args.epochs,
+                              rep_size=args.representation_size, order=args.order)
     elif args.method == 'deepWalk':
         model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
-                                 num_paths=args.number_walks, dim=args.representation_size,
-                                 workers=args.workers, window=args.window_size, dw=True)
+                                  num_paths=args.number_walks, dim=args.representation_size,
+                                  workers=args.workers, window=args.window_size, dw=True)
     elif args.method == 'tadw':
         # assert args.label_file != ''
         assert args.feature_file != ''
         g.read_node_label(args.label_file)
         g.read_node_features(args.feature_file)
-        model = tadw.TADW(graph=g, dim=args.representation_size, lamb=args.lamb)
+        model = tadw.TADW(
+            graph=g, dim=args.representation_size, lamb=args.lamb)
     elif args.method == 'gcn':
         assert args.label_file != ''
         assert args.feature_file != ''
         g.read_node_label(args.label_file)
         g.read_node_features(args.feature_file)
         model = gcnAPI.GCN(graph=g, dropout=args.dropout,
-                            weight_decay=args.weight_decay, hidden1=args.hidden,
-                            epochs=args.epochs, clf_ratio=args.clf_ratio)
+                           weight_decay=args.weight_decay, hidden1=args.hidden,
+                           epochs=args.epochs, clf_ratio=args.clf_ratio)
     elif args.method == 'grarep':
         model = GraRep(graph=g, Kstep=args.kstep, dim=args.representation_size)
+    elif args.method == 'lle':
+        model = lle.LLE(graph=g, d=args.representation_size)
+    elif args.method == 'hope':
+        model = hope.HOPE(graph=g, d=args.representation_size)
+    elif args.method == 'sdne':
+        encoder_layer_list = ast.literal_eval(args.encoder_list)
+        model = sdne.SDNE(g, encoder_layer_list=encoder_layer_list,
+                          alpha=args.alpha, beta=args.beta, nu1=args.nu1, nu2=args.nu2,
+                          batch_size=args.bs, epoch=args.epochs, learning_rate=args.lr)
+    elif args.method == 'lap':
+        model = lap.LaplacianEigenmaps(g, rep_size=args.representation_size)
+    elif args.method == 'gf':
+        model = gf.GraphFactorization(g, rep_size=args.representation_size,
+                                      epoch=args.epochs, learning_rate=args.lr, weight_decay=args.weight_decay)
     t2 = time.time()
     print(t2-t1)
     if args.method != 'gcn':
@@ -119,10 +170,10 @@ def main(args):
     if args.label_file and args.method != 'gcn':
         vectors = model.vectors
         X, Y = read_node_label(args.label_file)
-        print("Training classifier using {:.2f}% nodes...".format(args.clf_ratio*100))
+        print("Training classifier using {:.2f}% nodes...".format(
+            args.clf_ratio*100))
         clf = Classifier(vectors=vectors, clf=LogisticRegression())
         clf.split_train_evaluate(X, Y, args.clf_ratio)
-
 
 
 if __name__ == "__main__":

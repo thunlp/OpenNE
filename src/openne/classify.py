@@ -67,11 +67,10 @@ class Classifier(object):
         return self.evaluate(X_test, Y_test)
 
 
-
 def load_embeddings(filename):
     fin = open(filename, 'r')
     node_num, size = [int(x) for x in fin.readline().strip().split()]
-    vectors = {} 
+    vectors = {}
     while 1:
         l = fin.readline()
         if l == '':
@@ -82,6 +81,7 @@ def load_embeddings(filename):
     fin.close()
     assert len(vectors) == node_num
     return vectors
+
 
 def read_node_label(filename):
     fin = open(filename, 'r')
