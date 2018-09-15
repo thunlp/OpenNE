@@ -2,10 +2,9 @@ from setuptools import setup, find_packages
 
 setup(
     name="openne",
-    url="https://github.com/Freyr-Wings/OpenNE",
+    url="https://github.com/thunlp/OpenNE",
     license="MIT",
-    author="Freyr, Alan",
-    author_email="alan1995wang@outlook.com",
+    author="THUNLP",
     description="Open Source Network Embedding toolkit",
     packages=find_packages(),
     long_description=open("../README.md").read(),

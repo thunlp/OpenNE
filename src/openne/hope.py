@@ -13,7 +13,7 @@ __email__ = "alan1995wang@outlook.com"
 
 
 class HOPE(object):
-    def __init__(self, graph: g.Graph, d: int):
+    def __init__(self, graph, d):
         '''
           d: representation vector dimension
         '''
