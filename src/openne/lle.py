@@ -14,7 +14,7 @@ __email__ = "alan1995wang@outlook.com"
 
 class LLE(object):
 
-    def __init__(self, graph: g.Graph, d: int):
+    def __init__(self, graph, d):
         ''' Initialize the LocallyLinearEmbedding class
 
         Args:

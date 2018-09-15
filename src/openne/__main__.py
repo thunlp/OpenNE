@@ -96,7 +96,6 @@ def parse_args():
     parser.add_argument('--encoder-list', default='[1000, 128]', type=str,
                         help='a list of numbers of the neuron at each encoder layer, the last number is the '
                              'dimension of the output node representation')
-    parser.add_argument()
     args = parser.parse_args()
 
     if args.method != 'gcn' and not args.output:

@@ -2,24 +2,7 @@
 
 This repository provides a standard NE/NRL(Network Representation Learning）training and testing framework. In this framework, we unify the input and output interfaces of different NE models and provide scalable options for each model. Moreover, we implement typical NE models under this framework based on tensorflow, which enables these models to be trained with GPUs.
 
-We develop this toolkit according to the settings of DeepWalk. The implemented or modified models include [DeepWalk](https://github.com/phanein/deepwalk), [LINE](https://github.com/tangjianpku/LINE), [node2vec](https://github.com/aditya-grover/node2vec), [GraRep](https://github.com/ShelsonCao/GraRep), [TADW](https://github.com/thunlp/TADW) and [GCN](https://github.com/tkipf/gcn). We will implement more representative NE models continuously according to our released [NRL paper list](https://github.com/thunlp/nrlpapers). Specifically, we welcome other researchers to contribute NE models into this toolkit based on our framework. We will announce the contribution in this project.
-
-## Requirements
-
--  numpy==1.13.1
--  networkx==2.0
--  scipy==0.19.1
--  tensorflow==1.10.0
--  gensim==3.0.1
--  scikit-learn==0.19.0
-
-To install all dependency, simply run:
-
-```
-pip install -r requirements.txt
-```
-
-
+We develop this toolkit according to the settings of DeepWalk. The implemented or modified models include [DeepWalk](https://github.com/phanein/deepwalk), [LINE](https://github.com/tangjianpku/LINE), [node2vec](https://github.com/aditya-grover/node2vec), [GraRep](https://github.com/ShelsonCao/GraRep), [TADW](https://github.com/thunlp/TADW) and [GCN](https://github.com/tkipf/gcn), HOPE, GF, SDNE, LE. We will implement more representative NE models continuously according to our released [NRL paper list](https://github.com/thunlp/nrlpapers). Specifically, we welcome other researchers to contribute NE models into this toolkit based on our framework. We will announce the contribution in this project.
 
 ## Usage
 
@@ -28,6 +11,7 @@ pip install -r requirements.txt
 - Clone this repo.
 - enter the directory where you clone it, and run the following code
     ```bash
+    pip install -r requirements.txt
     cd src
     python setup.py install
     ```
@@ -36,14 +20,14 @@ pip install -r requirements.txt
 
 You can check out the other options available to use with *OpenNE* using:
 
-    python src/main.py --help
+    python -m openne --help
 
 
 - --input, the input file of a network;
 - --graph-format, the format of input graph, adjlist or edgelist;
 - --output, the output file of representation (GCN doesn't need it);
 - --representation-size, the number of latent dimensions to learn for each node; the default is 128
-- --method, the NE model to learn, including deepwalk, line, node2vec, grarep, tadw and gcn;
+- --method, the NE model to learn, including deepwalk, line, node2vec, grarep, tadw, gcn, lap, gf, hope and sdne;
 - --directed, treat the graph as directed; this is an action;
 - --weighted, treat the graph as weighted; this is an action;
 - --label-file, the file of node label; ignore this option if not testing;
@@ -54,11 +38,11 @@ You can check out the other options available to use with *OpenNE* using:
 
 To run "node2vec" on BlogCatalog network and evaluate the learned representations on multi-label node classification task, run the following command in the home directory of this project:
 
-    python src/main.py --method node2vec --label-file data/blogCatalog/bc_labels.txt --input data/blogCatalog/bc_adjlist.txt --graph-format adjlist --output vec_all.txt --q 0.25 --p 0.25
+    python -m openne --method node2vec --label-file data/blogCatalog/bc_labels.txt --input data/blogCatalog/bc_adjlist.txt --graph-format adjlist --output vec_all.txt --q 0.25 --p 0.25
 
 To run "gcn" on Cora network and evaluate the learned representations on multi-label node classification task, run the following command in the home directory of this project:
 
-    python src/main.py --method gcn --label-file data/cora/cora_labels.txt --input data/cora/cora_edgelist.txt --graph-format edgelist --feature-file data/cora/cora.features  --epochs 200 --output vec_all.txt --clf-ratio 0.1
+    python -m openne --method gcn --label-file data/cora/cora_labels.txt --input data/cora/cora_edgelist.txt --graph-format edgelist --feature-file data/cora/cora.features  --epochs 200 --output vec_all.txt --clf-ratio 0.1
 
 #### Specific Options
 
@@ -266,11 +250,39 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       Year                     = {2017}
     }
     
-    @article{goyal2017graph,
-      Title                    = {Graph embedding techniques, applications, and performance: A survey},
-      Author                   = {Palash Goyal and Emilio Ferrara},
-      Journal                  = {Knowledge-Based Systems},
-      Year                     = {2018}
+    @inproceedings{ou2016asymmetric,
+      title                    = {Asymmetric transitivity preserving graph embedding},
+      author                   = {Ou, Mingdong and Cui, Peng and Pei, Jian and Zhang, Ziwei and Zhu, Wenwu},
+      booktitle                = {Proceedings of the 22nd ACM SIGKDD},
+      pages                    = {1105--1114},
+      year                     = {2016},
+      organization             = {ACM}
+    }
+
+    @inproceedings{belkin2002laplacian,
+      title                    = {Laplacian eigenmaps and spectral techniques for embedding and clustering},
+      author                   = {Belkin, Mikhail and Niyogi, Partha},
+      booktitle                = {Advances in neural information processing systems},
+      pages                    = {585--591},
+      year                     = {2002}
+    }
+
+    @inproceedings{ahmed2013distributed,
+      title                    = {Distributed large-scale natural graph factorization},
+      author                   = {Ahmed, Amr and Shervashidze, Nino and Narayanamurthy, Shravan and Josifovski, Vanja and Smola, Alexander J},
+      booktitle                = {Proceedings of the 22nd international conference on World Wide Web},
+      pages                    = {37--48},
+      year                     = {2013},
+      organization             = {ACM}
+    }
+
+    @inproceedings{wang2016structural,
+      title                    = {Structural deep network embedding},
+      author                   = {Wang, Daixin and Cui, Peng and Zhu, Wenwu},
+      booktitle                = {Proceedings of the 22nd ACM SIGKDD international conference on Knowledge discovery and data mining},
+      pages                    = {1225--1234},
+      year                     = {2016},
+      organization             = {ACM}
     }
 
 ## Sponsor
