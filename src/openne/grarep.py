@@ -3,12 +3,13 @@ import numpy as np
 from numpy import linalg as la
 from sklearn.preprocessing import normalize
 
+
 class GraRep(object):
-    
+
     def __init__(self, graph, Kstep, dim):
         self.g = graph
         self.Kstep = Kstep
-        assert dim%Kstep == 0
+        assert dim % Kstep == 0
         self.dim = int(dim/Kstep)
         self.train()
 
@@ -42,7 +43,7 @@ class GraRep(object):
         node_num = len(self.vectors.keys())
         fout.write("{} {}\n".format(node_num, self.Kstep*self.dim))
         for node, vec in self.vectors.items():
-            fout.write("{} {}\n".format(node,' '.join([str(x) for x in vec])))
+            fout.write("{} {}\n".format(node, ' '.join([str(x) for x in vec])))
         fout.close()
 
     def train(self):
@@ -62,7 +63,3 @@ class GraRep(object):
         look_back = self.g.look_back_list
         for i, embedding in enumerate(self.RepMat):
             self.vectors[look_back[i]] = embedding
-
-
-
-
