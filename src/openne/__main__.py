@@ -4,16 +4,16 @@ import random
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from sklearn.linear_model import LogisticRegression
 from .graph import *
-import node2vec
+from . import node2vec
 from .classify import Classifier, read_node_label
-import line
-import tadw
+from . import line
+from . import tadw
 from .gcn import gcnAPI
-import lle
-import hope
-import lap
-import gf
-import sdne
+from . import lle
+from . import hope
+from . import lap
+from . import gf
+from . import sdne
 from .grarep import GraRep
 import time
 import ast
