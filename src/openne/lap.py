@@ -26,6 +26,7 @@ class LaplacianEigenmaps(object):
     def getLap(self):
         degree_mat = np.diagflat(np.sum(self.adj_mat, axis=1))
         deg_trans = np.diagflat(np.reciprocal(np.sqrt(np.sum(self.adj_mat, axis=1))))
+        deg_trans = np.nan_to_num(deg_trans)
         L = degree_mat-self.adj_mat
 
         # eye = np.eye(self.node_size)
