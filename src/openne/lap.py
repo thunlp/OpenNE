@@ -2,6 +2,10 @@ import numpy as np
 import networkx as nx
 
 
+__author__ = "Wang Binlu"
+__email__ = "wblmail@whu.edu.cn"
+
+
 class LaplacianEigenmaps(object):
     def __init__(self, graph, rep_size=128):
         self.g = graph

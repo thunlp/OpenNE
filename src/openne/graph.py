@@ -26,6 +26,10 @@ class Graph(object):
             self.node_size += 1
             self.G.nodes[node]['status'] = ''
 
+    def read_g(self, g):
+        self.G = g
+        self.encode_node()
+
     def read_adjlist(self, filename):
         """ Read graph from adjacency file in which the edge must be unweighted
             the format of each line: v1 n1 n2 n3 ... nk
