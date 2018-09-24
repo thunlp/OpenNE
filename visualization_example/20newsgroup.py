@@ -4,6 +4,7 @@ import numpy as np
 from tensorflow.contrib.tensorboard.plugins import projector
 import os
 
+LOG_DIR = 'log'
 
 def fetch_data(path):
     from sklearn.datasets import fetch_20newsgroups
@@ -28,28 +29,33 @@ def text_to_graph(text):
 
     g = nx.from_scipy_sparse_matrix(mat, create_using=nx.Graph())
 
-    return g, mat.toarray()
+    return g
 
 dataset = fetch_data('data')
-graph, adj_mat = text_to_graph(dataset.data)
-graph = graph.to_directed()
+
+if not os.path.exists(LOG_DIR+"/network.edgelist"):
+    import networkx as nx
+    graph = text_to_graph(dataset.data)
+    graph = graph.to_directed()
+    nx.write_edgelist(graph, LOG_DIR+"/network.edgelist", data=['weight'])
 
 labels = dataset.target
 
-############# CHANGE YOUR CODE HERE (≈6 line) #############
+############# CHANGE YOUR CODE HERE #############
 from openne.lap import LaplacianEigenmaps
 from openne.graph import Graph
+from openne import node2vec
 g = Graph()
-g.read_g(graph)
+g.read_edgelist(filename=LOG_DIR+"/network.edgelist", weighted=True,
+                directed=True)
+
 model = LaplacianEigenmaps(g)
 vectors = model.vectors
-embeddings = np.zeros((graph.number_of_nodes(), 128))
+embeddings = np.zeros((g.G.number_of_nodes(), 128))
 for i, embedding in vectors.items():
     embeddings[int(i), :] = embedding
 # embeddings = model.num_embeddings  # numpy array
 ########################## END ############################
-
-LOG_DIR = 'log'
 
 # save embeddings and labels
 emb_df = pd.DataFrame(embeddings)
