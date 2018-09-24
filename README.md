@@ -125,6 +125,10 @@ The supported input label format is
 
     node label1 label2 label3...
 
+#### Embedding visualization
+
+To show how to apply dimension reduction methods like t-SNE and PCA to embedding visualization, we choose the 20 newsgroups dataset. Using the text feature, we built the news network by `kneighbors_graph` in scikit-learn. We uploaded the results of different methods in **t-SNE-PCA.pptx** where the colors of nodes represent the labels of nodes.
+
 ## Comparisons with other implementations
 
 Running environment:  <br />
