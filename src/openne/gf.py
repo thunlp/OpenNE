@@ -4,6 +4,10 @@ import tensorflow as tf
 import networkx as nx
 
 
+__author__ = "Wang Binlu"
+__email__ = "wblmail@whu.edu.cn"
+
+
 class GraphFactorization(object):
     def __init__(self, graph, rep_size=128, epoch=120, learning_rate=0.003, weight_decay=1.):
         self.g = graph

@@ -1,4 +1,3 @@
-#pylint: disable=E1101
 from time import time
 import networkx as nx
 import numpy as np

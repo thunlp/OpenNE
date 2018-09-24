@@ -1,4 +1,3 @@
-# pylint: disable=e1101
 import networkx as nx
 import numpy as np
 import scipy.io as sio
