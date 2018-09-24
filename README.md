@@ -127,7 +127,13 @@ The supported input label format is
 
 #### Embedding visualization
 
-To show how to apply dimension reduction methods like t-SNE and PCA to embedding visualization, we choose the 20 newsgroups dataset. Using the text feature, we built the news network by `kneighbors_graph` in scikit-learn. We uploaded the results of different methods in **t-SNE-PCA.pptx** where the colors of nodes represent the labels of nodes.
+To show how to apply dimension reduction methods like t-SNE and PCA to embedding visualization, we choose the 20 newsgroups dataset. Using the text feature, we built the news network by `kneighbors_graph` in scikit-learn. We uploaded the results of different methods in **t-SNE-PCA.pptx** where the colors of nodes represent the labels of nodes. A simple script is shown as follows:
+
+    cd visualization_example
+    python 20newsgroup.py
+    tensorboard --logdir=log/
+
+After running the tensorboard, visit `localhost:6006` to view the result.
 
 ## Comparisons with other implementations
 
