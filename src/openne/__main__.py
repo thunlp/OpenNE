@@ -172,7 +172,7 @@ def main(args):
         print("Training classifier using {:.2f}% nodes...".format(
             args.clf_ratio*100))
         clf = Classifier(vectors=vectors, clf=LogisticRegression())
-        clf.split_train_evaluate(X, Y, args.clf_ratio)
+        clf.split_train_evaluate(X, Y, args.clf_ratio, seed=0)
 
 
 if __name__ == "__main__":
