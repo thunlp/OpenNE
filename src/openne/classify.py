@@ -51,7 +51,7 @@ class Classifier(object):
         Y = self.clf.predict(X_, top_k_list=top_k_list)
         return Y
 
-    def split_train_evaluate(self, X, Y, train_precent, seed=0):
+    def split_train_evaluate(self, X, Y, train_precent, seed=None):
         state = numpy.random.get_state()
 
         training_size = int(train_precent * len(X))
