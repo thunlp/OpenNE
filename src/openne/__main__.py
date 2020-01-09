@@ -163,9 +163,8 @@ def main(args):
                                       epoch=args.epochs, learning_rate=args.lr, weight_decay=args.weight_decay)
     t2 = time.time()
     print(t2-t1)
-    if args.method != 'gcn':
-        print("Saving embeddings...")
-        model.save_embeddings(args.output)
+    print("Saving embeddings...")
+    model.save_embeddings(args.output)
     if args.label_file and args.method != 'gcn':
         vectors = model.vectors
         X, Y = read_node_label(args.label_file)

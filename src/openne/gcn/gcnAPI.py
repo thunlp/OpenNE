@@ -40,6 +40,8 @@ class GCN(object):
         # Init variables
         self.sess.run(tf.global_variables_initializer())
 
+        self.vectors = {}
+
         cost_val = []
 
         # Train model
@@ -51,17 +53,17 @@ class GCN(object):
             feed_dict.update({self.placeholders['dropout']: self.dropout})
 
             # Training step
-            outs = self.sess.run(
-                [self.model.opt_op, self.model.loss, self.model.accuracy], feed_dict=feed_dict)
+            self.outs = self.sess.run(
+                [self.model.opt_op, self.model.loss, self.model.accuracy, self.model.layers[0].embedding], feed_dict=feed_dict)
 
             # Validation
             cost, acc, duration = self.evaluate(self.val_mask)
             cost_val.append(cost)
 
             # Print results
-            print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
+            print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(self.outs[1]),
                   "train_acc=", "{:.5f}".format(
-                outs[2]), "val_loss=", "{:.5f}".format(cost),
+                self.outs[2]), "val_loss=", "{:.5f}".format(cost),
                 "val_acc=", "{:.5f}".format(acc), "time=", "{:.5f}".format(time.time() - t))
 
             if epoch > self.early_stopping and cost_val[-1] > np.mean(cost_val[-(self.early_stopping+1):-1]):
@@ -73,6 +75,19 @@ class GCN(object):
         test_cost, test_acc, test_duration = self.evaluate(self.test_mask)
         print("Test set results:", "cost=", "{:.5f}".format(test_cost),
               "accuracy=", "{:.5f}".format(test_acc), "time=", "{:.5f}".format(test_duration))
+
+        self.embeddings = self.outs[3]
+        for i, embedding in enumerate(self.embeddings):
+            self.vectors[i] = embedding
+
+    # save embedding function
+    def save_embeddings(self, filename):
+        fout = open(filename, 'w')
+        node_num = len(self.vectors)
+        fout.write("{} {}\n".format(node_num, self.hidden1))
+        for node, vec in self.vectors.items():
+            fout.write("{} {}\n".format(node, ' '.join([str(x) for x in vec])))
+        fout.close()
 
     # Define model evaluation function
 
