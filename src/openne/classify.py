@@ -1,3 +1,5 @@
+# we do not need change this
+
 from __future__ import print_function
 import numpy
 from sklearn.multiclass import OneVsRestClassifier
@@ -8,13 +10,13 @@ from time import time
 
 class TopKRanker(OneVsRestClassifier):
     def predict(self, X, top_k_list):
-        probs = numpy.asarray(super(TopKRanker, self).predict_proba(X))
+        probs = numpy.asarray(super(TopKRanker, self).predict_proba(X))  # predict_proba returns a matrix
         all_labels = []
         for i, k in enumerate(top_k_list):
             probs_ = probs[i, :]
             labels = self.classes_[probs_.argsort()[-k:]].tolist()
             probs_[:] = 0
-            probs_[labels] = 1
+            probs_[labels] = 1          # mark top k labels
             all_labels.append(probs_)
         return numpy.asarray(all_labels)
 
