@@ -67,6 +67,7 @@ GraRep:
 
 TADW:
 
+- --feature-file, The file of node features;
 - --lamb, lamb is a hyperparameter in TADW that controls the weight of regularization terms.
 
 GCN:
