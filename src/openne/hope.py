@@ -27,13 +27,13 @@ class HOPE(object):
         graph = self.g.G
         A = nx.to_numpy_matrix(graph)
 
-        # self._beta = 0.0728
+        self._beta = 0.1 # 0.0728
 
-        # M_g = np.eye(graph.number_of_nodes()) - self._beta * A
-        # M_l = self._beta * A
+        M_g = np.eye(graph.number_of_nodes()) - self._beta * A
+        M_l = self._beta * A
 
-        M_g = np.eye(graph.number_of_nodes())
-        M_l = np.dot(A, A)
+        # M_g = np.eye(graph.number_of_nodes())
+        # M_l = np.dot(A, A)
 
         S = np.dot(np.linalg.inv(M_g), M_l)
         # s: \sigma_k

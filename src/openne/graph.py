@@ -3,7 +3,8 @@
 # from time import time
 import networkx as nx
 import pickle as pkl
-import numpy as np
+# import numpy as np
+import torch
 import scipy.sparse as sp
 
 __author__ = "Zhang Zhengyan"
@@ -93,7 +94,7 @@ class Graph(object):
         fin = open(filename, 'r')
         for l in fin.readlines():
             vec = l.split()
-            self.G.nodes[vec[0]]['feature'] = np.array(
+            self.G.nodes[vec[0]]['feature'] = torch.tensor(          # the only place of pytorch tensor
                 [float(x) for x in vec[1:]])
         fin.close()
 
