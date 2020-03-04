@@ -1,6 +1,9 @@
 import math
 import numpy as np
 from numpy import linalg as la
+
+import torch
+
 from sklearn.preprocessing import normalize
 
 
@@ -17,12 +20,14 @@ class GraRep(object):
         graph = self.g.G
         node_size = self.g.node_size
         look_up = self.g.look_up_dict
-        adj = np.zeros((node_size, node_size))
+        # adj = np.zeros((node_size, node_size))
+        adj = torch.zeros((node_size, node_size)) # a symmetric matrix
         for edge in self.g.G.edges():
             adj[look_up[edge[0]]][look_up[edge[1]]] = 1.0
             adj[look_up[edge[1]]][look_up[edge[0]]] = 1.0
         # ScaleSimMat
-        return np.matrix(adj/np.sum(adj, axis=1))
+        return adj/torch.sum(adj, 1)
+        # return np.matrix(adj/np.sum(adj, axis=1))
 
     def GetProbTranMat(self, Ak):
         probTranMat = np.log(Ak/np.tile(
