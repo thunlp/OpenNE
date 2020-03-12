@@ -1,6 +1,7 @@
 from __future__ import print_function
 import random
-import numpy as np
+# import numpy as np
+import torch
 import multiprocessing
 
 
@@ -19,8 +20,8 @@ class BasicWalker:
         Simulate a random walk starting from start node.
         '''
         G = self.G
-        look_up_dict = self.look_up_dict
-        node_size = self.node_size
+        # look_up_dict = self.look_up_dict
+        # node_size = self.node_size
 
         walk = [start_node]
 
@@ -168,8 +169,8 @@ def alias_setup(probs):
     for details
     '''
     K = len(probs)
-    q = np.zeros(K, dtype=np.float32)
-    J = np.zeros(K, dtype=np.int32)
+    q = torch.zeros(K, dtype=torch.float32) # np.zeros(K, dtype=np.float32)
+    J = torch.zeros(K, dtype=torch.int32) # np.zeros(K, dtype=np.int32)
 
     smaller = []
     larger = []
@@ -199,9 +200,11 @@ def alias_draw(J, q):
     Draw sample from a non-uniform discrete distribution using alias sampling.
     '''
     K = len(J)
+    kk = int(torch.floor(torch.rand(1)*K))
+    # kk = int(np.floor(np.random.rand()*K))
 
-    kk = int(np.floor(np.random.rand()*K))
-    if np.random.rand() < q[kk]:
+    if torch.rand(1) < q[kk]:
+   # if np.random.rand() < q[kk]:
         return kk
     else:
         return J[kk]
