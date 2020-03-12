@@ -24,7 +24,7 @@ class SDNE(object):
     def __init__(self, graph, encoder_layer_list, alpha=1e-6, beta=5., nu1=1e-5, nu2=1e-4,
                  batch_size=200, epoch=100, learning_rate=None):
         """
-        encoder_layer_list: a list of numbers of the neuron at each ecdoer layer, the last number is the
+        encoder_layer_list: a list of numbers of the neuron at each encoder layer, the last number is the
         dimension of the output node representation
         Eg:
         if node size is 2000, encoder_layer_list=[1000, 128], then the whole neural network would be
