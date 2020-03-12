@@ -62,5 +62,5 @@ class LLE(object):
         fout.write("{} {}\n".format(node_num, self._d))
         for node, vec in self.vectors.items():
             fout.write("{} {}\n".format(node,
-                                        ' '.join([str(x) for x in vec])))
+                                        ' '.join([str(float(x)) for x in vec])))
         fout.close()
