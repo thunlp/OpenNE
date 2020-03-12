@@ -1,4 +1,5 @@
-import numpy as np
+# import numpy as np
+import torch
 import networkx as nx
 
 
@@ -11,7 +12,7 @@ class LaplacianEigenmaps(object):
         self.g = graph
         self.node_size = self.g.G.number_of_nodes()
         self.rep_size = rep_size
-        self.adj_mat = nx.to_numpy_array(self.g.G)
+        self.adj_mat = torch.from_numpy(nx.to_numpy_array(self.g.G))  #
         self.vectors = {}
         self.embeddings = self.get_train()
         look_back = self.g.look_back_list
@@ -22,24 +23,25 @@ class LaplacianEigenmaps(object):
     def getAdj(self):
         node_size = self.g.node_size
         look_up = self.g.look_up_dict
-        adj = np.zeros((node_size, node_size))
+        adj = torch.zeros((node_size, node_size))
         for edge in self.g.G.edges():
             adj[look_up[edge[0]]][look_up[edge[1]]] = self.g.G[edge[0]][edge[1]]['weight']
         return adj
 
     def getLap(self):
-        degree_mat = np.diagflat(np.sum(self.adj_mat, axis=1))
-        deg_trans = np.diagflat(np.reciprocal(np.sqrt(np.sum(self.adj_mat, axis=1))))
-        deg_trans = np.nan_to_num(deg_trans)
+        degree_mat = torch.diagflat(self.adj_mat.sum(1))  # np.diagflat(np.sum(self.adj_mat, axis=1))
+        deg_trans = torch.diagflat(torch.reciprocal(torch.sqrt(self.adj_mat.sum(1))))  # np.diagflat(np.reciprocal(np.sqrt(np.sum(self.adj_mat, axis=1))))
+        deg_trans[torch.isnan(deg_trans)] = 0  # np.nan_to_num(deg_trans)
         L = degree_mat-self.adj_mat
 
         # eye = np.eye(self.node_size)
-        norm_lap_mat = np.matmul(np.matmul(deg_trans, L), deg_trans)
+        norm_lap_mat = torch.mm(torch.mm(deg_trans, L), deg_trans)  #np.matmul(np.matmul(deg_trans, L), deg_trans)
         return norm_lap_mat
 
     def get_train(self):
         lap_mat = self.getLap()
-        w, vec = np.linalg.eigh(lap_mat)
+        w, vec = torch.symeig(lap_mat, eigenvectors=True)
+        #        np.linalg.eigh(lap_mat)  eigh : optimized for symmetric matrices
 
         start = 0
         for i in range(self.node_size):

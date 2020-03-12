@@ -13,7 +13,7 @@ __email__ = "alan1995wang@outlook.com"
 
 
 class HOPE(object):
-    def __init__(self, graph, d):
+    def __init__(self, graph, d, all_eigenvalues = True):
         '''
           d: representation vector dimension
         '''
@@ -21,6 +21,7 @@ class HOPE(object):
         self._graph = graph.G
         self.g = graph
         self._node_num = graph.node_size
+        self.all_eigenvalues = all_eigenvalues
         self.learn_embedding()
 
     def learn_embedding(self):
@@ -40,11 +41,16 @@ class HOPE(object):
         # s: \sigma_k
 
         ######### let's test the performance of the following 2 algorithms
-        # u, s, vt = lg.svds(S, k=self._d // 2) # this one directly use the d/2-dim core for svd
-        u, s, vt = torch.svd(S) # this one performs a full svd before cutting dimension to d/2
-        u = u[:, 0:self._d//2]
-        s = s[0:self._d//2]
-        vt = vt[0:self._d//2]
+        if self.all_eigenvalues == True:
+            u, s, vt = lg.svds(S, k=self._d // 2) # this one directly use the d/2-dim core for svd
+            u = torch.from_numpy(u)
+            s = torch.from_numpy(s)
+            vt = torch.from_numpy(vt)
+        else:
+            u, s, vt = torch.svd(S) # this one performs a full svd before cutting dimension to d/2
+            u = u[:, 0:self._d//2]
+            s = s[0:self._d//2]
+            vt = vt[0:self._d//2]
 
         sigma = torch.diagflat(torch.sqrt(s))
         X1 = torch.mm(u, sigma)
