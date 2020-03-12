@@ -1,5 +1,6 @@
 import networkx as nx
-import numpy as np
+# import numpy as np
+import torch
 import scipy.io as sio
 import scipy.sparse as sp
 import scipy.sparse.linalg as lg
@@ -25,24 +26,32 @@ class HOPE(object):
     def learn_embedding(self):
 
         graph = self.g.G
-        A = nx.to_numpy_matrix(graph)
+        A = torch.from_numpy(nx.to_numpy_matrix(graph))  # brute force...
 
         self._beta = 0.1 # 0.0728
 
-        M_g = np.eye(graph.number_of_nodes()) - self._beta * A
+        M_g = torch.eye(graph.number_of_nodes()) - self._beta * A
         M_l = self._beta * A
 
         # M_g = np.eye(graph.number_of_nodes())
         # M_l = np.dot(A, A)
 
-        S = np.dot(np.linalg.inv(M_g), M_l)
+        S = torch.mm(torch.inverse(M_g),M_l)  # np.dot(np.linalg.inv(M_g), M_l)
         # s: \sigma_k
-        u, s, vt = lg.svds(S, k=self._d // 2)
-        sigma = np.diagflat(np.sqrt(s))
-        X1 = np.dot(u, sigma)
-        X2 = np.dot(vt.T, sigma)
+
+        ######### let's test the performance of the following 2 algorithms
+        # u, s, vt = lg.svds(S, k=self._d // 2) # this one directly use the d/2-dim core for svd
+        u, s, vt = torch.svd(S) # this one performs a full svd before cutting dimension to d/2
+        u = u[:, 0:self._d//2]
+        s = s[0:self._d//2]
+        vt = vt[0:self._d//2]
+
+        sigma = torch.diagflat(torch.sqrt(s))
+        X1 = torch.mm(u, sigma)
+        X2 = torch.mm(vt.t(), sigma)
         # self._X = X2
-        self._X = np.concatenate((X1, X2), axis=1)
+        # self._X = np.concatenate((X1, X2), axis=1)
+        self._X = torch.cat((X1, X2), dim=1)
 
     @property
     def vectors(self):
