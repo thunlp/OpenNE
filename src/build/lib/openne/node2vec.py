@@ -30,6 +30,7 @@ class Node2vec(object):
         kwargs["sg"] = 1
 
         self.size = kwargs["size"]
+        print(kwargs["sentences"])
         print("Learning representation...")
         word2vec = Word2Vec(**kwargs)
         self.vectors = {}

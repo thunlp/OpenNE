@@ -31,7 +31,7 @@ class HOPE(object):
 
         self._beta = 0.1 # 0.0728
 
-        M_g = torch.eye(graph.number_of_nodes()) - self._beta * A
+        M_g = torch.eye(graph.number_of_nodes(),dtype=torch.float64) - self._beta * A
         M_l = self._beta * A
 
         # M_g = np.eye(graph.number_of_nodes())

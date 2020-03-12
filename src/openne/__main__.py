@@ -20,6 +20,7 @@ import ast
 
 
 def parse_args():
+    print("parse_args")
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
                             conflict_handler='resolve')
     parser.add_argument('--input', required=True,
