@@ -1,6 +1,7 @@
 from time import time
 import networkx as nx
 import numpy as np
+import torch
 import scipy.io as sio
 import scipy.sparse as sp
 import scipy.sparse.linalg as lg
@@ -40,8 +41,9 @@ class LLE(object):
         I_min_A = I_n - A
         print(I_min_A)
         u, s, vt = lg.svds(I_min_A, k=self._d + 1, which='SM')
+        vt = torch.tensor(vt)
         t2 = time()
-        self._X = vt.T
+        self._X = vt.t()
         self._X = self._X[:, 1:]
         return self._X, (t2 - t1)
         # I_n = sp.eye(graph.number_of_nodes())

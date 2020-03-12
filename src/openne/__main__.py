@@ -42,6 +42,8 @@ def parse_args():
                         help='The training epochs of LINE and GCN')
     parser.add_argument('--p', default=1.0, type=float)
     parser.add_argument('--q', default=1.0, type=float)
+    parser.add_argument('--no-all-eigenvalues', dest='all-eigenvalues',action='store_false')
+    parser.set_defaults(all_eigenvalues=True)
     parser.add_argument('--method', required=True, choices=[
         'node2vec',
         'deepWalk',
@@ -150,7 +152,7 @@ def main(args):
     elif args.method == 'lle':
         model = lle.LLE(graph=g, d=args.representation_size)
     elif args.method == 'hope':
-        model = hope.HOPE(graph=g, d=args.representation_size)
+        model = hope.HOPE(graph=g, d=args.representation_size,all_eigenvalues=args.all_eigenvalues)
     elif args.method == 'sdne':
         encoder_layer_list = ast.literal_eval(args.encoder_list)
         model = sdne.SDNE(g, encoder_layer_list=encoder_layer_list,
