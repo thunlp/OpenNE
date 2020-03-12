@@ -20,7 +20,7 @@ class TopKRanker(OneVsRestClassifier):
             probs_[:] = 0
             probs_[labels] = 1          # mark top k labels
             all_labels.append(probs_)
-        return torch.tensor(all_labels)  # return a Tensor
+        return torch.stack(all_labels)  # return a Tensor
 
 
 class Classifier(object):
@@ -32,7 +32,7 @@ class Classifier(object):
 
     def train(self, X, Y, Y_all):
         self.binarizer.fit(Y_all)
-        X_train = [self.embeddings[x] for x in X]
+        X_train = torch.stack([self.embeddings[x] for x in X])  # [numpy.asarray(self.embeddings[x]) for x in X]
         Y = self.binarizer.transform(Y) # lhs Y a numpy array
         self.clf.fit(X_train, Y)
 
@@ -52,7 +52,7 @@ class Classifier(object):
 
     def predict(self, X, top_k_list):
         #X_ = numpy.asarray([self.embeddings[x] for x in X])
-        X_ = torch.tensor([self.embeddings[x] for x in X])
+        X_ = torch.stack([self.embeddings[x] for x in X])  # torch.tensor([numpy.asarray(self.embeddings[x]) for x in X])
         Y = self.clf.predict(X_, top_k_list=top_k_list)
         return Y
 
