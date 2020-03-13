@@ -41,6 +41,8 @@ def parse_args():
                         help='Window size of skipgram model.')
     parser.add_argument('--epochs', default=5, type=int,
                         help='The training epochs of LINE and GCN')
+    parser.add_argument('--iterations', default=20, type=int,
+                        help='The iteration number of TADW.')
     parser.add_argument('--p', default=1.0, type=float)
     parser.add_argument('--q', default=1.0, type=float)
     parser.add_argument('--method', required=True, choices=[
@@ -137,7 +139,7 @@ def main(args):
         g.read_node_label(args.label_file)
         g.read_node_features(args.feature_file)
         model = tadw.TADW(
-            graph=g, dim=args.representation_size, lamb=args.lamb)
+            graph=g, dim=args.representation_size, lamb=args.lamb, iters=args.iterations)
     elif args.method == 'gcn':
         assert args.label_file != ''
         assert args.feature_file != ''
