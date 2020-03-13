@@ -13,7 +13,7 @@ __email__ = "alan1995wang@outlook.com"
 
 
 class HOPE(object):
-    def __init__(self, graph, d, all_eigenvalues = True):
+    def __init__(self, graph, d):
         '''
           d: representation vector dimension
         '''
@@ -21,7 +21,6 @@ class HOPE(object):
         self._graph = graph.G
         self.g = graph
         self._node_num = graph.node_size
-        self.all_eigenvalues = all_eigenvalues
         self.learn_embedding()
 
     def learn_embedding(self):
@@ -29,28 +28,23 @@ class HOPE(object):
         graph = self.g.G
         A = torch.from_numpy(nx.to_numpy_matrix(graph))  # brute force...
 
-        self._beta = 0.1 # 0.0728
+        # Katz
+        # self._beta = 0.1 # 0.0728
+        # M_g = torch.eye(graph.number_of_nodes(),dtype=torch.float64) - self._beta * A
+        # M_l = self._beta * A
 
-        M_g = torch.eye(graph.number_of_nodes(),dtype=torch.float64) - self._beta * A
-        M_l = self._beta * A
-
-        # M_g = np.eye(graph.number_of_nodes())
-        # M_l = np.dot(A, A)
-
-        S = torch.mm(torch.inverse(M_g),M_l)  # np.dot(np.linalg.inv(M_g), M_l)
+        # common neighbours
+        M_g = torch.eye(graph.number_of_nodes(), dtype=torch.float64)
+        print("MG")
+        M_l = torch.mm(A, A)
+        print("ML")
+        S = torch.mm(torch.inverse(M_g), M_l)  # np.dot(np.linalg.inv(M_g), M_l)
         # s: \sigma_k
 
-        ######### let's test the performance of the following 2 algorithms
-        if self.all_eigenvalues == True:
-            u, s, vt = lg.svds(S, k=self._d // 2) # this one directly use the d/2-dim core for svd
-            u = torch.from_numpy(u)
-            s = torch.from_numpy(s)
-            vt = torch.from_numpy(vt)
-        else:
-            u, s, vt = torch.svd(S) # this one performs a full svd before cutting dimension to d/2
-            u = u[:, 0:self._d//2]
-            s = s[0:self._d//2]
-            vt = vt[0:self._d//2]
+        u, s, vt = lg.svds(S, k=self._d // 2)  # this one directly use the d/2-dim core for svd
+        u = torch.from_numpy(u)
+        s = torch.from_numpy(s)
+        vt = torch.from_numpy(vt)
 
         sigma = torch.diagflat(torch.sqrt(s))
         X1 = torch.mm(u, sigma)
