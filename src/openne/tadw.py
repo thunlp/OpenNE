@@ -50,10 +50,14 @@ class TADW(object):
 
     def preprocessFeature(self):
         if self.features.shape[1] > 200:
-            U, S, VT = torch.svd(self.features)
-            # U, S, VT = la.svd(self.features)
-            Ud = U[:, 0:200]
-            Sd = S[0:200]
+            # U, S, VT = torch.svd(self.features)
+            # Ud = U[:, 0:200]
+            # Sd = S[0:200]
+
+            U, S, VT = lg.svds(self.features, k=200)
+            Ud = torch.from_numpy(U)
+            Sd = torch.from_numpy(S)
+
             self.features = Ud*Sd  #.reshape(200)
 
     def train(self): # todo: rewrite with learning-model-based method
