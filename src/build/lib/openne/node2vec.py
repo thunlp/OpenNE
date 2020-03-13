@@ -2,6 +2,7 @@ from __future__ import print_function
 import time
 from gensim.models import Word2Vec
 from . import walker
+import torch
 
 
 class Node2vec(object):
@@ -30,12 +31,12 @@ class Node2vec(object):
         kwargs["sg"] = 1
 
         self.size = kwargs["size"]
-        print(kwargs["sentences"])
+        # print(kwargs["sentences"])
         print("Learning representation...")
         word2vec = Word2Vec(**kwargs)
         self.vectors = {}
         for word in graph.G.nodes():
-            self.vectors[word] = word2vec.wv[word]
+            self.vectors[word] = torch.Tensor(word2vec.wv[word])
         del word2vec
 
     def save_embeddings(self, filename):
