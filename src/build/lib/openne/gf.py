@@ -44,12 +44,13 @@ class GraphFactorization(object):
 
         mat_mask = 1.*(adj_mat > 0)
 
-        _embeddings = Variable(torch.nn.init.xavier_normal_(torch.FloatTensor(self.node_size, self.rep_size)), requires_grad=True)
+        _embeddings = Variable(torch.nn.init.xavier_uniform_(torch.FloatTensor(self.node_size, self.rep_size)), requires_grad=True)
         # _embeddings = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_size, self.rep_size]),
         #                          dtype=tf.float32, name='embeddings')
+        # print(_embeddings)
 
-        Adj = Variable(torch.FloatTensor(self.node_size, self.node_size), requires_grad=False)
-        AdjMask = Variable(torch.FloatTensor(self.node_size, self.node_size), requires_grad=False)
+        Adj = Variable(torch.FloatTensor(adj_mat), requires_grad=False)
+        AdjMask = Variable(torch.FloatTensor(mat_mask), requires_grad=False)
         # Adj = tf.placeholder(tf.float32, [self.node_size, self.node_size], name='adj_mat')
         # AdjMask = tf.placeholder(tf.float32, [self.node_size, self.node_size], name='adj_mask')
 
