@@ -47,7 +47,7 @@ def parse_args():
     parser.add_argument('--q', default=1.0, type=float)
     parser.add_argument('--method', required=True, choices=[
         'node2vec',
-        'deepWalk',
+        'deepWalk',  #  todo: change arg name to deepwalk
         'line',
         'gcn',
         'grarep',
