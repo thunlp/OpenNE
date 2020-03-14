@@ -39,7 +39,7 @@ class LLE(object):
         normalize(A, norm='l1', axis=1, copy=False)
         I_n = sp.eye(graph.number_of_nodes())
         I_min_A = I_n - A
-        print(I_min_A)
+        # print(I_min_A)
         u, s, vt = lg.svds(I_min_A, k=self._d + 1, which='SM')
         vt = torch.tensor(vt)
         t2 = time()
@@ -52,8 +52,10 @@ class LLE(object):
     def vectors(self):
         vectors = {}
         look_back = self.g.look_back_list
+        print(len(look_back))
         for i, embedding in enumerate(self._X):
             vectors[look_back[i]] = embedding
+        print(len(vectors))
         return vectors
 
     def save_embeddings(self, filename):
