@@ -23,7 +23,7 @@ class LLE(object):
           d: int
             dimension of the embedding
         '''
-
+        print("__INIT__")
         self._d = d
         self._method_name = "lle_svd"
         self.g = graph

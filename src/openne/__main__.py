@@ -118,6 +118,7 @@ def main(args):
     elif args.graph_format == 'edgelist':
         g.read_edgelist(filename=args.input, weighted=args.weighted,
                         directed=args.directed)
+    print("Read edges.")
     if args.method == 'node2vec':
         model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
                                   num_paths=args.number_walks, dim=args.representation_size,
