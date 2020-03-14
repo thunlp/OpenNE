@@ -170,8 +170,8 @@ def alias_setup(probs):
     for details
     '''
     K = len(probs)
-    q = torch.zeros(K, dtype=torch.float32) # np.zeros(K, dtype=np.float32)
-    J = torch.zeros(K, dtype=torch.int32) # np.zeros(K, dtype=np.int32)
+    q = [0 for i in range(K)] # torch.zeros(K, dtype=torch.float32) # np.zeros(K, dtype=np.float32)
+    J = [0.0 for i in range(K)] # np.zeros(K, dtype=np.int32)
 
     smaller = []
     larger = []
