@@ -2,6 +2,7 @@ from __future__ import print_function
 import random
 # import numpy as np
 import torch
+import math
 import multiprocessing
 
 
@@ -200,10 +201,10 @@ def alias_draw(J, q):
     Draw sample from a non-uniform discrete distribution using alias sampling.
     '''
     K = len(J)
-    kk = int(torch.floor(torch.rand(1)*K))
+    kk = int(math.floor(random.random()*K))
     # kk = int(np.floor(np.random.rand()*K))
 
-    if torch.rand(1) < q[kk]:
+    if random.random() < q[kk]:
    # if np.random.rand() < q[kk]:
         return kk
     else:
