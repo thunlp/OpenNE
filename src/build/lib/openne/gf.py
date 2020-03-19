@@ -1,9 +1,5 @@
 from __future__ import print_function
-import numpy as np
-import tensorflow as tf
 import torch
-from torch.autograd import Variable
-import networkx as nx
 
 
 __author__ = "Wang Binlu"
@@ -43,7 +39,7 @@ class GraphFactorization(object):
         adj_mat = self.adj_mat
         mat_mask = torch.as_tensor(adj_mat > 0, dtype=torch.float32)
 
-        _embeddings = Variable(torch.nn.init.xavier_uniform_(torch.FloatTensor(self.node_size, self.rep_size)),
+        _embeddings = torch.tensor(torch.nn.init.xavier_uniform_(torch.FloatTensor(self.node_size, self.rep_size)),
                                requires_grad=True)
         print(_embeddings)
 

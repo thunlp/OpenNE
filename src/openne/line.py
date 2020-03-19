@@ -3,13 +3,15 @@ import random
 import math
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-import tensorflow as tf
+# import tensorflow as tf
 from .classify import Classifier, read_node_label
+import torch
+import torch.nn.functional as F
 
 
 class _LINE(object):
 
-    def __init__(self, graph, rep_size=128, batch_size=1000, negative_ratio=5, order=3):
+    def __init__(self, graph, rep_size=128, batch_size=1000, negative_ratio=5, order=3, lr=0.001):
         self.cur_epoch = 0
         self.order = order
         self.g = graph
@@ -17,43 +19,45 @@ class _LINE(object):
         self.rep_size = rep_size
         self.batch_size = batch_size
         self.negative_ratio = negative_ratio
-
+        self.lr = lr
         self.gen_sampling_table()
-        self.sess = tf.Session()
+        # self.sess = tf.Session()
         cur_seed = random.getrandbits(32)
-        initializer = tf.contrib.layers.xavier_initializer(
-            uniform=False, seed=cur_seed)
-        with tf.variable_scope("model", reuse=None, initializer=initializer):
-            self.build_graph()
-        self.sess.run(tf.global_variables_initializer())
+        # initializer = tf.contrib.layers.xavier_initializer(
+        #    uniform=False, seed=cur_seed)
+        # with tf.variable_scope("model", reuse=None, initializer=initializer):
+        self.build_graph()
+        # self.sess.run(tf.global_variables_initializer())
 
     def build_graph(self):
-        self.h = tf.placeholder(tf.int32, [None])
-        self.t = tf.placeholder(tf.int32, [None])
-        self.sign = tf.placeholder(tf.float32, [None])
-
+        # self.h = tf.placeholder(tf.int32, [None])
+        # self.t = tf.placeholder(tf.int32, [None])
+        # self.sign = tf.placeholder(tf.float32, [None])
         cur_seed = random.getrandbits(32)
-        self.embeddings = tf.get_variable(name="embeddings"+str(self.order), shape=[
-                                          self.node_size, self.rep_size], initializer=tf.contrib.layers.xavier_initializer(uniform=False, seed=cur_seed))
-        self.context_embeddings = tf.get_variable(name="context_embeddings"+str(self.order), shape=[
-                                                  self.node_size, self.rep_size], initializer=tf.contrib.layers.xavier_initializer(uniform=False, seed=cur_seed))
-        # self.h_e = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.embeddings, self.h), 1)
-        # self.t_e = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.embeddings, self.t), 1)
-        # self.t_e_context = tf.nn.l2_normalize(tf.nn.embedding_lookup(self.context_embeddings, self.t), 1)
-        self.h_e = tf.nn.embedding_lookup(self.embeddings, self.h)
-        self.t_e = tf.nn.embedding_lookup(self.embeddings, self.t)
-        self.t_e_context = tf.nn.embedding_lookup(
-            self.context_embeddings, self.t)
-        self.second_loss = -tf.reduce_mean(tf.log_sigmoid(
-            self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e_context), axis=1)))
-        self.first_loss = -tf.reduce_mean(tf.log_sigmoid(
-            self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e), axis=1)))
+        torch.manual_seed(cur_seed)
+        self.embeddings = torch.tensor(torch.nn.init.xavier_normal_([self.node_size, self.rep_size]),
+                                       requires_grad=True)
+        # tf.get_variable(name="embeddings"+str(self.order), shape=[
+        #               self.node_size, self.rep_size], initializer=tf.contrib.layers.xavier_initializer(uniform=False, seed=cur_seed))
+        self.context_embeddings = self.embeddings.clone().detach().requires_grad_(True) #tf.get_variable(name="context_embeddings"+str(self.order), shape=[
+                                  #                self.node_size, self.rep_size], initializer=tf.contrib.layers.xavier_initializer(uniform=False, seed=cur_seed))
+        #self.h_e = tf.nn.embedding_lookup(self.embeddings, self.h)
+        #self.t_e = tf.nn.embedding_lookup(self.embeddings, self.t)
+        #self.t_e_context = tf.nn.embedding_lookup(
+        #    self.context_embeddings, self.t)
+        self.second_loss=lambda s, h, t: -(F.logsigmoid(s*(self.embeddings[h]*self.context_embeddings[t]).sum(dim=1))).mean()
+        self.first_loss=lambda s, h, t: -(F.logsigmoid(s*(self.embeddings[h]*self.embeddings[t]).sum(dim=1))).mean()
+        #self.second_loss = -tf.reduce_mean(tf.log_sigmoid(
+        #    self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e_context), axis=1)))
+        #self.first_loss = -tf.reduce_mean(tf.log_sigmoid(
+         #   self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e), axis=1)))
         if self.order == 1:
             self.loss = self.first_loss
         else:
             self.loss = self.second_loss
-        optimizer = tf.train.AdamOptimizer(0.001)
-        self.train_op = optimizer.minimize(self.loss)
+        self.optimizer = torch.optim.Adam([self.embeddings, self.context_embeddings], lr=self.lr)
+        # optimizer = tf.train.AdamOptimizer(0.001)
+        # self.train_op = optimizer.minimize(self.loss)
 
     def train_one_epoch(self):
         sum_loss = 0.0
@@ -61,13 +65,18 @@ class _LINE(object):
         batch_id = 0
         for batch in batches:
             h, t, sign = batch
-            feed_dict = {
-                self.h: h,
-                self.t: t,
-                self.sign: sign,
-            }
-            _, cur_loss = self.sess.run([self.train_op, self.loss], feed_dict)
+            self.optimizer.zero_grad()
+            cur_loss = self.loss(sign,h,t)
             sum_loss += cur_loss
+            cur_loss.backward()
+            self.optimizer.step()
+            # feed_dict = {
+            #     self.h: h,
+            #     self.t: t,
+            #     self.sign: sign,
+            # }
+            # _, cur_loss = self.sess.run([self.train_op, self.loss], feed_dict)
+            # sum_loss += cur_loss
             batch_id += 1
         print('epoch:{} sum of loss:{!s}'.format(self.cur_epoch, sum_loss))
         self.cur_epoch += 1
@@ -81,9 +90,8 @@ class _LINE(object):
         edges = [(look_up[x[0]], look_up[x[1]]) for x in self.g.G.edges()]
 
         data_size = self.g.G.number_of_edges()
-        edge_set = set([x[0]*numNodes+x[1] for x in edges])
-        shuffle_indices = np.random.permutation(np.arange(data_size))
-
+        # edge_set = set([x[0]*numNodes+x[1] for x in edges])
+        shuffle_indices = torch.randperm(data_size).tolist()
         # positive or negative mod
         mod = 0
         mod_size = 1 + self.negative_ratio
@@ -120,35 +128,35 @@ class _LINE(object):
                 end_index = min(start_index+self.batch_size, data_size)
 
     def gen_sampling_table(self):
-        table_size = 1e8
+        table_size = int(1e8)
         power = 0.75
         numNodes = self.node_size
 
         print("Pre-procesing for non-uniform negative sampling!")
-        node_degree = np.zeros(numNodes)  # out degree
+        node_degree = torch.zeros(numNodes)  # out degree
 
         look_up = self.g.look_up_dict
         for edge in self.g.G.edges():
             node_degree[look_up[edge[0]]
                         ] += self.g.G[edge[0]][edge[1]]["weight"]
 
-        norm = sum([math.pow(node_degree[i], power) for i in range(numNodes)])
+        norm = (node_degree**power).sum()  # sum([math.pow(node_degree[i], power) for i in range(numNodes)])
 
-        self.sampling_table = np.zeros(int(table_size), dtype=np.uint32)
+        self.sampling_table = torch.zeros(table_size, dtype=torch.int32) # does not support uint32
 
         p = 0
         i = 0
         for j in range(numNodes):
-            p += float(math.pow(node_degree[j], power)) / norm
-            while i < table_size and float(i) / table_size < p:
+            p += (node_degree[j]**power) / norm
+            while i < table_size and i / table_size < p:
                 self.sampling_table[i] = j
                 i += 1
 
         data_size = self.g.G.number_of_edges()
-        self.edge_alias = np.zeros(data_size, dtype=np.int32)
-        self.edge_prob = np.zeros(data_size, dtype=np.float32)
-        large_block = np.zeros(data_size, dtype=np.int32)
-        small_block = np.zeros(data_size, dtype=np.int32)
+        self.edge_alias = [0 for i in range(data_size)]
+        self.edge_prob = [0 for i in range(data_size)]
+        large_block = [0 for i in range(data_size)]
+        small_block = [0 for i in range(data_size)]
 
         total_sum = sum([self.g.G[edge[0]][edge[1]]["weight"]
                          for edge in self.g.G.edges()])
@@ -190,7 +198,8 @@ class _LINE(object):
 
     def get_embeddings(self):
         vectors = {}
-        embeddings = self.embeddings.eval(session=self.sess)
+        # embeddings = self.embeddings.eval(session=self.sess)
+        embeddings = self.embeddings.detach()
         # embeddings = self.sess.run(tf.nn.l2_normalize(self.embeddings.eval(session=self.sess), 1))
         look_back = self.g.look_back_list
         for i, embedding in enumerate(embeddings):
@@ -200,16 +209,16 @@ class _LINE(object):
 
 class LINE(object):
 
-    def __init__(self, graph, rep_size=128, batch_size=1000, epoch=10, negative_ratio=5, order=3, label_file=None, clf_ratio=0.5, auto_save=True):
+    def __init__(self, graph, rep_size=128, batch_size=1000, epoch=10, negative_ratio=5, order=3, label_file=None, clf_ratio=0.5, auto_save=True, lr=0.001):
         self.rep_size = rep_size
         self.order = order
         self.best_result = 0
         self.vectors = {}
         if order == 3:
-            self.model1 = _LINE(graph, rep_size/2, batch_size,
-                                negative_ratio, order=1)
-            self.model2 = _LINE(graph, rep_size/2, batch_size,
-                                negative_ratio, order=2)
+            self.model1 = _LINE(graph, rep_size//2, batch_size,
+                                negative_ratio, order=1, lr=lr)
+            self.model2 = _LINE(graph, rep_size//2, batch_size,
+                                negative_ratio, order=2, lr=lr)
             for i in range(epoch):
                 self.model1.train_one_epoch()
                 self.model2.train_one_epoch()
@@ -229,7 +238,7 @@ class LINE(object):
 
         else:
             self.model = _LINE(graph, rep_size, batch_size,
-                               negative_ratio, order=self.order)
+                               negative_ratio, order=self.order, lr=lr)
             for i in range(epoch):
                 self.model.train_one_epoch()
                 if label_file:
