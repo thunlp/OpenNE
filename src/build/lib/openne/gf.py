@@ -40,14 +40,14 @@ class GraphFactorization(object):
 
     def get_train(self):
 
-        adj_mat = self.adj_mat
 
-        mat_mask = 1.*(adj_mat > 0)
+        adj_mat = self.adj_mat
+        mat_mask = torch.as_tensor(adj_mat > 0, dtype=torch.float32)
 
         _embeddings = Variable(torch.nn.init.xavier_uniform_(torch.FloatTensor(self.node_size, self.rep_size)), requires_grad=True)
         # _embeddings = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_size, self.rep_size]),
         #                          dtype=tf.float32, name='embeddings')
-        # print(_embeddings)
+        print(_embeddings)
 
         Adj = Variable(torch.FloatTensor(adj_mat), requires_grad=False)
         AdjMask = Variable(torch.FloatTensor(mat_mask), requires_grad=False)

@@ -50,7 +50,7 @@ class GraphFactorization(object):
         print(_embeddings)
 
         Adj = Variable(torch.FloatTensor(adj_mat), requires_grad=False)
-        AdjMask = Variable(torch.Tensor(mat_mask), requires_grad=False)
+        AdjMask = Variable(torch.FloatTensor(mat_mask), requires_grad=False)
         # Adj = tf.placeholder(tf.float32, [self.node_size, self.node_size], name='adj_mat')
         # AdjMask = tf.placeholder(tf.float32, [self.node_size, self.node_size], name='adj_mask')
 
