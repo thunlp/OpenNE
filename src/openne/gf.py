@@ -1,9 +1,6 @@
 from __future__ import print_function
-import numpy as np
-import tensorflow as tf
 import torch
 from torch.autograd import Variable
-import networkx as nx
 
 
 __author__ = "Wang Binlu"
