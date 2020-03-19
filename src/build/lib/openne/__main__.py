@@ -126,7 +126,7 @@ def main(args):
     elif args.method == 'line':
         if args.label_file and not args.no_auto_save:
             model = line.LINE(g, epoch=args.epochs, rep_size=args.representation_size, order=args.order,
-                              label_file=args.label_file, clf_ratio=args.clf_ratio)
+                              label_file=args.label_file, clf_ratio=args.clf_ratio, lr=args.lr)
         else:
             model = line.LINE(g, epoch=args.epochs,
                               rep_size=args.representation_size, order=args.order)

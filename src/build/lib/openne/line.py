@@ -3,7 +3,6 @@ import random
 import math
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-# import tensorflow as tf
 from .classify import Classifier, read_node_label
 import torch
 import torch.nn.functional as F
@@ -20,44 +19,26 @@ class _LINE(object):
         self.batch_size = batch_size
         self.negative_ratio = negative_ratio
         self.lr = lr
+        self.table_size=1e8
         self.gen_sampling_table()
-        # self.sess = tf.Session()
         cur_seed = random.getrandbits(32)
-        # initializer = tf.contrib.layers.xavier_initializer(
-        #    uniform=False, seed=cur_seed)
-        # with tf.variable_scope("model", reuse=None, initializer=initializer):
         self.build_graph()
-        # self.sess.run(tf.global_variables_initializer())
 
     def build_graph(self):
-        # self.h = tf.placeholder(tf.int32, [None])
-        # self.t = tf.placeholder(tf.int32, [None])
-        # self.sign = tf.placeholder(tf.float32, [None])
         cur_seed = random.getrandbits(32)
         torch.manual_seed(cur_seed)
-        self.embeddings = torch.tensor(torch.nn.init.xavier_normal_([self.node_size, self.rep_size]),
-                                       requires_grad=True)
-        # tf.get_variable(name="embeddings"+str(self.order), shape=[
-        #               self.node_size, self.rep_size], initializer=tf.contrib.layers.xavier_initializer(uniform=False, seed=cur_seed))
-        self.context_embeddings = self.embeddings.clone().detach().requires_grad_(True) #tf.get_variable(name="context_embeddings"+str(self.order), shape=[
-                                  #                self.node_size, self.rep_size], initializer=tf.contrib.layers.xavier_initializer(uniform=False, seed=cur_seed))
-        #self.h_e = tf.nn.embedding_lookup(self.embeddings, self.h)
-        #self.t_e = tf.nn.embedding_lookup(self.embeddings, self.t)
-        #self.t_e_context = tf.nn.embedding_lookup(
-        #    self.context_embeddings, self.t)
-        self.second_loss=lambda s, h, t: -(F.logsigmoid(s*(self.embeddings[h]*self.context_embeddings[t]).sum(dim=1))).mean()
-        self.first_loss=lambda s, h, t: -(F.logsigmoid(s*(self.embeddings[h]*self.embeddings[t]).sum(dim=1))).mean()
-        #self.second_loss = -tf.reduce_mean(tf.log_sigmoid(
-        #    self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e_context), axis=1)))
-        #self.first_loss = -tf.reduce_mean(tf.log_sigmoid(
-         #   self.sign*tf.reduce_sum(tf.multiply(self.h_e, self.t_e), axis=1)))
+        self.embeddings = torch.nn.init.xavier_normal_(
+            torch.FloatTensor(self.node_size, self.rep_size).requires_grad_(True))
+        self.context_embeddings = self.embeddings.clone().detach().requires_grad_(True)
+        self.second_loss=lambda s, h, t: -(F.logsigmoid(
+            s*(self.embeddings[h]*self.context_embeddings[t]).sum(dim=1))).mean()
+        self.first_loss=lambda s, h, t: -(F.logsigmoid(
+            s*(self.embeddings[h]*self.embeddings[t]).sum(dim=1))).mean()
         if self.order == 1:
             self.loss = self.first_loss
         else:
             self.loss = self.second_loss
         self.optimizer = torch.optim.Adam([self.embeddings, self.context_embeddings], lr=self.lr)
-        # optimizer = tf.train.AdamOptimizer(0.001)
-        # self.train_op = optimizer.minimize(self.loss)
 
     def train_one_epoch(self):
         sum_loss = 0.0
@@ -66,17 +47,10 @@ class _LINE(object):
         for batch in batches:
             h, t, sign = batch
             self.optimizer.zero_grad()
-            cur_loss = self.loss(sign,h,t)
+            cur_loss = self.loss(torch.tensor(sign),h,t)
             sum_loss += cur_loss
             cur_loss.backward()
             self.optimizer.step()
-            # feed_dict = {
-            #     self.h: h,
-            #     self.t: t,
-            #     self.sign: sign,
-            # }
-            # _, cur_loss = self.sess.run([self.train_op, self.loss], feed_dict)
-            # sum_loss += cur_loss
             batch_id += 1
         print('epoch:{} sum of loss:{!s}'.format(self.cur_epoch, sum_loss))
         self.cur_epoch += 1
@@ -84,15 +58,13 @@ class _LINE(object):
     def batch_iter(self):
         look_up = self.g.look_up_dict
 
-        table_size = 1e8
+        table_size = self.table_size
         numNodes = self.node_size
 
         edges = [(look_up[x[0]], look_up[x[1]]) for x in self.g.G.edges()]
 
         data_size = self.g.G.number_of_edges()
-        # edge_set = set([x[0]*numNodes+x[1] for x in edges])
         shuffle_indices = torch.randperm(data_size).tolist()
-        # positive or negative mod
         mod = 0
         mod_size = 1 + self.negative_ratio
         h = []
@@ -128,36 +100,33 @@ class _LINE(object):
                 end_index = min(start_index+self.batch_size, data_size)
 
     def gen_sampling_table(self):
-        table_size = int(1e8)
+        table_size = int(self.table_size)
         power = 0.75
         numNodes = self.node_size
 
-        print("Pre-procesing for non-uniform negative sampling!")
+        print("Pre-processing for non-uniform negative sampling!")
         node_degree = torch.zeros(numNodes)  # out degree
-
         look_up = self.g.look_up_dict
         for edge in self.g.G.edges():
             node_degree[look_up[edge[0]]
                         ] += self.g.G[edge[0]][edge[1]]["weight"]
 
-        norm = (node_degree**power).sum()  # sum([math.pow(node_degree[i], power) for i in range(numNodes)])
-
-        self.sampling_table = torch.zeros(table_size, dtype=torch.int32) # does not support uint32
-
+        norm = float((node_degree**power).sum())  # float is faster than tensor when visited
+        node_degree=node_degree.tolist() # list has fastest visit speed
+        self.sampling_table = np.zeros(table_size, dtype=np.int32) # torch is much slower when referring to frequent visits
         p = 0
         i = 0
         for j in range(numNodes):
-            p += (node_degree[j]**power) / norm
+            p += math.pow(node_degree[j], power) / norm
             while i < table_size and i / table_size < p:
                 self.sampling_table[i] = j
                 i += 1
-
+        # self.sampling_table=torch.from_numpy(self.sampling_table)
         data_size = self.g.G.number_of_edges()
         self.edge_alias = [0 for i in range(data_size)]
         self.edge_prob = [0 for i in range(data_size)]
         large_block = [0 for i in range(data_size)]
         small_block = [0 for i in range(data_size)]
-
         total_sum = sum([self.g.G[edge[0]][edge[1]]["weight"]
                          for edge in self.g.G.edges()])
         norm_prob = [self.g.G[edge[0]][edge[1]]["weight"] *
@@ -188,7 +157,6 @@ class _LINE(object):
             else:
                 large_block[num_large_block] = cur_large_block
                 num_large_block += 1
-
         while num_large_block:
             num_large_block -= 1
             self.edge_prob[large_block[num_large_block]] = 1
@@ -198,9 +166,7 @@ class _LINE(object):
 
     def get_embeddings(self):
         vectors = {}
-        # embeddings = self.embeddings.eval(session=self.sess)
         embeddings = self.embeddings.detach()
-        # embeddings = self.sess.run(tf.nn.l2_normalize(self.embeddings.eval(session=self.sess), 1))
         look_back = self.g.look_back_list
         for i, embedding in enumerate(embeddings):
             vectors[look_back[i]] = embedding
@@ -276,5 +242,5 @@ class LINE(object):
         fout.write("{} {}\n".format(node_num, self.rep_size))
         for node, vec in self.vectors.items():
             fout.write("{} {}\n".format(node,
-                                        ' '.join([str(x) for x in vec])))
+                                        ' '.join([str(float(x)) for x in vec])))
         fout.close()
