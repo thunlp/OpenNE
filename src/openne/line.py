@@ -132,7 +132,7 @@ class _LINE(object):
         power = 0.75
         numNodes = self.node_size
 
-        print("Pre-procesing for non-uniform negative sampling!")
+        print("Pre-processing for non-uniform negative sampling!")
         node_degree = torch.zeros(numNodes)  # out degree
 
         look_up = self.g.look_up_dict
