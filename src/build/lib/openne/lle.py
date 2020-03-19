@@ -36,14 +36,15 @@ class LLE(object):
         graph = graph.to_undirected()
         t1 = time()
         print("start")
-        A = nx.to_scipy_sparse_matrix(graph)
+        # A = nx.to_scipy_sparse_matrix(graph)
+        A = nx.to_numpy_matrix(graph)  # todo: check when sparse matrix is better
         # print(np.sum(A.todense(), axis=0))
         normalize(A, norm='l1', axis=1, copy=False)
-        I_n = sp.eye(graph.number_of_nodes())
+        I_n = np.eye(graph.number_of_nodes()) # sp.eye(graph.number_of_nodes())
         I_min_A = I_n - A
         print("I_min_A")
         # print(I_min_A)
-        u, s, vt = lg.svds(I_min_A, k=self._d + 1, which='SM')
+        u, s, vt = lg.svds(I_min_A, k=self._d + 1) # , which='SM')
         print("svds")
         vt = torch.tensor(vt)
         t2 = time()
