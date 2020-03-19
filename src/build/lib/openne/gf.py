@@ -19,11 +19,10 @@ class GraphFactorization(object):
         self.max_iter = epoch
         self.lr = learning_rate
         self.lamb = weight_decay
-        # self.sess = tf.Session()
         self.adj_mat = self.getAdj()
         self.vectors = {}
 
-        self.embeddings = self.get_train().detach()
+        self.embeddings = self.get_train()
 
         look_back = self.g.look_back_list
 
@@ -44,45 +43,25 @@ class GraphFactorization(object):
         adj_mat = self.adj_mat
         mat_mask = torch.as_tensor(adj_mat > 0, dtype=torch.float32)
 
-        _embeddings = Variable(torch.nn.init.xavier_uniform_(torch.FloatTensor(self.node_size, self.rep_size)), requires_grad=True)
-        # _embeddings = tf.Variable(tf.contrib.layers.xavier_initializer()([self.node_size, self.rep_size]),
-        #                          dtype=tf.float32, name='embeddings')
+        _embeddings = Variable(torch.nn.init.xavier_uniform_(torch.FloatTensor(self.node_size, self.rep_size)),
+                               requires_grad=True)
         print(_embeddings)
 
-        Adj = Variable(torch.FloatTensor(adj_mat), requires_grad=False)
-        AdjMask = Variable(torch.FloatTensor(mat_mask), requires_grad=False)
-        # Adj = tf.placeholder(tf.float32, [self.node_size, self.node_size], name='adj_mat')
-        # AdjMask = tf.placeholder(tf.float32, [self.node_size, self.node_size], name='adj_mask')
+        Adj = adj_mat
+        AdjMask = mat_mask
 
-        # cost = torch.sum(
-        #     (Adj - torch.mm(_embeddings, _embeddings.t())*AdjMask)**2 + \
-        #     self.lamb * torch.sum(_embeddings ** 2)
-        # )
-        # tf.reduce_sum(
-               # tf.square(Adj - tf.matmul(_embeddings, tf.transpose(_embeddings))*AdjMask)) + \
-               # self.lamb * tf.reduce_sum(tf.square(_embeddings))
-
-        optimizer = torch.optim.Adam([_embeddings], lr=self.lr)  # tf.train.AdamOptimizer(self.lr)
-        # train_op = optimizer.minimize(cost)
-
-        # init = tf.global_variables_initializer()
-
-        # self.sess.run(init)
+        optimizer = torch.optim.Adam([_embeddings], lr=self.lr)
 
         print("total iter: %i" % self.max_iter)
         for step in range(self.max_iter):
             optimizer.zero_grad()
-            cost = torch.sum(
-                (Adj - torch.mm(_embeddings, _embeddings.t()) * AdjMask) ** 2 + \
-                self.lamb * torch.sum(_embeddings ** 2)
-            )
+            cost = ((Adj - torch.mm(_embeddings, _embeddings.t()) * AdjMask) ** 2).sum() + \
+                self.lamb * ((_embeddings ** 2).sum())
             cost.backward()
             optimizer.step()
-            #self.sess.run(train_op, feed_dict={Adj: adj_mat, AdjMask: mat_mask})
-            if step % 50 == 0:
+            if step % 5 == 0:
                 print("step %i: cost: %g" % (step, cost))
-                                             #self.sess.run(cost, feed_dict={Adj: adj_mat, AdjMask: mat_mask})))
-        return _embeddings # self.sess.run(_embeddings)
+        return _embeddings.detach()
 
     def save_embeddings(self, filename):
         fout = open(filename, 'w')
