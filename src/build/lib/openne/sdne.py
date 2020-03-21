@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-
+import torch
 
 __author__ = "Wang Binlu"
 __email__ = "wblmail@whu.edu.cn"
@@ -8,16 +8,78 @@ __email__ = "wblmail@whu.edu.cn"
 
 def fc_op(input_op, name, n_out, layer_collector, act_func=tf.nn.leaky_relu):
     n_in = input_op.get_shape()[-1].value
-    with tf.name_scope(name) as scope:
-        kernel = tf.Variable(tf.contrib.layers.xavier_initializer()([n_in, n_out]), dtype=tf.float32, name=scope + "w")
 
+    # return
+    with tf.name_scope(name) as scope:
+        # kernel = torch.nn.init.xavier_uniform_(torch.FloatTensor(n_in, n_out).requires_grad_(True))
+        kernel = tf.Variable(tf.contrib.layers.xavier_initializer()([n_in, n_out]), dtype=tf.float32, name=scope + "w")
+        # biases = torch.zeros((1, n_out), dtype=torch.float32, requires_grad=True)
         # kernel = tf.Variable(tf.random_normal([n_in, n_out]))
         biases = tf.Variable(tf.constant(0, shape=[1, n_out], dtype=tf.float32), name=scope + 'b')
-
+        # fc = torch.mm(input_op, kernel)+biases
         fc = tf.add(tf.matmul(input_op, kernel), biases)
         activation = act_func(fc, name=scope + 'act')
         layer_collector.append([kernel, biases])
         return activation
+
+
+def init_weights(m):
+    if type(m) == torch.nn.Linear:
+        torch.nn.init.xavier_uniform_(m.weight)
+        m.bias.data.fill_(0.)
+        print(m)
+
+
+def adjust_learning_rate(optimizer, step, decay_strategy=lambda x: 0.03):
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = decay_strategy(step)
+
+
+class sdnenet(torch.nn.Module):
+    def __init__(self, encoder_layer_list, alpha, nu1, nu2):
+        super(sdnenet, self).__init__()
+        self.alpha = alpha
+        self.nu1 = nu1
+        self.nu2 = nu2  # loss parameters
+        layer_collector = []
+        for i in range(1, len(encoder_layer_list)):
+            layer_collector.append(torch.nn.Linear(encoder_layer_list[i - 1], encoder_layer_list[i]))
+            layer_collector.append(torch.nn.LeakyReLU())
+        self.encoder = torch.nn.Sequential(*layer_collector)
+
+        layer_collector1 = []
+        for i in range(len(encoder_layer_list) - 2, -1, -1):
+            layer_collector1.append(torch.nn.Linear(encoder_layer_list[i + 1], encoder_layer_list[i]))
+            layer_collector1.append(torch.nn.LeakyReLU())
+
+        self.decoder = torch.nn.Sequential(*layer_collector1)
+        self.layer_collector = layer_collector + layer_collector1
+
+        self.encoder.apply(init_weights)
+        self.decoder.apply(init_weights)
+
+    def forward(self, a_b):
+        embeddings = self.encoder(a_b)
+        final = self.decoder(embeddings)
+        return embeddings, final
+
+    def _L_1st(self, a, e_n, e):
+        return (a * (e_n - 2 * torch.mm(e, e.t()) + e_n.t())).sum()
+
+    def _L_2nd(self, a_b, f, b):
+        x1 = (((a_b - f) * b) ** 2).sum()
+        return x1
+
+    # L_2nd =
+    def loss(self, a_b, a, b, embeddings, final):
+        embeddings_norm = (embeddings ** 2).sum(1, keepdims=True)
+        l1 = self._L_1st(a, embeddings_norm, embeddings)
+        l2 = self._L_2nd(a_b, final, b)
+        L = l2 + self.alpha * l1
+        for param in self.layer_collector:
+            if type(param) == torch.nn.Linear:
+                L += self.nu1 * param.weight.abs().sum() + self.nu2 * (param.weight ** 2).sum()
+        return L, l1, l2
 
 
 class SDNE(object):
@@ -37,7 +99,7 @@ class SDNE(object):
 
         self.encoder_layer_list = [self.node_size]
         self.encoder_layer_list.extend(encoder_layer_list)
-        self.encoder_layer_num = len(encoder_layer_list)+1
+        self.encoder_layer_num = len(encoder_layer_list) + 1
 
         self.alpha = alpha
         self.beta = beta
@@ -47,11 +109,9 @@ class SDNE(object):
         self.epoch = epoch
         self.max_iter = (epoch * self.node_size) // batch_size
 
-        self.lr = learning_rate
-        if self.lr is None:
-            self.lr = tf.train.inverse_time_decay(0.03, self.max_iter, decay_steps=1, decay_rate=0.9999)
-
-        self.sess = tf.Session()
+        self.lr = lambda x: learning_rate
+        if learning_rate is None:
+            self.lr = lambda x: 0.01 / (1 + 0.9999 * x)
         self.vectors = {}
 
         self.adj_mat = self.getAdj()
@@ -68,90 +128,41 @@ class SDNE(object):
         adj = np.zeros((node_size, node_size))
         for edge in self.g.G.edges():
             adj[look_up[edge[0]]][look_up[edge[1]]] = self.g.G[edge[0]][edge[1]]['weight']
-        return adj
+        return torch.from_numpy(adj).type(torch.float32)
+
+    def train_one_epoch(self, model, optimizer, adj_batch_train, adj_mat_train, b_mat_train, step):
+        optimizer.zero_grad()
+        embeddings, final = model(adj_batch_train)
+        loss, l1, l2 = model.loss(adj_batch_train, adj_mat_train, b_mat_train, embeddings, final)
+        loss.backward()
+        optimizer.step()
+        adjust_learning_rate(optimizer, step, decay_strategy=self.lr)
+        if step % 5 == 0:
+            print("step %i: total loss: %s, l1 loss: %s, l2 loss: %s" % (step, loss, l1, l2))
 
     def train(self):
         adj_mat = self.adj_mat
 
-        AdjBatch = tf.placeholder(tf.float32, [None, self.node_size], name='adj_batch')
-        Adj = tf.placeholder(tf.float32, [None, None], name='adj_mat')
-        B = tf.placeholder(tf.float32, [None, self.node_size], name='b_mat')
-
-        fc = AdjBatch
-        scope_name = 'encoder'
-        layer_collector = []
-
-        with tf.name_scope(scope_name):
-            for i in range(1, self.encoder_layer_num):
-                fc = fc_op(fc,
-                           name=scope_name+str(i),
-                           n_out=self.encoder_layer_list[i],
-                           layer_collector=layer_collector)
-
-        _embeddings = fc
-
-        scope_name = 'decoder'
-        with tf.name_scope(scope_name):
-            for i in range(self.encoder_layer_num-2, 0, -1):
-                fc = fc_op(fc,
-                           name=scope_name+str(i),
-                           n_out=self.encoder_layer_list[i],
-                           layer_collector=layer_collector)
-            fc = fc_op(fc,
-                       name=scope_name+str(0),
-                       n_out=self.encoder_layer_list[0],
-                       layer_collector=layer_collector,)
-
-        _embeddings_norm = tf.reduce_sum(tf.square(_embeddings), 1, keepdims=True)
-
-        L_1st = tf.reduce_sum(
-            Adj * (
-                    _embeddings_norm - 2 * tf.matmul(
-                        _embeddings, tf.transpose(_embeddings)
-                    ) + tf.transpose(_embeddings_norm)
-            )
-        )
-
-        L_2nd = tf.reduce_sum(tf.square((AdjBatch - fc) * B))
-
-        L = L_2nd + self.alpha * L_1st
-
-        for param in layer_collector:
-            L += self.nu1 * tf.reduce_sum(tf.abs(param[0])) + self.nu2 * tf.reduce_sum(tf.square(param[0]))
-
-        optimizer = tf.train.AdamOptimizer(self.lr)
-
-        train_op = optimizer.minimize(L)
-
-        init = tf.global_variables_initializer()
-        self.sess.run(init)
-
+        model = sdnenet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2)
+        optimizer = torch.optim.Adam(model.parameters(), lr=self.lr(0))
         print("total iter: %i" % self.max_iter)
         for step in range(self.max_iter):
-            index = np.random.randint(self.node_size, size=self.bs)
+            index = torch.randint(high=self.node_size,
+                                  size=[self.bs])  # np.random.randint(self.node_size, size=self.bs)
             adj_batch_train = adj_mat[index, :]
             adj_mat_train = adj_batch_train[:, index]
-            b_mat_train = np.ones_like(adj_batch_train)
+            b_mat_train = torch.ones_like(adj_batch_train)
             b_mat_train[adj_batch_train != 0] = self.beta
-
-            self.sess.run(train_op, feed_dict={AdjBatch: adj_batch_train,
-                                               Adj: adj_mat_train,
-                                               B: b_mat_train})
-            if step % 50 == 0:
-                l, l1, l2 = self.sess.run((L, L_1st, L_2nd),
-                                          feed_dict={AdjBatch: adj_batch_train,
-                                                     Adj: adj_mat_train,
-                                                     B: b_mat_train})
-                print("step %i: total loss: %s, l1 loss: %s, l2 loss: %s" % (step, l, l1, l2))
-
-        return self.sess.run(_embeddings, feed_dict={AdjBatch: adj_mat})
+            self.train_one_epoch(model, optimizer, adj_batch_train, adj_mat_train, b_mat_train, step)
+        embeddings,final= model(adj_mat)
+        return embeddings.detach()
 
     def save_embeddings(self, filename):
         fout = open(filename, 'w')
         node_num = len(self.vectors)
         fout.write("{} {}\n".format(node_num, self.dim))
         for node, vec in self.vectors.items():
-            fout.write("{} {}\n".format(node, ' '.join([str(x) for x in vec])))
+            fout.write("{} {}\n".format(node, ' '.join([str(float(x)) for x in vec])))
         fout.close()
 
 
@@ -165,7 +176,7 @@ class SDNE2(object):
         self.rep_size = encoder_layer_list[-1]
 
         self.encoder_layer_list = [self.node_size] + encoder_layer_list
-        self.encoder_layer_num = len(encoder_layer_list)+1
+        self.encoder_layer_num = len(encoder_layer_list) + 1
 
         self.alpha = alpha
         self.beta = beta
@@ -202,16 +213,16 @@ class SDNE2(object):
         with tf.name_scope(scope_name + 'encoder'):
             for i in range(1, self.encoder_layer_num):
                 fc = fc_op(fc,
-                           name=scope_name+str(i),
+                           name=scope_name + str(i),
                            n_out=self.encoder_layer_list[i],
                            layer_collector=layer_collector)
 
         _embeddings = fc
 
         with tf.name_scope(scope_name + 'decoder'):
-            for i in range(self.encoder_layer_num-2, -1, -1):
+            for i in range(self.encoder_layer_num - 2, -1, -1):
                 fc = fc_op(fc,
-                           name=scope_name+str(i),
+                           name=scope_name + str(i),
                            n_out=self.encoder_layer_list[i],
                            layer_collector=layer_collector)
 
@@ -282,7 +293,7 @@ class SDNE2(object):
 
         generator = self.generate_batch()
 
-        for step in range(self.max_iter+1):
+        for step in range(self.max_iter + 1):
             nodes_a, nodes_b, beta_mask_a, beta_mask_b, weights = generator.__next__()
 
             feed_dict = {NodeA: nodes_a,
