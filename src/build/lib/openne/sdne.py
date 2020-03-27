@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import torch
+from overloading import overload
 
 __author__ = "Wang Binlu"
 __email__ = "wblmail@whu.edu.cn"
@@ -27,36 +28,101 @@ def init_weights(m):
     if type(m) == torch.nn.Linear:
         torch.nn.init.xavier_uniform_(m.weight)
         m.bias.data.fill_(0.)
-        print(m)
 
 
 def adjust_learning_rate(optimizer, step, decay_strategy=lambda x: 0.03):
     for param_group in optimizer.param_groups:
         param_group['lr'] = decay_strategy(step)
 
+# reference: https://github.com/mehulrastogi/Deep-Belief-Network-pytorch
+import torch
+class RBM(torch.nn.Module):
+    def __init__(self, weights=None, bias=None, visible_dim = 128, hidden_dim = 64, lr=1e-5, batch_size=16):
+        super(RBM, self).__init__()
+        self.lr = lr
+        self.batch_size = batch_size
+        if weights==None:
+            self.weights = torch.nn.init.xavier_uniform_(torch.FloatTensor(visible_dim, hidden_dim))
+            self.v_dim = visible_dim
+            self.h_dim = hidden_dim
+            self.v_bias = torch.zeros(visible_dim)
+            self.h_bias = torch.zeros(hidden_dim)
+        else:
+            self.weights = weights
+            self.v_dim = len(weights)
+            self.h_dim = len(bias)
+            self.v_bias = torch.zeros(self.v_dim) # the only tensor created
+            self.h_bias = bias
+
+    def sample(self, P):
+        return torch.floor(torch.rand(P.size())+P) # torch.distributions.bernoulli.Bernoulli(P).sample()
+
+    def forward(self, x):
+        P=torch.sigmoid(self.h_bias+torch.mm(x, self.weights))
+        return P
+
+    def backward(self, x):
+        P=torch.sigmoid(self.v_bias+torch.mm(x, self.weights.t()))
+        return P
+
+    def contrastive_divergence(self, x, update=True):
+        h1 = self.sample(self.forward(x))
+        v2 = self.sample(self.backward(h1))
+        h2 = self.sample(self.forward(v2))
+
+        dw = torch.mm(x.t(),h1) - torch.mm(v2.t(),h2) # delta weight
+        dvb = torch.sum(v2 - x, dim=0)  # delta v_bias
+        dhb = torch.sum(h1 - h2, dim=0) # delta h_bias
+        lr = self.lr / self.batch_size
+        if update:
+            self.weights += lr * dw
+            self.v_bias += lr * dvb
+            self.h_bias += lr * dhb
+        return torch.sum((x-v2)**2) #, torch.mean(torch.sum((x-v2)**2, dim=0))
+
+    def train(self, data, epochs=10, batch_size=None):
+        if batch_size:
+            self.batch_size = batch_size
+        dataloader = torch.utils.data.DataLoader(data, batch_size=self.batch_size)
+        for epoch in range(epochs):
+            allcost=0.
+            for batch in dataloader:
+                batch = batch.view(len(batch), self.v_dim)
+                a=(self.contrastive_divergence(batch))
+                allcost+=a
+            print("Epoch:{}, cost={}".format(epoch, allcost))
 
 class sdnenet(torch.nn.Module):
-    def __init__(self, encoder_layer_list, alpha, nu1, nu2):
+    def __init__(self, encoder_layer_list, alpha, nu1, nu2, pretrain_lr=1e-5, pretrain_epoch=50):
         super(sdnenet, self).__init__()
         self.alpha = alpha
         self.nu1 = nu1
         self.nu2 = nu2  # loss parameters
+        self.pretrain_lr = pretrain_lr
+        self.pretrain_epoch = pretrain_epoch
         layer_collector = []
         for i in range(1, len(encoder_layer_list)):
             layer_collector.append(torch.nn.Linear(encoder_layer_list[i - 1], encoder_layer_list[i]))
-            layer_collector.append(torch.nn.LeakyReLU())
+            #layer_collector.append(torch.nn.LeakyReLU())
+            layer_collector.append(torch.nn.Sigmoid())
         self.encoder = torch.nn.Sequential(*layer_collector)
 
         layer_collector1 = []
         for i in range(len(encoder_layer_list) - 2, -1, -1):
             layer_collector1.append(torch.nn.Linear(encoder_layer_list[i + 1], encoder_layer_list[i]))
-            layer_collector1.append(torch.nn.LeakyReLU())
+            layer_collector.append(torch.nn.Sigmoid())
 
         self.decoder = torch.nn.Sequential(*layer_collector1)
         self.layer_collector = layer_collector + layer_collector1
 
         self.encoder.apply(init_weights)
         self.decoder.apply(init_weights)
+
+    def pretrain(self, data): # deep-belief-network-based pretraining
+        for layer in self.layer_collector:
+            rbm = RBM(layer.weight, layer.bias, lr=self.pretrain_lr)
+            rbm.train(data, epochs=self.pretrain_epoch)
+            _,data = rbm.forward(data)
 
     def forward(self, a_b):
         embeddings = self.encoder(a_b)
@@ -78,7 +144,8 @@ class sdnenet(torch.nn.Module):
         L = l2 + self.alpha * l1
         for param in self.layer_collector:
             if type(param) == torch.nn.Linear:
-                L += self.nu1 * param.weight.abs().sum() + self.nu2 * (param.weight ** 2).sum()
+                L += self.nu2 * (param.weight ** 2).sum()  #self.nu1 * param.weight.abs().sum() +: not in the paper
+
         return L, l1, l2
 
 
@@ -111,7 +178,7 @@ class SDNE(object):
 
         self.lr = lambda x: learning_rate
         if learning_rate is None:
-            self.lr = lambda x: 0.01 / (1 + 0.9999 * x)
+            self.lr = lambda x: 0.03 / (1 + 0.9999 * x)
         self.vectors = {}
 
         self.adj_mat = self.getAdj()
@@ -144,6 +211,8 @@ class SDNE(object):
         adj_mat = self.adj_mat
 
         model = sdnenet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2)
+        labels=torch.tensor([i['label'] for i in self.g.G.nodes],dtype=torch.float32)
+        model.pretrain(labels)
         optimizer = torch.optim.Adam(model.parameters(), lr=self.lr(0))
         print("total iter: %i" % self.max_iter)
         for step in range(self.max_iter):

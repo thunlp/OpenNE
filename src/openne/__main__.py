@@ -156,6 +156,7 @@ def main(args):
     elif args.method == 'hope':
         model = hope.HOPE(graph=g, d=args.representation_size)
     elif args.method == 'sdne':
+        g.read_node_label(args.label_file)
         encoder_layer_list = ast.literal_eval(args.encoder_list)
         model = sdne.SDNE(g, encoder_layer_list=encoder_layer_list,
                           alpha=args.alpha, beta=args.beta, nu1=args.nu1, nu2=args.nu2,
