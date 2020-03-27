@@ -106,7 +106,7 @@ class sdnenet(torch.nn.Module):
     def __init__(self, encoder_layer_list, alpha, nu1, nu2, pretrain_lr=1e-4, pretrain_epoch=3):
         super(sdnenet, self).__init__()
         self.alpha = alpha
-        self.nu1 = 0 # nu1
+        self.nu1 = nu1
         self.nu2 = nu2  # loss parameters
         self.pretrain_lr = pretrain_lr
         self.pretrain_epoch = pretrain_epoch
@@ -159,13 +159,13 @@ class sdnenet(torch.nn.Module):
         L = l2 + self.alpha * l1
         for param in self.layer_collector:
             if type(param) == torch.nn.Linear:
-                L += self.nu1 * param.weight.abs().sum() + self.nu2 * (param.weight ** 2).sum()
+                L +=  self.nu2 * (param.weight ** 2).sum() # self.nu1 * param.weight.abs().sum() +
         return L, l1, l2
 
 
 class SDNE(object):
     def __init__(self, graph, encoder_layer_list, alpha=1e-6, beta=5., nu1=1e-5, nu2=1e-4,
-                 batch_size=200, epoch=100, learning_rate=None):
+                 batch_size=200, epoch=100, learning_rate=0.01):
         """
         encoder_layer_list: a list of numbers of the neuron at each encoder layer, the last number is the
         dimension of the output node representation
@@ -191,8 +191,13 @@ class SDNE(object):
         self.max_iter = (epoch * self.node_size) // batch_size
 
         self.lr = lambda x: learning_rate
-        if learning_rate is None:
+        self.pretrain=False
+        if learning_rate <= 0:
             self.lr = lambda x: 0.03 / (1 + 0.9999 * x)
+            if learning_rate < -1:
+                self.pretrain = True
+            if learning_rate < -10:
+                self.lr = lambda x: -10-learning_rate
         self.vectors = {}
 
         self.adj_mat = self.getAdj()
@@ -225,6 +230,8 @@ class SDNE(object):
         adj_mat = self.adj_mat
 
         model = sdnenet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2)
+        if self.pretrain:
+            model.pretrain(adj_mat)
         optimizer = torch.optim.Adam(model.parameters(), lr=self.lr(0))
         print("total iter: %i" % self.max_iter)
         for step in range(self.max_iter):
