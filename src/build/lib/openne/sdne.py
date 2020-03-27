@@ -103,7 +103,7 @@ class RBM(torch.nn.Module):
         self.lr=lr0
 
 class sdnenet(torch.nn.Module):
-    def __init__(self, encoder_layer_list, alpha, nu1, nu2, pretrain_lr=1e-4, pretrain_epoch=3):
+    def __init__(self, encoder_layer_list, alpha, nu1, nu2, pretrain_lr=1e-5, pretrain_epoch=1):
         super(sdnenet, self).__init__()
         self.alpha = alpha
         self.nu1 = nu1
@@ -191,12 +191,15 @@ class SDNE(object):
         self.max_iter = (epoch * self.node_size) // batch_size
 
         self.lr = lambda x: learning_rate
+        self.decay = False
         self.pretrain=False
         if learning_rate <= 0:
+            self.decay = True
             self.lr = lambda x: 0.03 / (1 + 0.9999 * x)
             if learning_rate < -1:
                 self.pretrain = True
             if learning_rate < -10:
+                self.decay = False
                 self.lr = lambda x: -10-learning_rate
         self.vectors = {}
 
@@ -222,8 +225,9 @@ class SDNE(object):
         loss, l1, l2 = model.loss(adj_batch_train, adj_mat_train, b_mat_train, embeddings, final)
         loss.backward()
         optimizer.step()
-        adjust_learning_rate(optimizer, step, decay_strategy=self.lr)
-        if step % 5 == 0:
+        if self.decay:
+            adjust_learning_rate(optimizer, step, decay_strategy=self.lr)
+        if step % 50 == 0:
             print("step %i: total loss: %s, l1 loss: %s, l2 loss: %s" % (step, loss, l1, l2))
 
     def train(self):
