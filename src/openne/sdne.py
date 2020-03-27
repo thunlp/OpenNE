@@ -103,7 +103,7 @@ class RBM(torch.nn.Module):
         self.lr=lr0
 
 class sdnenet(torch.nn.Module):
-    def __init__(self, encoder_layer_list, alpha, nu1, nu2, pretrain_lr=1e-4, pretrain_epoch=5):
+    def __init__(self, encoder_layer_list, alpha, nu1, nu2, pretrain_lr=1e-4, pretrain_epoch=3):
         super(sdnenet, self).__init__()
         self.alpha = alpha
         self.nu1 = nu1
@@ -133,7 +133,7 @@ class sdnenet(torch.nn.Module):
             if type(layer)==torch.nn.Linear:
                 rbm = RBM(visible_dim=len(layer.weight[0]), hidden_dim=len(layer.weight), batch_size=len(data),
                           lr=self.pretrain_lr*len(data),
-                          decay=True)
+                          decay=False)
                 rbm.train(data, epochs=self.pretrain_epoch)
                 layer.weight = torch.nn.Parameter(rbm.weights.t())
                 layer.bias = torch.nn.Parameter(rbm.h_bias)
@@ -229,7 +229,7 @@ class SDNE(object):
 
 
 
-        model.pretrain(adj_mat)
+        # model.pretrain(adj_mat)
         optimizer = torch.optim.Adam(model.parameters(), lr=self.lr(0))
         print("total iter: %i" % self.max_iter)
         for step in range(self.max_iter):
