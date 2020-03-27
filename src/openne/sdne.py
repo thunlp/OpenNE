@@ -120,7 +120,7 @@ class sdnenet(torch.nn.Module):
         layer_collector1 = []
         for i in range(len(encoder_layer_list) - 2, -1, -1):
             layer_collector1.append(torch.nn.Linear(encoder_layer_list[i + 1], encoder_layer_list[i]))
-            layer_collector.append(torch.nn.LeakyReLU())
+            layer_collector1.append(torch.nn.LeakyReLU())
 
         self.decoder = torch.nn.Sequential(*layer_collector1)
         self.layer_collector = layer_collector + layer_collector1
