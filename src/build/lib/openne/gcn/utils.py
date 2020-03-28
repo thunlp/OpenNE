@@ -4,7 +4,7 @@ import networkx as nx
 import scipy.sparse as sp
 from scipy.sparse.linalg.eigen.arpack import eigsh
 import sys
-
+import torch
 
 def parse_index_file(filename):
     """Parse index file."""
@@ -16,9 +16,9 @@ def parse_index_file(filename):
 
 def sample_mask(idx, l):
     """Create mask."""
-    mask = np.zeros(l)
+    mask = torch.zeros(l)#np.zeros(l)
     mask[idx] = 1
-    return np.array(mask, dtype=np.bool)
+    return mask.type(dtype=torch.bool) #np.array(mask, dtype=np.bool)
 
 
 def load_data(dataset_str):
@@ -79,7 +79,7 @@ def sparse_to_tuple(sparse_mx):
     def to_tuple(mx):
         if not sp.isspmatrix_coo(mx):
             mx = mx.tocoo()
-        coords = np.vstack((mx.row, mx.col)).transpose()
+        coords = torch.stack((torch.tensor(mx.row), torch.tensor(mx.col))).t() #vstack
         values = mx.data
         shape = mx.shape
         return coords, values, shape
@@ -95,16 +95,16 @@ def sparse_to_tuple(sparse_mx):
 
 def preprocess_features(features):
     """Row-normalize feature matrix and convert to tuple representation"""
-    rowsum = np.array(features.sum(1))
-    r_inv = np.power(rowsum, -1).flatten()
-    r_inv[np.isinf(r_inv)] = 0.
-    r_mat_inv = sp.diags(r_inv)
-    features = sp.coo_matrix(features)
+    rowsum = torch.tensor(features.sum(1)) #np.array(features.sum(1))
+    r_inv = (rowsum**-1).flatten() #np.power(rowsum, -1).flatten()
+    r_inv[torch.isinf(r_inv)] = 0.
+    r_mat_inv = torch.diag(r_inv)#sp.diags(r_inv)
     features = r_mat_inv.dot(features)
+    features = sp.coo_matrix(features)
     return sparse_to_tuple(features)
 
 
-def normalize_adj(adj):
+def normalize_adj(adj): #  safe. don't change by now
     """Symmetrically normalize adjacency matrix."""
     adj = sp.coo_matrix(adj)
     rowsum = np.array(adj.sum(1))
@@ -120,16 +120,16 @@ def preprocess_adj(adj):
     return sparse_to_tuple(adj_normalized)
 
 
-def construct_feed_dict(features, support, labels, labels_mask, placeholders):
-    """Construct feed dictionary."""
-    feed_dict = dict()
-    feed_dict.update({placeholders['labels']: labels})
-    feed_dict.update({placeholders['labels_mask']: labels_mask})
-    feed_dict.update({placeholders['features']: features})
-    feed_dict.update({placeholders['support'][i]: support[i]
-                      for i in range(len(support))})
-    feed_dict.update({placeholders['num_features_nonzero']: features[1].shape})
-    return feed_dict
+# def construct_feed_dict(features, support, labels, labels_mask, placeholders):
+#     """Construct feed dictionary."""
+#     feed_dict = dict()
+#     feed_dict.update({placeholders['labels']: labels})
+#     feed_dict.update({placeholders['labels_mask']: labels_mask})
+#     feed_dict.update({placeholders['features']: features})
+#     feed_dict.update({placeholders['support'][i]: support[i]
+#                       for i in range(len(support))})
+#     feed_dict.update({placeholders['num_features_nonzero']: features[1].shape})
+#     return feed_dict
 
 
 def chebyshev_polynomials(adj, k):
