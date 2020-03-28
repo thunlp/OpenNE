@@ -1,11 +1,12 @@
 import networkx as nx
-# import numpy as np
+import numpy as np
 import torch
 import scipy.io as sio
 import scipy.sparse as sp
 import scipy.sparse.linalg as lg
 from . import graph as g
 import tensorflow as tf
+from time import time
 from sklearn.preprocessing import normalize
 
 __author__ = "Alan WANG"
@@ -17,41 +18,42 @@ class HOPE(object):
         '''
           d: representation vector dimension
         '''
+        t1=time()
         self._d = d
         self._graph = graph.G
         self.g = graph
         self._node_num = graph.node_size
         self.learn_embedding()
+        t2=time()
+        print("TIME used: ",t2-t1)
 
     def learn_embedding(self):
-
         graph = self.g.G
-        A = torch.from_numpy(nx.to_numpy_matrix(graph))  # brute force...
+        A = (nx.to_numpy_matrix(graph))  # brute force...
+        # Katz: M_g^-1 * M_l = (I - beta * A)^-1 - I
+        self.beta = 0.01 # 0.0728
+        n = graph.number_of_nodes()
+        S = np.asarray((np.eye(n) - self.beta * np.mat(A)).I - np.eye(n))
 
-        # Katz
-        # self._beta = 0.1 # 0.0728
         # M_g = torch.eye(graph.number_of_nodes(),dtype=torch.float64) - self._beta * A
         # M_l = self._beta * A
 
         # common neighbours
-        M_g = torch.eye(graph.number_of_nodes(), dtype=torch.float64)
-        print("MG")
-        M_l = torch.mm(A, A)
-        print("ML")
-        S = torch.mm(torch.inverse(M_g), M_l)  # np.dot(np.linalg.inv(M_g), M_l)
+        #M_g = torch.eye(graph.number_of_nodes(), dtype=torch.float64)
+        #print("MG")
+        #M_l = torch.mm(A, A)
+        #print("ML")
+        # S = torch.mm(torch.inverse(M_g), M_l)  # np.dot(np.linalg.inv(M_g), M_l)
         # s: \sigma_k
 
+        print("d=",self._d//2)
         u, s, vt = lg.svds(S, k=self._d // 2)  # this one directly use the d/2-dim core for svd
-        u = torch.from_numpy(u)
-        s = torch.from_numpy(s)
-        vt = torch.from_numpy(vt)
 
-        sigma = torch.diagflat(torch.sqrt(s))
-        X1 = torch.mm(u, sigma)
-        X2 = torch.mm(vt.t(), sigma)
-        # self._X = X2
-        # self._X = np.concatenate((X1, X2), axis=1)
-        self._X = torch.cat((X1, X2), dim=1)
+        sigma = np.sqrt(s)
+        X1 = normalize(u * sigma)
+        X2 = normalize(vt.T * sigma)
+        self._X = torch.cat((torch.tensor(X1), torch.tensor(X2)), dim=1)
+
 
     @property
     def vectors(self):

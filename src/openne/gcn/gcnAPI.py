@@ -4,6 +4,7 @@ from . import models
 import time
 import scipy.sparse as sp
 import tensorflow as tf
+import torch
 
 
 class GCN(object):
@@ -31,14 +32,14 @@ class GCN(object):
         self.max_degree = max_degree
 
         self.preprocess_data()
-        self.build_placeholders()
+        # self.build_placeholders()
         # Create model
         self.model = models.GCN(
             self.placeholders, input_dim=self.features[2][1], hidden1=self.hidden1, weight_decay=self.weight_decay, logging=True)
         # Initialize session
-        self.sess = tf.Session()
+        # self.sess = tf.Session()
         # Init variables
-        self.sess.run(tf.global_variables_initializer())
+        # self.sess.run(tf.global_variables_initializer())
 
         cost_val = []
 
@@ -47,12 +48,12 @@ class GCN(object):
 
             t = time.time()
             # Construct feed dictionary
-            feed_dict = self.construct_feed_dict(self.train_mask)
-            feed_dict.update({self.placeholders['dropout']: self.dropout})
+            # feed_dict = self.construct_feed_dict(self.train_mask)
+            # feed_dict.update({self.placeholders['dropout']: self.dropout})
 
             # Training step
-            outs = self.sess.run(
-                [self.model.opt_op, self.model.loss, self.model.accuracy], feed_dict=feed_dict)
+            # outs = self.sess.run(
+            #     [self.model.opt_op, self.model.loss, self.model.accuracy], feed_dict=feed_dict)
 
             # Validation
             cost, acc, duration = self.evaluate(self.val_mask)
@@ -83,17 +84,17 @@ class GCN(object):
             [self.model.loss, self.model.accuracy], feed_dict=feed_dict_val)
         return outs_val[0], outs_val[1], (time.time() - t_test)
 
-    def build_placeholders(self):
-        num_supports = 1
-        self.placeholders = {
-            'support': [tf.sparse_placeholder(tf.float32) for _ in range(num_supports)],
-            'features': tf.sparse_placeholder(tf.float32, shape=tf.constant(self.features[2], dtype=tf.int64)),
-            'labels': tf.placeholder(tf.float32, shape=(None, self.labels.shape[1])),
-            'labels_mask': tf.placeholder(tf.int32),
-            'dropout': tf.placeholder_with_default(0., shape=()),
-            # helper variable for sparse dropout
-            'num_features_nonzero': tf.placeholder(tf.int32)
-        }
+    # def build_placeholders(self):
+    #     num_supports = 1
+    #     self.placeholders = {
+    #         'support': [tf.sparse_placeholder(tf.float32) for _ in range(num_supports)],
+    #         'features': tf.sparse_placeholder(tf.float32, shape=tf.constant(self.features[2], dtype=tf.int64)),
+    #         'labels': tf.placeholder(tf.float32, shape=(None, self.labels.shape[1])),
+    #         'labels_mask': tf.placeholder(tf.int32),
+    #         'dropout': tf.placeholder_with_default(0., shape=()),
+    #         # helper variable for sparse dropout
+    #         'num_features_nonzero': tf.placeholder(tf.int32)
+    #     }
 
     def build_label(self):
         g = self.graph.G
@@ -107,7 +108,7 @@ class GCN(object):
                 if l not in label_dict:
                     label_dict[l] = label_id
                     label_id += 1
-        self.labels = np.zeros((len(labels), label_id))
+        self.labels = torch.zeros((len(labels), label_id))
         self.label_dict = label_dict
         for node, l in labels:
             node_id = look_up[node]
@@ -121,17 +122,18 @@ class GCN(object):
         """
         train_precent = self.clf_ratio
         training_size = int(train_precent * self.graph.G.number_of_nodes())
-        state = np.random.get_state()
-        np.random.seed(0)
-        shuffle_indices = np.random.permutation(
-            np.arange(self.graph.G.number_of_nodes()))
-        np.random.set_state(state)
-
+        # state = np.random.get_state()
+        state = torch.random.get_rng_state()
+        torch.random.manual_seed(0)
+        shuffle_indices = torch.randperm(self.graph.G.number_of_nodes)
+        #    np.random.permutation(
+         #   np.arange(self.graph.G.number_of_nodes()))
+        torch.random.set_rng_state(state)
         look_up = self.graph.look_up_dict
         g = self.graph.G
 
         def sample_mask(begin, end):
-            mask = np.zeros(g.number_of_nodes())
+            mask = torch.zeros(g.number_of_nodes())
             for i in range(begin, end):
                 mask[shuffle_indices[i]] = 1
             return mask
@@ -151,8 +153,10 @@ class GCN(object):
         """
         g = self.graph.G
         look_back = self.graph.look_back_list
-        self.features = np.vstack([g.nodes[look_back[i]]['feature']
-                                   for i in range(g.number_of_nodes())])
+        self.features = torch.stack([g.nodes[look_back[i]]['feature']
+                                     for i in range(g.number_of_nodes())])
+            #np.vstack([g.nodes[look_back[i]]['feature']
+            #                       for i in range(g.number_of_nodes())])
         self.features = preprocess_features(self.features)
         self.build_label()
         self.build_train_val_test()

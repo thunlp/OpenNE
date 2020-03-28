@@ -19,7 +19,7 @@ class Model(object):
         self.logging = logging
 
         self.vars = {}
-        self.placeholders = {}
+        # self.placeholders = {}
 
         self.layers = []
         self.activations = []
@@ -30,27 +30,31 @@ class Model(object):
         self.loss = 0
         self.accuracy = 0
         self.optimizer = None
-        self.opt_op = None
+        # self.opt_op = None
 
     def _build(self):
         raise NotImplementedError
 
     def build(self):
         """ Wrapper for _build() """
-        with tf.variable_scope(self.name):
-            self._build()
+        # with tf.variable_scope(self.name):
+        self._build()
 
         # Build sequential layer model
+        layers = [self.inputs] + self.layers
+        self.activations = torch.nn.Se
         self.activations.append(self.inputs)
         for layer in self.layers:
+
             hidden = layer(self.activations[-1])
             self.activations.append(hidden)
         self.outputs = self.activations[-1]
 
+
         # Store model variables for easy access
-        variables = tf.get_collection(
-            tf.GraphKeys.GLOBAL_VARIABLES, scope=self.name)
-        self.vars = {var.name: var for var in variables}
+        # variables = tf.get_collection(
+        #     tf.GraphKeys.GLOBAL_VARIABLES, scope=self.name)
+        # self.vars = {var.name: var for var in variables}
 
         # Build metrics
         self._loss()
@@ -132,7 +136,8 @@ class MLP(Model):
 
 
 class GCN(Model):
-    def __init__(self, placeholders, input_dim, hidden1, weight_decay, **kwargs):
+    def __init__(self, # placeholders,
+                 input_dim, hidden1, weight_decay, **kwargs):
         super(GCN, self).__init__(**kwargs)
 
         self.inputs = placeholders['features']

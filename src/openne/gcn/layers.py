@@ -1,5 +1,6 @@
 from .inits import *
-import tensorflow as tf
+import torch
+# import tensorflow as tf
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -21,18 +22,18 @@ def get_layer_uid(layer_name=''):
 def sparse_dropout(x, keep_prob, noise_shape):
     """Dropout for sparse tensors."""
     random_tensor = keep_prob
-    random_tensor += tf.random_uniform(noise_shape)
-    dropout_mask = tf.cast(tf.floor(random_tensor), dtype=tf.bool)
-    pre_out = tf.sparse_retain(x, dropout_mask)
+    random_tensor += torch.rand(noise_shape) # tf.random_uniform(noise_shape)
+    dropout_mask = torch.floor(random_tensor).type(torch.bool) # tf.cast(tf.floor(random_tensor), dtype=tf.bool)
+    pre_out = x[dropout_mask] # tf.sparse_retain(x, dropout_mask) ###########################
     return pre_out * (1./keep_prob)
 
 
 def dot(x, y, sparse=False):
     """Wrapper for tf.matmul (sparse vs dense)."""
     if sparse:
-        res = tf.sparse_tensor_dense_matmul(x, y)
+        res = torch.smm(x,y)#tf.sparse_tensor_dense_matmul(x, y)
     else:
-        res = tf.matmul(x, y)
+        res = torch.mm(x, y)
     return res
 
 
