@@ -76,7 +76,7 @@ def parse_args():
                         help='no save the best embeddings when training LINE')
     parser.add_argument('--dropout', default=0.5, type=float,
                         help='Dropout rate (1 - keep probability)')
-    parser.add_argument('--weight-decay', type=float, default=5e-4,
+    parser.add_argument('--weight-decay', type=float, default=1e-5,
                         help='Weight for L2 loss on embedding matrix')
     parser.add_argument('--hidden', default=16, type=int,
                         help='Number of units in hidden layer 1')

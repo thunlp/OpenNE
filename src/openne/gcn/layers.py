@@ -175,5 +175,5 @@ class GraphConvolution(Layer):
         # bias
         if self.bias is not None:
             output += self.bias
-
+        #print([name for name,param in self.named_parameters()])
         return self.act(output)

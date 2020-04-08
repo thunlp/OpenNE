@@ -162,4 +162,4 @@ class GCN(Model):
         self.layers.append(torch.nn.Softmax())
 
     def _optim(self):
-        self.optimizer = torch.optim.Adam(self.parameters(), lr=0.01)
+        self.optimizer = torch.optim.Adam(self.parameters(), lr=1e-2)
