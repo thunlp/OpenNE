@@ -1,5 +1,6 @@
-import tensorflow as tf
 import numpy as np
+import torch
+import math
 
 
 def uniform(shape, scale=0.05, name=None):
@@ -9,21 +10,20 @@ def uniform(shape, scale=0.05, name=None):
     return tf.Variable(initial, name=name)
 
 
-def glorot(shape, name=None):
+def glorot(shape):
     """Glorot & Bengio (AISTATS 2010) init."""
-    init_range = np.sqrt(6.0/(shape[0]+shape[1]))
-    initial = tf.random_uniform(
-        shape, minval=-init_range, maxval=init_range, dtype=tf.float32)
-    return tf.Variable(initial, name=name)
+    init_range = math.sqrt(6.0/(shape[0]+shape[1]))
+    initial = torch.rand(shape)*(2*init_range)-init_range
+    return torch.nn.Parameter(initial)
 
 
-def zeros(shape, name=None):
+def zeros(shape):
     """All zeros."""
-    initial = tf.zeros(shape, dtype=tf.float32)
-    return tf.Variable(initial, name=name)
+    initial = torch.zeros(shape, dtype=torch.float32)
+    return torch.nn.Parameter(initial)
 
 
-def ones(shape, name=None):
+def ones(shape):
     """All ones."""
-    initial = tf.ones(shape, dtype=tf.float32)
-    return tf.Variable(initial, name=name)
+    initial = torch.ones(shape, dtype=torch.float32)
+    return torch.nn.Parameter(initial)

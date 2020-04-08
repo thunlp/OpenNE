@@ -33,14 +33,39 @@ class GCN(object):
 
         self.preprocess_data()
         # self.build_placeholders()
+        # def build_placeholders(self):
+        #     num_supports = 1
+        #     self.placeholders = {
+        #         'support': [tf.sparse_placeholder(tf.float32) for _ in range(num_supports)],
+        #         'features': tf.sparse_placeholder(tf.float32, shape=tf.constant(self.features[2], dtype=tf.int64)),
+        #         'labels': tf.placeholder(tf.float32, shape=(None, self.labels.shape[1])),
+        #         'labels_mask': tf.placeholder(tf.int32),
+        #         'dropout': tf.placeholder_with_default(0., shape=()),
+        #         # helper variable for sparse dropout
+        #         'num_features_nonzero': tf.placeholder(tf.int32)
+        #     }
         # Create model
-        self.model = models.GCN(
-            self.placeholders, input_dim=self.features[2][1], hidden1=self.hidden1, weight_decay=self.weight_decay, logging=True)
+        self.model = models.GCN(input_dim=self.features.shape[1], output_dim=self.labels.shape[1], hidden_dims=[self.hidden1],
+                                supports=self.support, dropout=self.dropout,
+                                num_features_nonzero=self.features.shape, weight_decay=self.weight_decay, logging=False)
+        # sparse: self.features.shape[2][1], self.features[1].shape
+            #models.GCN(
+            #self.placeholders, input_dim=self.features[2][1], hidden1=self.hidden1, weight_decay=self.weight_decay, logging=True)
         # Initialize session
         # self.sess = tf.Session()
         # Init variables
         # self.sess.run(tf.global_variables_initializer())
-
+        # def construct_feed_dict(self, labels_mask):
+        #     """Construct feed dictionary."""
+        #     feed_dict = dict()
+        #     feed_dict.update({self.placeholders['labels']: self.labels})
+        #     feed_dict.update({self.placeholders['labels_mask']: labels_mask})
+        #     feed_dict.update({self.placeholders['features']: self.features})
+        #     feed_dict.update(
+        #         {self.placeholders['support'][i]: self.support[i] for i in range(len(self.support))})
+        #     feed_dict.update(
+        #         {self.placeholders['num_features_nonzero']: self.features[1].shape})
+        #     return feed_dict
         cost_val = []
 
         # Train model
@@ -52,17 +77,17 @@ class GCN(object):
             # feed_dict.update({self.placeholders['dropout']: self.dropout})
 
             # Training step
+            _, train_loss, train_acc, __ = self.evaluate(self.train_mask)
             # outs = self.sess.run(
             #     [self.model.opt_op, self.model.loss, self.model.accuracy], feed_dict=feed_dict)
 
             # Validation
-            cost, acc, duration = self.evaluate(self.val_mask)
+            _, cost, acc, duration = self.evaluate(self.val_mask)
             cost_val.append(cost)
 
             # Print results
-            print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(outs[1]),
-                  "train_acc=", "{:.5f}".format(
-                outs[2]), "val_loss=", "{:.5f}".format(cost),
+            print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(train_loss),
+                  "train_acc=", "{:.5f}".format(train_acc), "val_loss=", "{:.5f}".format(cost),
                 "val_acc=", "{:.5f}".format(acc), "time=", "{:.5f}".format(time.time() - t))
 
             if epoch > self.early_stopping and cost_val[-1] > np.mean(cost_val[-(self.early_stopping+1):-1]):
@@ -71,30 +96,24 @@ class GCN(object):
         print("Optimization Finished!")
 
         # Testing
-        test_cost, test_acc, test_duration = self.evaluate(self.test_mask)
+        test_res, test_cost, test_acc, test_duration = self.evaluate(self.test_mask, False)
         print("Test set results:", "cost=", "{:.5f}".format(test_cost),
               "accuracy=", "{:.5f}".format(test_acc), "time=", "{:.5f}".format(test_duration))
 
     # Define model evaluation function
 
-    def evaluate(self, mask):
+    def evaluate(self, mask, train=True):
         t_test = time.time()
-        feed_dict_val = self.construct_feed_dict(mask)
-        outs_val = self.sess.run(
-            [self.model.loss, self.model.accuracy], feed_dict=feed_dict_val)
-        return outs_val[0], outs_val[1], (time.time() - t_test)
+        self.model.zero_grad()
+        self.model.train(train)
+        output = self.model(self.features)
+        loss = self.model.loss(self.labels, mask)
+        accuracy = self.model.accuracy(self.labels, mask)
+        if train==True:
+            self.model.optimizer.step()
+        return output, loss, accuracy, (time.time() - t_test)
 
-    # def build_placeholders(self):
-    #     num_supports = 1
-    #     self.placeholders = {
-    #         'support': [tf.sparse_placeholder(tf.float32) for _ in range(num_supports)],
-    #         'features': tf.sparse_placeholder(tf.float32, shape=tf.constant(self.features[2], dtype=tf.int64)),
-    #         'labels': tf.placeholder(tf.float32, shape=(None, self.labels.shape[1])),
-    #         'labels_mask': tf.placeholder(tf.int32),
-    #         'dropout': tf.placeholder_with_default(0., shape=()),
-    #         # helper variable for sparse dropout
-    #         'num_features_nonzero': tf.placeholder(tf.int32)
-    #     }
+
 
     def build_label(self):
         g = self.graph.G
@@ -125,7 +144,7 @@ class GCN(object):
         # state = np.random.get_state()
         state = torch.random.get_rng_state()
         torch.random.manual_seed(0)
-        shuffle_indices = torch.randperm(self.graph.G.number_of_nodes)
+        shuffle_indices = torch.randperm(self.graph.G.number_of_nodes())
         #    np.random.permutation(
          #   np.arange(self.graph.G.number_of_nodes()))
         torch.random.set_rng_state(state)
@@ -161,16 +180,9 @@ class GCN(object):
         self.build_label()
         self.build_train_val_test()
         adj = nx.adjacency_matrix(g)  # the type of graph
-        self.support = [preprocess_adj(adj)]
+        if self.max_degree==0:
+            self.support = [preprocess_adj(adj)]
+        else:
+            self.support = chebyshev_polynomials(adj, self.max_degree)
 
-    def construct_feed_dict(self, labels_mask):
-        """Construct feed dictionary."""
-        feed_dict = dict()
-        feed_dict.update({self.placeholders['labels']: self.labels})
-        feed_dict.update({self.placeholders['labels_mask']: labels_mask})
-        feed_dict.update({self.placeholders['features']: self.features})
-        feed_dict.update(
-            {self.placeholders['support'][i]: self.support[i] for i in range(len(self.support))})
-        feed_dict.update(
-            {self.placeholders['num_features_nonzero']: self.features[1].shape})
-        return feed_dict
+
