@@ -10,8 +10,8 @@ import torch
 class GCN(object):
 
     def __init__(self, graph, learning_rate=0.01, epochs=200,
-                 hidden1=16, dropout=0.5, weight_decay=5e-4, early_stopping=10,
-                 max_degree=3, clf_ratio=0.1):
+                 hidden1=16, dropout=0.5, weight_decay=1e-4, early_stopping=100,
+                 max_degree=0, clf_ratio=0.1):
         """
                         learning_rate: Initial learning rate
                         epochs: Number of epochs to train
@@ -32,55 +32,18 @@ class GCN(object):
         self.max_degree = max_degree
 
         self.preprocess_data()
-        # self.build_placeholders()
-        # def build_placeholders(self):
-        #     num_supports = 1
-        #     self.placeholders = {
-        #         'support': [tf.sparse_placeholder(tf.float32) for _ in range(num_supports)],
-        #         'features': tf.sparse_placeholder(tf.float32, shape=tf.constant(self.features[2], dtype=tf.int64)),
-        #         'labels': tf.placeholder(tf.float32, shape=(None, self.labels.shape[1])),
-        #         'labels_mask': tf.placeholder(tf.int32),
-        #         'dropout': tf.placeholder_with_default(0., shape=()),
-        #         # helper variable for sparse dropout
-        #         'num_features_nonzero': tf.placeholder(tf.int32)
-        #     }
         # Create model
         self.model = models.GCN(input_dim=self.features.shape[1], output_dim=self.labels.shape[1], hidden_dims=[self.hidden1],
                                 supports=self.support, dropout=self.dropout,
                                 num_features_nonzero=self.features.shape, weight_decay=self.weight_decay, logging=False)
-        # sparse: self.features.shape[2][1], self.features[1].shape
-            #models.GCN(
-            #self.placeholders, input_dim=self.features[2][1], hidden1=self.hidden1, weight_decay=self.weight_decay, logging=True)
-        # Initialize session
-        # self.sess = tf.Session()
-        # Init variables
-        # self.sess.run(tf.global_variables_initializer())
-        # def construct_feed_dict(self, labels_mask):
-        #     """Construct feed dictionary."""
-        #     feed_dict = dict()
-        #     feed_dict.update({self.placeholders['labels']: self.labels})
-        #     feed_dict.update({self.placeholders['labels_mask']: labels_mask})
-        #     feed_dict.update({self.placeholders['features']: self.features})
-        #     feed_dict.update(
-        #         {self.placeholders['support'][i]: self.support[i] for i in range(len(self.support))})
-        #     feed_dict.update(
-        #         {self.placeholders['num_features_nonzero']: self.features[1].shape})
-        #     return feed_dict
         cost_val = []
 
         # Train model
         for epoch in range(self.epochs):
 
             t = time.time()
-            # Construct feed dictionary
-            # feed_dict = self.construct_feed_dict(self.train_mask)
-            # feed_dict.update({self.placeholders['dropout']: self.dropout})
-
             # Training step
             _, train_loss, train_acc, __ = self.evaluate(self.train_mask)
-            # outs = self.sess.run(
-            #     [self.model.opt_op, self.model.loss, self.model.accuracy], feed_dict=feed_dict)
-
             # Validation
             _, cost, acc, duration = self.evaluate(self.val_mask)
             cost_val.append(cost)
@@ -90,7 +53,7 @@ class GCN(object):
                   "train_acc=", "{:.5f}".format(train_acc), "val_loss=", "{:.5f}".format(cost),
                 "val_acc=", "{:.5f}".format(acc), "time=", "{:.5f}".format(time.time() - t))
 
-            if epoch > self.early_stopping and cost_val[-1] > np.mean(cost_val[-(self.early_stopping+1):-1]):
+            if epoch > self.early_stopping and cost_val[-1] > torch.mean(torch.stack(cost_val[-(self.early_stopping+1):-1])):
                 print("Early stopping...")
                 break
         print("Optimization Finished!")
@@ -103,6 +66,7 @@ class GCN(object):
     # Define model evaluation function
 
     def evaluate(self, mask, train=True):
+        torch.autograd.set_detect_anomaly(True)
         t_test = time.time()
         self.model.zero_grad()
         self.model.train(train)
@@ -110,6 +74,8 @@ class GCN(object):
         loss = self.model.loss(self.labels, mask)
         accuracy = self.model.accuracy(self.labels, mask)
         if train==True:
+            loss.backward()
+            #print([(name, param.grad) for name,param in self.model.named_parameters()])
             self.model.optimizer.step()
         return output, loss, accuracy, (time.time() - t_test)
 
@@ -141,14 +107,10 @@ class GCN(object):
         """
         train_precent = self.clf_ratio
         training_size = int(train_precent * self.graph.G.number_of_nodes())
-        # state = np.random.get_state()
         state = torch.random.get_rng_state()
         torch.random.manual_seed(0)
         shuffle_indices = torch.randperm(self.graph.G.number_of_nodes())
-        #    np.random.permutation(
-         #   np.arange(self.graph.G.number_of_nodes()))
         torch.random.set_rng_state(state)
-        look_up = self.graph.look_up_dict
         g = self.graph.G
 
         def sample_mask(begin, end):
@@ -156,11 +118,6 @@ class GCN(object):
             for i in range(begin, end):
                 mask[shuffle_indices[i]] = 1
             return mask
-
-        # nodes_num = len(self.labels)
-        # self.train_mask = sample_mask('train', nodes_num)
-        # self.val_mask = sample_mask('valid', nodes_num)
-        # self.test_mask = sample_mask('test', nodes_num)
         self.train_mask = sample_mask(0, training_size-100)
         self.val_mask = sample_mask(training_size-100, training_size)
         self.test_mask = sample_mask(training_size, g.number_of_nodes())
@@ -174,8 +131,6 @@ class GCN(object):
         look_back = self.graph.look_back_list
         self.features = torch.stack([g.nodes[look_back[i]]['feature']
                                      for i in range(g.number_of_nodes())])
-            #np.vstack([g.nodes[look_back[i]]['feature']
-            #                       for i in range(g.number_of_nodes())])
         self.features = preprocess_features(self.features)
         self.build_label()
         self.build_train_val_test()
@@ -184,5 +139,5 @@ class GCN(object):
             self.support = [preprocess_adj(adj)]
         else:
             self.support = chebyshev_polynomials(adj, self.max_degree)
-
+        #print(self.support)
 
