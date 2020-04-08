@@ -33,25 +33,26 @@ class HOPE(object):
         # Katz: M_g^-1 * M_l = (I - beta * A)^-1 - I
         self.beta = 0.01 # 0.0728
         n = graph.number_of_nodes()
-        S = np.asarray((np.eye(n) - self.beta * np.mat(A)).I - np.eye(n))
+        # S = np.asarray((np.eye(n) - self.beta * np.mat(A)).I - np.eye(n))
 
         # M_g = torch.eye(graph.number_of_nodes(),dtype=torch.float64) - self._beta * A
         # M_l = self._beta * A
 
         # common neighbours
-        #M_g = torch.eye(graph.number_of_nodes(), dtype=torch.float64)
+        M_g = torch.eye(graph.number_of_nodes(), dtype=torch.float64)
         #print("MG")
-        #M_l = torch.mm(A, A)
+        A=torch.tensor(A)
+        M_l = torch.mm(A, A)
         #print("ML")
-        # S = torch.mm(torch.inverse(M_g), M_l)  # np.dot(np.linalg.inv(M_g), M_l)
+        S = torch.mm(torch.inverse(M_g), M_l)  # np.dot(np.linalg.inv(M_g), M_l)
         # s: \sigma_k
 
-        print("d=",self._d//2)
+        # print("d=",self._d//2)
         u, s, vt = lg.svds(S, k=self._d // 2)  # this one directly use the d/2-dim core for svd
 
-        sigma = np.sqrt(s)
-        X1 = normalize(u * sigma)
-        X2 = normalize(vt.T * sigma)
+        sigma = np.diagflat(np.sqrt(s))
+        X1 = normalize(np.matmul(u, sigma))
+        X2 = normalize(np.matmul(vt.T, sigma))
         self._X = torch.cat((torch.tensor(X1), torch.tensor(X2)), dim=1)
 
 

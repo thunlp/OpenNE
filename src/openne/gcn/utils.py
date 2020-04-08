@@ -20,7 +20,7 @@ def sample_mask(idx, l):
     mask[idx] = 1
     return mask.type(dtype=torch.bool) #np.array(mask, dtype=np.bool)
 
-
+### not used
 def load_data(dataset_str):
     """Load data."""
     names = ['x', 'y', 'tx', 'ty', 'allx', 'ally', 'graph']
@@ -45,7 +45,7 @@ def load_data(dataset_str):
         tx_extended = sp.lil_matrix((len(test_idx_range_full), x.shape[1]))
         tx_extended[test_idx_range-min(test_idx_range), :] = tx
         tx = tx_extended
-        ty_extended = np.zeros((len(test_idx_range_full), y.shape[1]))
+        ty_extended = torch.zeros((len(test_idx_range_full), y.shape[1]))
         ty_extended[test_idx_range-min(test_idx_range), :] = ty
         ty = ty_extended
 
@@ -53,7 +53,7 @@ def load_data(dataset_str):
     features[test_idx_reorder, :] = features[test_idx_range, :]
     adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
 
-    labels = np.vstack((ally, ty))
+    labels = torch.cat((ally, ty))
     labels[test_idx_reorder, :] = labels[test_idx_range, :]
 
     idx_test = test_idx_range.tolist()
@@ -64,9 +64,9 @@ def load_data(dataset_str):
     val_mask = sample_mask(idx_val, labels.shape[0])
     test_mask = sample_mask(idx_test, labels.shape[0])
 
-    y_train = np.zeros(labels.shape)
-    y_val = np.zeros(labels.shape)
-    y_test = np.zeros(labels.shape)
+    y_train = torch.zeros(labels.shape)
+    y_val = torch.zeros(labels.shape)
+    y_test = torch.zeros(labels.shape)
     y_train[train_mask, :] = labels[train_mask, :]
     y_val[val_mask, :] = labels[val_mask, :]
     y_test[test_mask, :] = labels[test_mask, :]
@@ -77,11 +77,17 @@ def load_data(dataset_str):
 def sparse_to_tuple(sparse_mx):
     """Convert sparse matrix to tuple representation."""
     def to_tuple(mx):
-        if not sp.isspmatrix_coo(mx):
-            mx = mx.tocoo()
-        coords = torch.stack((torch.tensor(mx.row), torch.tensor(mx.col))).t() #vstack
-        values = mx.data
-        shape = mx.shape
+        if type(mx) == torch.Tensor:
+            mx=mx.coalesce()
+            coords=torch.stack((mx.indices()[0],mx.indices()[1])).t()
+            values=mx.values()
+            shape=mx.shape
+        else:
+            if not sp.isspmatrix_coo(mx):
+                mx = mx.tocoo()
+            coords = torch.stack((torch.tensor(mx.row), torch.tensor(mx.col))).t() #vstack
+            values = mx.data
+            shape = mx.shape
         return coords, values, shape
 
     if isinstance(sparse_mx, list):
@@ -92,16 +98,19 @@ def sparse_to_tuple(sparse_mx):
 
     return sparse_mx
 
+def tuple_to_sparse(tuple):
+    w=tuple[0].t()
+    return torch.sparse.FloatTensor(w.to(dtype=torch.long), torch.tensor(tuple[1]), torch.Size(tuple[2]))
 
-def preprocess_features(features):
+
+def preprocess_features(features, sparse=False):
     """Row-normalize feature matrix and convert to tuple representation"""
     rowsum = torch.tensor(features.sum(1)) #np.array(features.sum(1))
     r_inv = (rowsum**-1).flatten() #np.power(rowsum, -1).flatten()
     r_inv[torch.isinf(r_inv)] = 0.
     r_mat_inv = torch.diag(r_inv)#sp.diags(r_inv)
-    features = r_mat_inv.dot(features)
-    features = sp.coo_matrix(features)
-    return sparse_to_tuple(features)
+    features = r_mat_inv.mm(features)
+    return sparse_to_tuple(features.to_sparse()) if sparse else features
 
 
 def normalize_adj(adj): #  safe. don't change by now
@@ -117,19 +126,7 @@ def normalize_adj(adj): #  safe. don't change by now
 def preprocess_adj(adj):
     """Preprocessing of adjacency matrix for simple GCN model and conversion to tuple representation."""
     adj_normalized = normalize_adj(adj + sp.eye(adj.shape[0]))
-    return sparse_to_tuple(adj_normalized)
-
-
-# def construct_feed_dict(features, support, labels, labels_mask, placeholders):
-#     """Construct feed dictionary."""
-#     feed_dict = dict()
-#     feed_dict.update({placeholders['labels']: labels})
-#     feed_dict.update({placeholders['labels_mask']: labels_mask})
-#     feed_dict.update({placeholders['features']: features})
-#     feed_dict.update({placeholders['support'][i]: support[i]
-#                       for i in range(len(support))})
-#     feed_dict.update({placeholders['num_features_nonzero']: features[1].shape})
-#     return feed_dict
+    return (adj_normalized)
 
 
 def chebyshev_polynomials(adj, k):
@@ -153,4 +150,4 @@ def chebyshev_polynomials(adj, k):
     for i in range(2, k+1):
         t_k.append(chebyshev_recurrence(t_k[-1], t_k[-2], scaled_laplacian))
 
-    return sparse_to_tuple(t_k)
+    return [tuple_to_sparse(st).type(torch.float32) for st in sparse_to_tuple(t_k)]
