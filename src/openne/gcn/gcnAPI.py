@@ -30,12 +30,16 @@ class GCN(object):
         self.weight_decay = weight_decay
         self.early_stopping = early_stopping
         self.max_degree = max_degree
+        self.sparse = False
 
         self.preprocess_data()
         # Create model
-        self.model = models.GCN(input_dim=self.features.shape[1], output_dim=self.labels.shape[1], hidden_dims=[self.hidden1],
-                                supports=self.support, dropout=self.dropout,
-                                num_features_nonzero=self.features.shape, weight_decay=self.weight_decay, logging=False)
+        input_dim = self.features.shape[1] if not self.sparse else self.features[2][1]
+        feature_shape = self.features.shape if not self.sparse else self.features[0].shape[0]
+        output_dim = self.labels.shape[1]
+        self.model = models.GCN(input_dim=input_dim, output_dim=output_dim, hidden_dims=[self.hidden1],
+                                supports=self.support, dropout=self.dropout, sparse_inputs=self.sparse,
+                                num_features_nonzero=feature_shape, weight_decay=self.weight_decay, logging=False)
         cost_val = []
 
         # Train model
@@ -131,7 +135,7 @@ class GCN(object):
         look_back = self.graph.look_back_list
         self.features = torch.stack([g.nodes[look_back[i]]['feature']
                                      for i in range(g.number_of_nodes())])
-        self.features = preprocess_features(self.features)
+        self.features = preprocess_features(self.features, sparse=self.sparse)
         self.build_label()
         self.build_train_val_test()
         adj = nx.adjacency_matrix(g)  # the type of graph

@@ -73,8 +73,9 @@ class Layer(torch.nn.Module):
         #     tf.summary.histogram(self.name + '/vars/' + var, self.vars[var])
 
 # ignore this class
+"""
 class Dense(Layer):
-    """Dense layer."""
+    #Dense layer.
 
     def __init__(self, input_dim, output_dim, dropout=0., sparse_inputs=False,
                  act=torch.nn.ReLU, bias=False, featureless=False, **kwargs):
@@ -119,7 +120,7 @@ class Dense(Layer):
             output += self.vars['bias']
 
         return self.act(output)
-
+"""
 
 class GraphConvolution(Layer):
     """Graph convolution layer."""
@@ -158,7 +159,8 @@ class GraphConvolution(Layer):
                 x = sparse_dropout(x, 1-self.dropout, self.num_features_nonzero)
             else:
                 x = torch.dropout(x, 1-self.dropout,True)
-
+        elif self.sparse_inputs:
+            x = tuple_to_sparse(x)
         # convolve
         # (self.support[0])
         output = torch.zeros([self.support[0].size()[0], self.output_dim])
