@@ -73,6 +73,8 @@ def load_data(dataset_str):
 
     return adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask
 
+def scipy_to_torch(scipy_tensor, dtype=None):
+    return torch.sparse_coo_tensor((scipy_tensor.row,scipy_tensor.col),scipy_tensor.data, scipy_tensor.shape, dtype=dtype)
 
 def sparse_to_tuple(sparse_mx):
     """Convert sparse matrix to tuple representation."""
@@ -102,7 +104,6 @@ def tuple_to_sparse(tuple):
     w=tuple[0].t()
     return torch.sparse.FloatTensor(w.to(dtype=torch.long), torch.tensor(tuple[1]), torch.Size(tuple[2]))
 
-
 def preprocess_features(features, sparse=False):
     """Row-normalize feature matrix and convert to tuple representation"""
     rowsum = torch.tensor(features.sum(1)) #np.array(features.sum(1))
@@ -126,7 +127,7 @@ def normalize_adj(adj): #  safe. don't change by now
 def preprocess_adj(adj):
     """Preprocessing of adjacency matrix for simple GCN model and conversion to tuple representation."""
     adj_normalized = normalize_adj(adj + sp.eye(adj.shape[0]))
-    return tuple_to_sparse(sparse_to_tuple(adj_normalized)).type(torch.float32)
+    return scipy_to_torch(adj_normalized, torch.float32)
 
 
 def chebyshev_polynomials(adj, k):
@@ -150,4 +151,4 @@ def chebyshev_polynomials(adj, k):
     for i in range(2, k+1):
         t_k.append(chebyshev_recurrence(t_k[-1], t_k[-2], scaled_laplacian))
 
-    return [tuple_to_sparse(st).type(torch.float32) for st in sparse_to_tuple(t_k)]
+    return [scipy_to_torch(st, torch.float32) for st in t_k]

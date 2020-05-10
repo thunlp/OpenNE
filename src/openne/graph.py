@@ -43,7 +43,6 @@ class Graph(object):
 
     def read_edgelist(self, filename, weighted=False, directed=False):
         self.G = nx.DiGraph()
-
         if directed:
             def read_unweighted(l):
                 src, dst = l.split()
@@ -68,6 +67,7 @@ class Graph(object):
                 self.G.add_edge(dst, src)
                 self.G[src][dst]['weight'] = float(w)
                 self.G[dst][src]['weight'] = float(w)
+
         fin = open(filename, 'r')
         func = read_unweighted
         if weighted:

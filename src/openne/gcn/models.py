@@ -156,7 +156,7 @@ class GCN(Model):
                                             act=lambda x:x,
                                             support=self.supports,
                                             dropout=self.dropout,
-                                            sparse_inputs=self.sparse_inputs,
+                                            sparse_inputs=False,
                                             num_features_nonzero=self.num_features_nonzero,
                                             logging=self.logging))
         self.layers.append(torch.nn.Softmax())
