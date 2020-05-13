@@ -39,6 +39,8 @@ class Dataset(torch.utils.data.Dataset):
         self.processed_names = processed_names
         self.downloaded_paths = [osp.join(self.downloaded_dir, f) for f in to_list(self.downloaded_names)]
         self.processed_paths = [osp.join(self.processed_dir, f) for f in to_list(self.processed_names)]
+
+    def load_data(self):
         if not files_exist(self.processed_paths):
             if not files_exist(self.downloaded_paths):
                 print('Downloading dataset "{}" from "{}".\n'
@@ -97,7 +99,7 @@ class Graph(Dataset):
         self.G = nx.read_sparse6(self.processed_names[0])
         self.encode_node()
 
-    def adjmat(self, directed=False, weighted=False, scaled=None, sparse=False):
+    def adjmat(self, directed, weighted, scaled=None, sparse=False):
         G = self.G
         if self.directed and not directed:
             G = nx.to_undirected(G)
@@ -108,7 +110,7 @@ class Graph(Dataset):
         if self.weighted and not weighted:
             A = A.astype(np.bool).astype(np.float32)
         if scaled is not None:  # e.g. scaled = 1
-            A = A / np.sum(A, scaled)
+            A = A / A.sum(scaled, keepdims=True)
         return A
 
     def labels(self):
@@ -122,6 +124,10 @@ class Graph(Dataset):
     @property
     def nodesize(self):
         return self.G.number_of_nodes()
+
+    @property
+    def edgesize(self):
+        return self.G.number_of_edges()
 
     def encode_node(self):
         look_up = self.look_up_dict
