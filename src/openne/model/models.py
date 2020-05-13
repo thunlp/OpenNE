@@ -1,6 +1,7 @@
 import torch
 import os
 from time import time
+from ..utils import *
 
 class BaseModel(torch.nn.Module):
     def __init__(self, **kwargs):
@@ -12,11 +13,31 @@ class BaseModel(torch.nn.Module):
     def forward(self, dataset):
         raise NotImplementedError
 
+    def setvalue(self, attribute_name, value, compare_function=lambda x, y: True if x < y else False):
+        """
+        Update certain attribute with given new value.
+        :param attribute_name: attribute name.
+        :param value: new value.
+        :param compare_function: Bool type. Accepts two values, the old and the new.
+                Returns True if the new is to be updated.
+        :return: bool, whether the new one is updated.
+        """
+        if attribute_name not in self.__dict__:
+            self.__dict__[attribute_name] = value
+            return True
+        else:
+            if compare_function(self.__dict__[attribute_name], value):
+                self.__dict__[attribute_name] = value
+                return True
+            return False
 
 class ModelWithEmbeddings(BaseModel):
     def __init__(self, *, output=None, save=True, **kwargs):
+        self.vectors = {}
+        self.embeddings = None
+        self.debug_info = None
         if save:
-            if output == None:
+            if output is None:
                 outputpath = os.path.join('result', type(self).__name__)
                 outputmodelfile = type(self).__name__ + '_model.txt'
                 outputembeddingfile = type(self).__name__ + '_embeddings.txt'
@@ -28,15 +49,14 @@ class ModelWithEmbeddings(BaseModel):
                 outputembeddingfile = os.path.basename(output)
             if not os.path.isdir(self.outputpath):
                 os.mkdir(self.outputpath)
-            self.embeddings = None
             try:
-                with open(os.path.join(self.outputpath, self.outputembeddingfile), 'a') as fout:
+                with open(os.path.join(self.outputpath, self.outputembeddingfile), 'a'):
                     pass
             except Exception as e:
                 raise FileNotFoundError('Failed to open target embedding file "{}": {}. '.format(
                     os.path.join(self.outputpath, self.outputembeddingfile), str(e)))
             try:
-                with open(os.path.join(self.outputpath, self.outputembeddingfile), 'a') as fout:
+                with open(os.path.join(self.outputpath, self.outputembeddingfile), 'a'):
                     pass
             except Exception as e:
                 raise FileNotFoundError('Failed to open target model file "{}": {}. '.format(
@@ -50,16 +70,10 @@ class ModelWithEmbeddings(BaseModel):
         else:
             super(ModelWithEmbeddings, self).__init__(save=save, **kwargs)
 
-
-    def get_train(self, graph, **kwargs):
-        raise NotImplementedError
-
-    def save_model(self):
-        filename = os.path.join(self.outputpath, self.outputmodelfile)
+    def save_model(self, filename):
         torch.save(self.state_dict(), filename)
 
-    def save_embeddings(self):
-        filename = os.path.join(self.outputpath, self.outputembeddingfile)
+    def save_embeddings(self, filename):
         with open(filename, 'w') as fout:
             node_num = len(self.vectors)
             fout.write("{} {}\n".format(node_num, self.rep_size))
@@ -71,15 +85,55 @@ class ModelWithEmbeddings(BaseModel):
             raise FileNotFoundError("Model file not found.")
         self.load_state_dict(torch.load(path))
 
+    @classmethod
+    def check_train_parameters(cls, **kwargs):
+        return kwargs
+
+    def get_vectors(self, graph):
+        self.vectors = {}
+        for i, embedding in enumerate(self.embeddings):
+            self.vectors[graph.look_back_list[i]] = embedding
+        return self.vectors
+
+    def _check_train_parameters(self, **kwargs):
+        new_kwargs = kwargs.copy()
+        self.check_train_parameters(**new_kwargs)
+        if 'epochs' not in kwargs:
+            epoch_debug_output = None
+        else:
+            epoch_debug_output = 5
+        check_existance(new_kwargs, {'epochs': 1,
+                                     'validation_hooks': [],
+                                     'debug_output_interval': epoch_debug_output})
+        return new_kwargs
+
+    def build(self, graph, **kwargs):
+        pass
+
+    def get_train(self, graph, **kwargs):
+        raise NotImplementedError
+
     def forward(self, graph, **kwargs):
+        kwargs = self._check_train_parameters(**kwargs)
         t1 = time()
         print("Start training...")
-        self.embeddings = self.get_train(graph, **kwargs)
+        self.build(graph, **kwargs)
+        epochs = kwargs['epochs']
+        if kwargs['debug_output_interval']:
+            print("total iter: %i" % epochs)
+        for i in range(epochs):
+            self.embeddings = self.get_train(graph, **kwargs)
+            if epochs > 1:
+                for f_v in kwargs['validation_hooks']:
+                    f_v(self, graph, **kwargs)
+            if kwargs['debug_output_interval'] and i % kwargs['debug_output_interval'] == 0:
+                print("epoch {}: {}".format(i, self.debug_info))
+        self.get_vectors(graph)
         if self.save:
             print("Saving embeddings...")
-            self.save_embeddings()
+            self.save_embeddings(os.path.join(self.outputpath, self.outputembeddingfile))
             print("Saving model...")
-            self.save_model()
+            self.save_model(os.path.join(self.outputpath, self.outputmodelfile))
         t2 = time()
         print("Finished training. Time used = {}.".format(t2 - t1))
         return self.embeddings
