@@ -5,7 +5,7 @@ import torch
 from numpy import linalg as la
 import scipy.sparse.linalg as lg
 from sklearn.preprocessing import normalize
-from .gcn.utils import *
+
 
 
 class TADW(object):
