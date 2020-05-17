@@ -172,6 +172,13 @@ class LINE(ModelWithEmbeddings):
         check_existance(kwargs, {'lr': 0.001, 'batch_size': 1000, 'negative_ratio': 5})
         check_range(kwargs, {'lr': (0, np.inf), 'batch_size': (0, np.inf), 'negative_ratio': (0, np.inf)})
 
+    def build(self, graph, **kwargs):
+        if self.order == 3:
+            self.model1.build(graph, **kwargs)
+            self.model2.build(graph, **kwargs)
+        else:
+            self.model.build(graph, **kwargs)
+
     def get_train(self, graph, **kwargs):
         if self.order == 3:
             self.model1.get_train(graph, **kwargs)
