@@ -22,7 +22,7 @@ class HOPE(ModelWithEmbeddings):
         super(HOPE, self).__init__(_d=d)
 
     @classmethod
-    def check_train_parameters(cls, **kwargs):
+    def check_train_parameters(cls, graphtype, **kwargs):
         check_existance(kwargs, {'measurement': 'katz'})
         check_range(kwargs, {'measurement': ['katz', 'cn', 'rpr', 'aa']})
         if kwargs['measurement'] == 'katz':

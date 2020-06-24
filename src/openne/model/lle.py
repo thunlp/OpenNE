@@ -15,19 +15,17 @@ __email__ = "alan1995wang@outlook.com"
 
 class LLE(ModelWithEmbeddings):
 
-    def __init__(self, graph, d):
+    def __init__(self, d):
         """ Initialize the LocallyLinearEmbedding class
 
         Args:
-          graph: nx.DiGraph
-            input Graph
           d: int
             dimension of the embedding
         """
         super(LLE, self).__init__(_d=d)
 
     @classmethod
-    def check_train_parameters(cls, **kwargs):
+    def check_train_parameters(cls, graphtype, **kwargs):
         check_existance(kwargs, {'sparse': False})
         check_range(kwargs, {'sparse': [1, 0, True, False]})
 

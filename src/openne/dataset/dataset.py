@@ -73,9 +73,9 @@ class Graph(Dataset):
         self.node_size = 0
         self.downloaded_name_dict = downloaded_name_dict
 
-        defaultkwargs = {'directed': False, 'weighted': False}
+        defaultkwargs = {}
         for kw in set(defaultkwargs).union(set(kwargs)):
-            self.__setattr__(kw, kwargs[kw] if kw in kwargs else defaultkwargs[kw])
+            self.__setattr__(kw, kwargs.get(kw, defaultkwargs[kw]))
 
         #self.processed_names = [name+'_edgefile.txt', name+'_labelfile.txt', name+'_featurefile.txt'] ---> leave to more concrete classes
         super(Graph, self).__init__(name, resource_url, root_dir, [i for k, i in downloaded_name_dict.items()], "graph.sparse6")
@@ -99,15 +99,27 @@ class Graph(Dataset):
         self.G = nx.read_sparse6(self.processed_names[0])
         self.encode_node()
 
+    @classmethod
+    def directed(cls):
+        raise NotImplementedError
+
+    @classmethod
+    def weighted(cls):
+        raise NotImplementedError
+
+    @classmethod
+    def attributed(cls):
+        raise NotImplementedError
+
     def adjmat(self, directed, weighted, scaled=None, sparse=False):
         G = self.G
-        if self.directed and not directed:
+        if type(self).directed() and not directed:
             G = nx.to_undirected(G)
         if not sparse:
             A = nx.to_numpy_matrix(G)
         else:
             A = nx.to_scipy_sparse_matrix(G)
-        if self.weighted and not weighted:
+        if type(self).weighted() and not weighted:
             A = A.astype(np.bool).astype(np.float32)
         if scaled is not None:  # e.g. scaled = 1
             A = A / A.sum(scaled, keepdims=True)

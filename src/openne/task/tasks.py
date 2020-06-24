@@ -22,6 +22,6 @@ class BaseTask:
         res = model(graph, **self.train_kwargs)
         return self._process(res)
 
-    def evaluate(self, res, dataset):
+    def evaluate(self, model, res, dataset):
         raise NotImplementedError
 
