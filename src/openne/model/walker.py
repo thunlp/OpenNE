@@ -202,10 +202,8 @@ def alias_draw(J, q):
     '''
     K = len(J)
     kk = int(math.floor(random.random()*K))
-    # kk = int(np.floor(np.random.rand()*K))
 
     if random.random() < q[kk]:
-   # if np.random.rand() < q[kk]:
         return kk
     else:
         return J[kk]

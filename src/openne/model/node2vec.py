@@ -3,20 +3,31 @@ import time
 from gensim.models import Word2Vec
 from . import walker
 import torch
+from .models import *
 
+class Node2vec(ModelWithEmbeddings):
 
-class Node2vec(object):
+    def __init__(self, dim=128, dw=False):
+        super(Node2vec, self).__init__(dim=dim, dw=dw)
 
-    def __init__(self, graph, path_length, num_paths, dim, p=1.0, q=1.0, dw=False, **kwargs):
+    @classmethod
+    def check_train_parameters(cls, graphtype, **kwargs):
+        check_existance(kwargs, {'path_length': 80,
+                                 'num_paths': 10,
+                                 'p': 1.0,
+                                 'q': 1.0,
+                                 'workers': 1,
+                                 'min_count': 0,
+                                 'sg': 1})
 
-        kwargs["workers"] = kwargs.get("workers", 1)
-        if dw:
+    def build(self, graph, *, path_length=80, num_paths=10, p=1.0, q=1.0, **kwargs):
+
+        if self.dw:
             kwargs["hs"] = 1
             p = 1.0
             q = 1.0
 
-        self.graph = graph
-        if dw:
+        if self.dw:
             self.walker = walker.BasicWalker(graph, workers=kwargs["workers"])
         else:
             self.walker = walker.Walker(
@@ -26,24 +37,11 @@ class Node2vec(object):
         sentences = self.walker.simulate_walks(
             num_walks=num_paths, walk_length=path_length)
         kwargs["sentences"] = sentences
-        kwargs["min_count"] = kwargs.get("min_count", 0)
-        kwargs["size"] = kwargs.get("size", dim)
-        kwargs["sg"] = 1
+        kwargs["size"] = kwargs.get("size", self.dim)
 
-        self.size = kwargs["size"]
-        # print(kwargs["sentences"])
-        print("Learning representation...")
+    def get_train(self, graph, **kwargs):
         word2vec = Word2Vec(**kwargs)
         self.vectors = {}
         for word in graph.G.nodes():
             self.vectors[word] = torch.Tensor(word2vec.wv[word])
         del word2vec
-
-    def save_embeddings(self, filename):
-        fout = open(filename, 'w')
-        node_num = len(self.vectors.keys())
-        fout.write("{} {}\n".format(node_num, self.size))
-        for node, vec in self.vectors.items():
-            fout.write("{} {}\n".format(node,
-                                        ' '.join([str(float(x)) for x in vec])))
-        fout.close()

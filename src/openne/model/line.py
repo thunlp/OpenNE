@@ -8,13 +8,14 @@ from ..utils import *
 import torch.nn.functional as F
 from .models import *
 
+# todo: add validation hook (see openne/line.py)
 class _LINE(ModelWithEmbeddings):
-    def __init__(self, rep_size=128, order=3, table_size=1e8):
+    def __init__(self, rep_size=128, order=2, table_size=1e8):
         super(ModelWithEmbeddings, self).__init__(rep_size=rep_size, order=order, table_size=table_size)
         self.cur_epoch = 0
 
     @classmethod
-    def check_train_parameters(cls, **kwargs):
+    def check_train_parameters(cls, graphtype, **kwargs):
         check_existance(kwargs, {'lr': 0.001, 'batch_size': 1000, 'negative_ratio': 5})
         check_range(kwargs, {'lr': (0, np.inf), 'batch_size': (0, np.inf), 'negative_ratio': (0, np.inf)})
 
@@ -49,8 +50,7 @@ class _LINE(ModelWithEmbeddings):
             cur_loss.backward()
             self.optimizer.step()
             batch_id += 1
-        print('epoch:{} sum of loss:{!s}'.format(self.cur_epoch, sum_loss))
-        self.cur_epoch += 1
+        self.debug_info = sum_loss
 
     def batch_iter(self, data_size):
         table_size = self.table_size
@@ -165,11 +165,10 @@ class LINE(ModelWithEmbeddings):
         else:
             self.model = _LINE(rep_size=rep_size, order=order)
 
-        self.get_embeddings()
 
     @classmethod
-    def check_train_parameters(cls, **kwargs):
-        check_existance(kwargs, {'lr': 0.001, 'batch_size': 1000, 'negative_ratio': 5})
+    def check_train_parameters(cls, graphtype, **kwargs):
+        check_existance(kwargs, {'lr': 0.001, 'batch_size': 1000, 'negative_ratio': 5, 'debug_output_interval': 1})
         check_range(kwargs, {'lr': (0, np.inf), 'batch_size': (0, np.inf), 'negative_ratio': (0, np.inf)})
 
     def build(self, graph, **kwargs):
@@ -183,8 +182,10 @@ class LINE(ModelWithEmbeddings):
         if self.order == 3:
             self.model1.get_train(graph, **kwargs)
             self.model2.get_train(graph, **kwargs)
+            self.debug_info = "sum of loss: {!s}".format(self.model1.debug_info + self.model2.debug_info)
         else:
             self.model.get_train(graph, **kwargs)
+            self.debug_info = "sum of loss: {!s}".format(self.model.debug_info)
 
     def get_vectors(self, graph):
         self.last_vectors = self.vectors
