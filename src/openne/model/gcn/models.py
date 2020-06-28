@@ -65,9 +65,9 @@ class Model(torch.nn.Module):
         print("Model restored from file: %s" % save_path)
 
 
-class GCN(Model):
+class GCNModel(Model):
     def __init__(self, input_dim, output_dim, hidden_dims, supports, dropout=0., weight_decay=0.,num_features_nonzero=0, logging=False, sparse_inputs=False, **kwargs):
-        super(GCN, self).__init__(**kwargs)
+        super(GCNModel, self).__init__(**kwargs)
         self.dimensions = [input_dim]+hidden_dims+[output_dim]
         self.weight_decay = weight_decay
         self.input_dim = input_dim
