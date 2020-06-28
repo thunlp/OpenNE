@@ -54,7 +54,7 @@ class GCN(ModelWithEmbeddings):
         input_dim = self.features.shape[1] if not self.sparse else self.features[2][1]
         feature_shape = self.features.shape if not self.sparse else self.features[0].shape[0]
         output_dim = self.labels.shape[1]
-        self.model = models.GCN(input_dim=input_dim, output_dim=output_dim, hidden_dims=[self.hidden1],
+        self.model = models.GCNModel(input_dim=input_dim, output_dim=output_dim, hidden_dims=[self.hidden1],
                                 supports=self.support, dropout=self.dropout, sparse_inputs=self.sparse,
                                 num_features_nonzero=feature_shape, weight_decay=self.weight_decay, logging=False)
         self.cost_val = []
