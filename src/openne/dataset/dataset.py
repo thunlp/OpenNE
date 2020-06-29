@@ -34,104 +34,74 @@ def makedirs(path):
 
 
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self, name, resource_url, root_dir, downloaded_names, processed_names, *,
-                 downloaded_dir='downloaded', processed_dir='processed'):
+    def __init__(self, name, resource_url, root_dir, filenames):
         """
         :param name:
         :param resource_url:
         :param root_dir:
-        :param downloaded_names:
-        :param processed_names:
-        :param downloaded_dir: RELATIVE. root_dir/downloaded_dir.  if downloaded_dir==None: no downloaded dir
-        :param processed_dir:
+        :param filenames: local filenames
         """
         super(Dataset, self).__init__()
         self.name = name
         self.resource_url = resource_url
         self.dir = root_dir
 
-        if downloaded_dir is not None:
-            self.downloaded_dir = osp.join(root_dir, downloaded_dir)
-            self.downloaded_names = to_list(downloaded_names)
-            self.downloaded_paths = [self.fulldwn(f) for f in self.downloaded_names]
-        else:
-            self.downloaded_dir, self.downloaded_names, self.downloaded_paths = None, None, None
-        if processed_dir is not None:
-            self.processed_dir = osp.join(root_dir, processed_dir)
-            self.processed_names = to_list(processed_names)
-            self.processed_paths = [self.fullpro(f) for f in self.processed_names]
-        else:
-            self.processed_dir, self.processed_names, self.processed_paths = None, None, None
+        self.filenames = to_list(filenames)
+        self.paths = [self.full(f) for f in self.filenames]
+
         self.load_data()
 
-    # "edgelist.txt" -> "OPENNE/downloaded/edgelist.txt"
-    def fulldwn(self, filename):
-        return osp.join(self.downloaded_dir, filename)
-
-    def fullpro(self, filename):
-        return osp.join(self.processed_dir, filename)
+    # "edgelist.txt" -> "OPENNE/edgelist.txt"
+    def full(self, filename):
+        return osp.join(self.dir, filename)
 
     def load_data(self):
-        """
-            processed_paths and download_paths: 1. check if downloaded (download) 2. check if processed (process) 3. read if processed
-            processed_paths is None: 1. check if downloaded (download) 2. process
-            downloaded_paths is None: 1. check if processed (process) 2. read if processed
-        """
-        if self.processed_paths is None or not files_exist(self.processed_paths):
-            if self.processed_paths is not None:
-                makedirs(self.processed_dir)
-            if self.downloaded_paths is not None and not files_exist(self.downloaded_paths):
-                makedirs(self.downloaded_dir)
-                print('Downloading dataset "{}" from "{}".\n'
-                      'Files will be saved to "{}".'.format(self.name, self.resource_url, self.downloaded_dir))
-                self.download()
-                print('Downloaded.')
-            print('Processing dataset. \n'
-                  'Processed files will be saved to {}'.format(self.processed_dir))
-            self.process()
-            print('All done.\n')
+        if not files_exist(self.paths):
+            if self.resource_url is None:
+                errmsg = '\n'.join([f for f in self.paths if osp.exists(f)])
+                raise FileNotFoundError("Cannot find required files:\n{}".format(errmsg))
+            makedirs(self.dir)
+            print('Downloading dataset "{}" from "{}".\n'
+                  'Files will be saved to "{}".'.format(self.name, self.resource_url, self.dir))
+            self.download()
+            print('Downloaded.')
         else:
             self.read()
 
     def download(self):
-        for name in self.downloaded_names:
-            download_url('{}/{}'.format(self.resource_url, name), self.downloaded_dir)
-
-    def process(self):
-        raise NotImplementedError
+        for name in self.filenames:
+            download_url('{}/{}'.format(self.resource_url, name), self.dir)
 
     def read(self):
         raise NotImplementedError
 
 
-class Graph(Dataset):
-    def __init__(self, name, resource_url, root_dir, downloaded_name_dict, processed_name_dict, **kwargs):
+class Graph(Dataset, ABC):
+    def __init__(self, name, resource_url, root_dir, name_dict, **kwargs):
         self.G = None
         self.look_up_dict = {}
         self.look_back_list = []
         # self.node_size = 0
-        self.downloaded_name_dict = downloaded_name_dict
-        self.processed_name_dict = processed_name_dict
+        self.name_dict = name_dict
 
         defaultkwargs = {}
         for kw in set(defaultkwargs).union(set(kwargs)):
             self.__setattr__(kw, kwargs.get(kw, defaultkwargs[kw]))
 
-        super(Graph, self).__init__(name, resource_url, root_dir, [i for k, i in downloaded_name_dict.items()],
-                                    [i for k, i in processed_name_dict.items()], **kwargs)
+        super(Graph, self).__init__(name, resource_url, root_dir, [i for k, i in name_dict.items()])
 
     def read(self):
-        name_dict = self.processed_name_dict
+        name_dict = self.name_dict
         if 'edgefile' in name_dict:
-            self.read_edgelist(self.fulldwn(name_dict['edgefile']))
+            self.read_edgelist(self.full(name_dict['edgefile']))
         elif 'adjfile' in name_dict:
-            self.read_adjlist(self.fulldwn(name_dict['adjfile']))
+            self.read_adjlist(self.full(name_dict['adjfile']))
         if 'labelfile' in name_dict:
-            self.read_node_label(self.fulldwn(name_dict['labelfile']))
+            self.read_node_label(self.full(name_dict['labelfile']))
         if 'features' in name_dict:
-            self.read_node_features(self.fulldwn(name_dict['features']))
+            self.read_node_features(self.full(name_dict['features']))
         if 'status' in name_dict:
-            self.read_node_status(self.fulldwn(name_dict['status']))
+            self.read_node_status(self.full(name_dict['status']))
 
     @classmethod
     def directed(cls):
@@ -301,33 +271,29 @@ class Graph(Dataset):
             self.G[edgelist[i][0]][edgelist[i][1]]['feature'] = edgeattrvectors[i]
 
 
-class LocalFileWithProcess(Graph, ABC):
-    def __init__(self, name, root_dir, downloaded_name_dict, processed_name_dict, **kwargs):
-        super(LocalFileWithProcess, self).__init__(name, None, root_dir, downloaded_name_dict, processed_name_dict,
-                                                   downloaded_dir='.', **kwargs)
-
-    def download(self):
-        pass
-
-
-class LocalFileWithoutProcess(Graph, ABC):
-    def __init__(self, name, root_dir, processed_name_dict, **kwargs):
-        super(LocalFileWithoutProcess, self).__init__(name, None, root_dir, {}, processed_name_dict,
-                                                      downloaded_dir=None, processed_dir='.', **kwargs)
-
-    def download(self):
-        pass
-
-    def process(self):
-        pass
+class LocalFile(Graph, ABC):
+    def __init__(self, name, root_dir, name_dict, **kwargs):
+        super(LocalFile, self).__init__(name, None, root_dir, name_dict, **kwargs)
 
 
 class NetResources(Graph, ABC):
-    def __init__(self, name, resource_url, downloaded_name_dict, processed_name_dict, **kwargs):
+    def __init__(self, name, resource_url, name_dict, **kwargs):
         self.name = name
-        super(NetResources, self).__init__(name, resource_url, self.root_dir,
-                                           downloaded_name_dict, processed_name_dict, **kwargs)
+        super(NetResources, self).__init__(name, resource_url, self.root_dir, name_dict, **kwargs)
 
     @property
     def root_dir(self):
         return osp.join(osp.dirname(osp.realpath(__file__)), '..', '..', 'data', self.name)  #########################
+
+class Adapter(Graph, ABC):
+    def __init__(self, name, AdapteeClass, *args, **kwargs):
+        self.name = name
+        self.data = AdapteeClass(*args, **kwargs)
+        super(Adapter, self).__init__(name, None, self.root_dir, {}, **kwargs)
+
+    @property
+    def root_dir(self):
+        return osp.join(osp.dirname(osp.realpath(__file__)), '..', '..', 'data', self.name)
+
+    def download(self):
+        pass
