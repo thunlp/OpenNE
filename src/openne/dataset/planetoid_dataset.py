@@ -4,24 +4,17 @@ import torch_geometric.datasets as datasets
 import torch_geometric.transforms as T
 from .dataset import *
 
-class TorchGeometricAttributed(NetResources, ABC):
-    def __init__(self, name, adapterclass):
+class TorchGeometricAttributed(Adapter, ABC):
+    def __init__(self, name, AdapteeClass):
         self.name = name
-        self.dataset = adapterclass(self.root_dir, name, T.TargetIndegree())
-        super(TorchGeometricAttributed, self).__init__(name, None, {'filename': name})
+        super(TorchGeometricAttributed, self).__init__(name, AdapteeClass, self.root_dir, name, T.TargetIndegree())
         # edge_attr, edge_index, test_mask, train_mask, val_mask, x, y
 
-    def download(self):
-        pass
-
-    def process(self):
+    def read(self):
         self.G = nx.from_edgelist(self.dataset[0]['edge_index'].t().numpy())
         self.set_node_features(self.dataset[0]['x'].numpy())
         self.set_node_label(self.dataset[0]['y'].numpy())
         self.set_node_features(self.dataset[0]['edge_index'].t().numpy(), self.dataset[0]['edge_attr'].numpy())
-
-    def read(self):
-        self.process()
 
     @classmethod
     def attributed(cls):

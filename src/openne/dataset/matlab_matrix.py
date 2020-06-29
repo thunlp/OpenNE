@@ -9,13 +9,13 @@ class MatlabMatrix(NetResources, ABC):
     def __init__(self, name, resource_url, filename):
         super(MatlabMatrix, self).__init__(name, resource_url, {'matfile': filename + '.mat'})
 
-    def process(self):
-        path = self.downloaded_paths[0]
+    def read(self):
+        path = self.paths[0]
         smat = scipy.io.loadmat(path)
         adjmat, group = smat["network"], smat["group"]
         self.G = nx.from_scipy_sparse_matrix(adjmat)
         self.set_node_label(group)
-        super(MatlabMatrix, self).process()
+
 
 class BlogCatalog(MatlabMatrix):
     def __init__(self):
