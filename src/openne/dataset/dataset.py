@@ -34,26 +34,56 @@ def makedirs(path):
 
 
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self, name, resource_url, root_dir, downloaded_names, processed_names):
+    def __init__(self, name, resource_url, root_dir, downloaded_names, processed_names, *,
+                 downloaded_dir='downloaded', processed_dir='processed'):
+        """
+        :param name:
+        :param resource_url:
+        :param root_dir:
+        :param downloaded_names:
+        :param processed_names:
+        :param downloaded_dir: RELATIVE. root_dir/downloaded_dir.  if downloaded_dir==None: no downloaded dir
+        :param processed_dir:
+        """
         super(Dataset, self).__init__()
         self.name = name
         self.resource_url = resource_url
         self.dir = root_dir
-        self.downloaded_dir = osp.join(root_dir, 'downloaded')
-        self.processed_dir = osp.join(root_dir, 'processed')
-        self.downloaded_names = downloaded_names
-        self.processed_names = processed_names
-        self.downloaded_paths = [osp.join(self.downloaded_dir, f) for f in to_list(self.downloaded_names)]
-        self.processed_paths = [osp.join(self.processed_dir, f) for f in to_list(self.processed_names)]
+
+        if downloaded_dir is not None:
+            self.downloaded_dir = osp.join(root_dir, downloaded_dir)
+            self.downloaded_names = to_list(downloaded_names)
+            self.downloaded_paths = [self.fulldwn(f) for f in self.downloaded_names]
+        else:
+            self.downloaded_dir, self.downloaded_names, self.downloaded_paths = None, None, None
+        if processed_dir is not None:
+            self.processed_dir = osp.join(root_dir, processed_dir)
+            self.processed_names = to_list(processed_names)
+            self.processed_paths = [self.fullpro(f) for f in self.processed_names]
+        else:
+            self.processed_dir, self.processed_names, self.processed_paths = None, None, None
         self.load_data()
 
+    # "edgelist.txt" -> "OPENNE/downloaded/edgelist.txt"
+    def fulldwn(self, filename):
+        return osp.join(self.downloaded_dir, filename)
+
+    def fullpro(self, filename):
+        return osp.join(self.processed_dir, filename)
+
     def load_data(self):
-        if not files_exist(self.processed_paths):
-            if not files_exist(self.downloaded_paths):
-                print('Downloading dataset "{}" from "{}".\n'
-                      'Files will be saved to "{}".'.format(
-                    self.name, self.resource_url, self.downloaded_dir))
+        """
+            processed_paths and download_paths: 1. check if downloaded (download) 2. check if processed (process) 3. read if processed
+            processed_paths is None: 1. check if downloaded (download) 2. process
+            downloaded_paths is None: 1. check if processed (process) 2. read if processed
+        """
+        if self.processed_paths is None or not files_exist(self.processed_paths):
+            if self.processed_paths is not None:
+                makedirs(self.processed_dir)
+            if self.downloaded_paths is not None and not files_exist(self.downloaded_paths):
                 makedirs(self.downloaded_dir)
+                print('Downloading dataset "{}" from "{}".\n'
+                      'Files will be saved to "{}".'.format(self.name, self.resource_url, self.downloaded_dir))
                 self.download()
                 print('Downloaded.')
             print('Processing dataset. \n'
@@ -75,37 +105,33 @@ class Dataset(torch.utils.data.Dataset):
 
 
 class Graph(Dataset):
-    def __init__(self, name, resource_url, root_dir, downloaded_name_dict, **kwargs):
+    def __init__(self, name, resource_url, root_dir, downloaded_name_dict, processed_name_dict, **kwargs):
         self.G = None
         self.look_up_dict = {}
         self.look_back_list = []
         # self.node_size = 0
         self.downloaded_name_dict = downloaded_name_dict
+        self.processed_name_dict = processed_name_dict
 
         defaultkwargs = {}
         for kw in set(defaultkwargs).union(set(kwargs)):
             self.__setattr__(kw, kwargs.get(kw, defaultkwargs[kw]))
 
         super(Graph, self).__init__(name, resource_url, root_dir, [i for k, i in downloaded_name_dict.items()],
-                                    "graph.sparse6")
-
-    def process(self):
-        downloaded_name_dict = self.downloaded_name_dict
-        if 'edgefile' in downloaded_name_dict:
-            self.read_edgelist(downloaded_name_dict['edgefile'])
-        elif 'adjfile' in downloaded_name_dict:
-            self.read_adjlist(downloaded_name_dict['adjfile'])
-        if 'labelfile' in downloaded_name_dict:
-            self.read_node_label(downloaded_name_dict['labelfile'])
-        if 'features' in downloaded_name_dict:
-            self.read_node_features(downloaded_name_dict['features'])
-        if 'status' in downloaded_name_dict:
-            self.read_node_status(downloaded_name_dict['status'])
-        nx.write_sparse6(self.G, self.processed_paths[0])
+                                    [i for k, i in processed_name_dict.items()], **kwargs)
 
     def read(self):
-        self.G = nx.read_sparse6(self.processed_paths[0])
-        self.encode_node()
+        name_dict = self.processed_name_dict
+        if 'edgefile' in name_dict:
+            self.read_edgelist(self.fulldwn(name_dict['edgefile']))
+        elif 'adjfile' in name_dict:
+            self.read_adjlist(self.fulldwn(name_dict['adjfile']))
+        if 'labelfile' in name_dict:
+            self.read_node_label(self.fulldwn(name_dict['labelfile']))
+        if 'features' in name_dict:
+            self.read_node_features(self.fulldwn(name_dict['features']))
+        if 'status' in name_dict:
+            self.read_node_status(self.fulldwn(name_dict['status']))
 
     @classmethod
     def directed(cls):
@@ -123,10 +149,9 @@ class Graph(Dataset):
         G = self.G
         if type(self).directed() and not directed:
             G = nx.to_undirected(G)
+        A = nx.adjacency_matrix(G)
         if not sparse:
-            A = nx.to_numpy_matrix(G, nodelist=range(G.number_of_nodes()))
-        else:
-            A = nx.to_scipy_sparse_matrix(G, nodelist=range(G.number_of_nodes()))
+            A = np.array(nx.adjacency_matrix(G).todense())
         if type(self).weighted() and not weighted:
             A = A.astype(np.bool).astype(np.float32)
         if scaled is not None:  # e.g. scaled = 1
@@ -174,8 +199,10 @@ class Graph(Dataset):
         self.encode_node()
 
     def read_edgelist(self, filename):
-        self.G = nx.DiGraph()
-        if self.directed:
+
+        if self.directed():
+            self.G = nx.DiGraph()
+
             def read_unweighted(l):
                 src, dst = l.split()
                 self.G.add_edge(src, dst)
@@ -186,6 +213,8 @@ class Graph(Dataset):
                 self.G.add_edge(src, dst)
                 self.G[src][dst]['weight'] = float(w)
         else:
+            self.G = nx.Graph()
+
             def read_unweighted(l):
                 src, dst = l.split()
                 self.G.add_edge(src, dst)
@@ -201,7 +230,7 @@ class Graph(Dataset):
                 self.G[dst][src]['weight'] = float(w)
         fin = open(filename, 'r')
         func = read_unweighted
-        if self.weighted:
+        if self.weighted():
             func = read_weighted
         while 1:
             l = fin.readline()
@@ -272,19 +301,32 @@ class Graph(Dataset):
             self.G[edgelist[i][0]][edgelist[i][1]]['feature'] = edgeattrvectors[i]
 
 
-class SelfDefined(Graph, ABC):
-    def __init__(self, name, root_dir, name_dict, **kwargs):
-        super(SelfDefined, self).__init__(name, None, root_dir, name_dict, **kwargs)
+class LocalFileWithProcess(Graph, ABC):
+    def __init__(self, name, root_dir, downloaded_name_dict, processed_name_dict, **kwargs):
+        super(LocalFileWithProcess, self).__init__(name, None, root_dir, downloaded_name_dict, processed_name_dict,
+                                                   downloaded_dir='.', **kwargs)
 
     def download(self):
         pass
 
 
+class LocalFileWithoutProcess(Graph, ABC):
+    def __init__(self, name, root_dir, processed_name_dict, **kwargs):
+        super(LocalFileWithoutProcess, self).__init__(name, None, root_dir, {}, processed_name_dict,
+                                                      downloaded_dir=None, processed_dir='.', **kwargs)
+
+    def download(self):
+        pass
+
+    def process(self):
+        pass
+
+
 class NetResources(Graph, ABC):
-    def __init__(self, name, resource_url, name_dict, **kwargs):
+    def __init__(self, name, resource_url, downloaded_name_dict, processed_name_dict, **kwargs):
         self.name = name
-        self.name_dict = name_dict
-        super(NetResources, self).__init__(name, resource_url, self.root_dir, name_dict, **kwargs)
+        super(NetResources, self).__init__(name, resource_url, self.root_dir,
+                                           downloaded_name_dict, processed_name_dict, **kwargs)
 
     @property
     def root_dir(self):
