@@ -65,8 +65,7 @@ class Dataset(torch.utils.data.Dataset):
                   'Files will be saved to "{}".'.format(self.name, self.resource_url, self.dir))
             self.download()
             print('Downloaded.')
-        else:
-            self.read()
+        self.read()
 
     def download(self):
         for name in self.filenames:
