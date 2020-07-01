@@ -54,7 +54,7 @@ vectors = model.vectors
 embeddings = np.zeros((g.G.number_of_nodes(), 128))
 for i, embedding in vectors.items():
     embeddings[int(i), :] = embedding
-# embeddings = model.num_embeddings  # numpy array
+# embeddings = models.num_embeddings  # numpy array
 ########################## END ############################
 
 # save embeddings and labels
@@ -70,7 +70,7 @@ sess = tf.Session()
 
 saver = tf.train.Saver([embeddings_var])
 sess.run(embeddings_var.initializer)
-saver.save(sess, os.path.join(LOG_DIR, "model.ckpt"), 1)
+saver.save(sess, os.path.join(LOG_DIR, "models.ckpt"), 1)
 
 # configure tf projector
 config = projector.ProjectorConfig()

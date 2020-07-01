@@ -60,7 +60,7 @@ class TADW(object):
 
             self.features = Ud*Sd  #.reshape(200)
 
-    def train(self): # todo: rewrite with learning-model-based method
+    def train(self): # todo: rewrite with learning-models-based method
         self.adj = self.getAdj()
         # M=(A+A^2)/2 where A is the row-normalized adjacency matrix
         self.M = (self.adj + torch.mm(self.adj, self.adj))/2

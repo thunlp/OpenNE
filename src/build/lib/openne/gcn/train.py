@@ -16,9 +16,9 @@ tf.set_random_seed(seed)
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 # 'cora', 'citeseer', 'pubmed'
-flags.DEFINE_string('dataset', 'cora', 'Dataset string.')
+flags.DEFINE_string('datasets', 'cora', 'Dataset string.')
 # 'gcn', 'gcn_cheby', 'dense'
-flags.DEFINE_string('model', 'gcn', 'Model string.')
+flags.DEFINE_string('models', 'gcn', 'Model string.')
 flags.DEFINE_float('learning_rate', 0.01, 'Initial learning rate.')
 flags.DEFINE_integer('epochs', 200, 'Number of epochs to train.')
 flags.DEFINE_integer('hidden1', 16, 'Number of units in hidden layer 1.')
@@ -48,7 +48,7 @@ elif FLAGS.model == 'dense':
     num_supports = 1
     model_func = MLP
 else:
-    raise ValueError('Invalid argument for model: ' + str(FLAGS.model))
+    raise ValueError('Invalid argument for models: ' + str(FLAGS.model))
 
 # Define placeholders
 placeholders = {
@@ -61,14 +61,14 @@ placeholders = {
     'num_features_nonzero': tf.placeholder(tf.int32)
 }
 
-# Create model
+# Create models
 model = model_func(placeholders, input_dim=features[2][1], logging=True)
 
 # Initialize session
 sess = tf.Session()
 
 
-# Define model evaluation function
+# Define models evaluation function
 def evaluate(features, support, labels, mask, placeholders):
     t_test = time.time()
     feed_dict_val = construct_feed_dict(
@@ -82,7 +82,7 @@ sess.run(tf.global_variables_initializer())
 
 cost_val = []
 
-# Train model
+# Train models
 for epoch in range(FLAGS.epochs):
 
     t = time.time()
