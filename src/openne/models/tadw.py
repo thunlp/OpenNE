@@ -10,8 +10,8 @@ from .models import *
 
 class TADW(ModelWithEmbeddings):
 
-    def __init__(self, dim, lamb=0.2):
-        super(TADW, self).__init__(dim=dim//2, lamb=lamb)
+    def __init__(self, dim, lamb=0.2, **kwargs):
+        super(TADW, self).__init__(dim=dim//2, lamb=lamb, **kwargs)
 
     @staticmethod
     def getT(graph):
@@ -34,6 +34,7 @@ class TADW(ModelWithEmbeddings):
                                  'lamb': 0.2,
                                  'epochs': 20})
         assert kwargs['dim'] % 2 == 0
+        return kwargs
 
     @classmethod
     def check_graphtype(cls, graphtype, **kwargs):

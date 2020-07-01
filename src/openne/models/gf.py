@@ -9,14 +9,15 @@ __email__ = "wblmail@whu.edu.cn"
 
 
 class GraphFactorization(ModelWithEmbeddings):
-    def __init__(self, rep_size=128):
-        super(GraphFactorization, self).__init__(rep_size=rep_size)
+    def __init__(self, dim=128, **kwargs):
+        super(GraphFactorization, self).__init__(dim=dim, **kwargs)
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
-        check_existance(kwargs, {'epoch': 120, 'learning_rate': 0.003, 'weight_decay': 1., 'rep_size': 128})
+        check_existance(kwargs, {'epoch': 120, 'learning_rate': 0.003, 'weight_decay': 1., 'dim': 128})
         check_range(kwargs, {'epoch': 'positive', 'learning_rate': 'positive',
-                             'weight_decay': 'positive', 'rep_size': 'positive'})
+                             'weight_decay': 'positive', 'dim': 'positive'})
+        return kwargs
 
     def build(self, graph, *, learning_rate=0.003, **kwargs):
         self.adj_mat = torch.from_numpy(graph.adjmat(directed=True, weighted=True))

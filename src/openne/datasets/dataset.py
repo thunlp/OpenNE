@@ -11,27 +11,7 @@ import numpy as np
 from torch_geometric.data import download_url
 import os
 import errno
-
-
-def to_list(x):
-    if x is None:
-        return []
-    if not isinstance(x, collections.Iterable) or isinstance(x, str):
-        x = [x]
-    return x
-
-
-def files_exist(files):
-    return all([osp.exists(f) for f in files])
-
-
-def makedirs(path):
-    try:
-        os.makedirs(osp.expanduser(osp.normpath(path)))
-    except OSError as e:
-        if e.errno != errno.EEXIST and osp.isdir(path):
-            raise e
-
+from ..utils import *
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, resource_url, root_dir, filenames):
@@ -55,6 +35,7 @@ class Dataset(torch.utils.data.Dataset):
         return osp.join(self.dir, filename)
 
     def load_data(self):
+        print("Loading {} Dataset from root dir: {}".format(type(self).__name__, self.dir))
         if not files_exist(self.paths):
             if self.resource_url is None:
                 errmsg = '\n'.join([f for f in self.paths if osp.exists(f)])

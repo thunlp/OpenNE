@@ -16,13 +16,14 @@ def getLap(adj_mat):
 
 
 class LaplacianEigenmaps(ModelWithEmbeddings):
-    def __init__(self, dim=128):
-        super(LaplacianEigenmaps, self).__init__(dim=dim)
+    def __init__(self, dim=128, **kwargs):
+        super(LaplacianEigenmaps, self).__init__(dim=dim, **kwargs)
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
         check_existance(kwargs, {'dim': 128})
         check_range(kwargs, {'dim': 'positive'})
+        return kwargs
 
     def get_train(self, graph, **kwargs):
         adj_mat = graph.adjmat(directed=True, weighted=False)

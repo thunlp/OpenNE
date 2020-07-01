@@ -1,4 +1,5 @@
-from . import BaseTask, Classifier
+from .tasks import BaseTask
+from .classify import Classifier
 from ..utils import *
 from ..models import ModelWithEmbeddings
 from sklearn.linear_model import LogisticRegression

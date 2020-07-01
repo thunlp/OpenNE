@@ -23,6 +23,12 @@ def xtype(val):
         return ListInput
     return type(val)
 
+def toargstr(s):
+    if s[:2] != '--':
+        s = '--' + s
+    s = s.replace('_', '-')
+    return s
+
 def parse_args():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
                             conflict_handler='resolve')
@@ -33,7 +39,7 @@ def parse_args():
                              'automatically assign one according to the model.')
     parser.add_argument('--model', choices=models.modeldict.keys(), type=str.lower,
                         help='Assign a model.', required=True)
-    group = parser.add_mutually_exclusive_group()
+    group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--dataset', choices=datasets.datasetdict.keys(), type=str.lower,
                        help='Assign a dataset as provided by OpenNE.\n'
                             'Use --local-dataset if you want to load dataset from file.')
@@ -42,7 +48,7 @@ def parse_args():
     local_inputs = parser.add_argument_group('LOCAL DATASET INPUTS')
     group.add_argument('--local-dataset', action='store_true',
                        help='Load dataset from file. Check LOCAK DATASET INPUTS for more details.')
-    local_input_format = local_inputs.add_mutually_exclusive_group(required=True)
+    local_input_format = local_inputs.add_mutually_exclusive_group()
     local_input_format.add_argument('--edgelist', help='Graph description in edgelist format.')
     local_input_format.add_argument('--adjlist', help='Graph description in adjlist format.')
     local_inputs.add_argument('--label-file', help='Node labels.')
@@ -57,7 +63,7 @@ def parse_args():
     for arg in model_args:
         if arg not in used_names:
             used_names.add(arg)
-            group.add_argument(arg, type=xtype(model_args[arg]), default=model_args[arg])
+            group.add_argument(toargstr(arg), type=xtype(model_args[arg]), default=model_args[arg])
 
     for modelname in models.modeldict:
         model = models.modeldict[modelname]
@@ -66,20 +72,16 @@ def parse_args():
         for arg in model_args:
             if arg not in used_names:
                 used_names.add(arg)
-                group.add_argument(arg, type=xtype(model_args[arg]), default=model_args[arg])
+                group.add_argument(toargstr(arg), type=xtype(model_args[arg]), default=model_args[arg])
 
     args = parser.parse_args()
-
-    if args.method != 'gcn' and not args.output:
-        print("No output filename. Exit.")
-        exit(1)
 
     return args
 
 
 def parse(**kwargs):
-    Dataset = datasets.datasetdict[kwargs['model']]
-    Model = models.modeldict[kwargs['dataset']]
+    Dataset = datasets.datasetdict[kwargs['dataset']]
+    Model = models.modeldict[kwargs['model']]
     taskname = kwargs.get('task', None)
     if taskname is None:
         if Model in tasks.supervisedmodels:

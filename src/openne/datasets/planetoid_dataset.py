@@ -11,10 +11,12 @@ class TorchGeometricAttributed(Adapter, ABC):
         # edge_attr, edge_index, test_mask, train_mask, val_mask, x, y
 
     def read(self):
-        self.G = nx.from_edgelist(self.dataset[0]['edge_index'].t().numpy())
-        self.set_node_features(self.dataset[0]['x'].numpy())
-        self.set_node_label(self.dataset[0]['y'].numpy())
-        self.set_node_features(self.dataset[0]['edge_index'].t().numpy(), self.dataset[0]['edge_attr'].numpy())
+        self.G = nx.from_edgelist(self.data[0]['edge_index'].t().numpy())
+        self.encode_node()
+        self.set_node_features(self.data[0]['x'].numpy())
+        self.set_node_label(self.data[0]['y'].numpy())
+        self.set_edge_attr(self.data[0]['edge_index'].t().numpy(), self.data[0]['edge_attr'].numpy())
+
 
     @classmethod
     def attributed(cls):

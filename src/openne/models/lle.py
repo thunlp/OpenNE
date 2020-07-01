@@ -15,19 +15,20 @@ __email__ = "alan1995wang@outlook.com"
 
 class LLE(ModelWithEmbeddings):
 
-    def __init__(self, dim):
+    def __init__(self, dim, **kwargs):
         """ Initialize the LocallyLinearEmbedding class
 
         Args:
           dim: int
             dimension of the embedding
         """
-        super(LLE, self).__init__(dim=dim)
+        super(LLE, self).__init__(dim=dim, **kwargs)
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
         check_existance(kwargs, {'dim': 128, 'sparse': False})
         check_range(kwargs, {'dim': 'positive', 'sparse': [1, 0, True, False]})
+        return kwargs
 
     def get_train(self, graph, *, sparse=False, **kwargs):
         A = graph.adjmat(directed=False, weighted=True, sparse=sparse)  # todo: check when sparse matrix is better
