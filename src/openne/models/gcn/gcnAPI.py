@@ -15,21 +15,26 @@ class GCN(ModelWithEmbeddings):
         super(GCN, self).__init__(hiddens=hiddens, max_degree=max_degree)
 
     @classmethod
-    def check_train_parameters(cls, graphtype, **kwargs):
-        if not graphtype.attributed():
-            raise TypeError("GCN only accepts attributed graphs!")
+    def check_train_parameters(cls, **kwargs):
         check_existance(kwargs, {"learning_rate": 0.01,
                                  "epochs": 200,
                                  "dropout": 0.5,
                                  "weight_decay": 1e-4,
                                  "early_stopping": 100,
-                                 "clf_ratio": 0.1})
+                                 "clf_ratio": 0.1,
+                                 "max_degree": 0})
         check_range(kwargs, {"learning_rate": (0, np.inf),
                              "epochs": (0, np.inf),
                              "dropout": (0, 1),
                              "weight_decay": (0, 1),
                              "early_stopping": (0, np.inf),
-                             "clf_ratio": (0, 1)})
+                             "clf_ratio": (0, 1),
+                             "max_degree": (0, np.inf)})
+
+    @classmethod
+    def check_graphtype(cls, graphtype, **kwargs):
+        if not graphtype.attributed():
+            raise TypeError("GCN only accepts attributed graphs!")
 
     def build(self, graph, *, learning_rate=0.01, epochs=200,
               dropout=0.5, weight_decay=1e-4, early_stopping=100,

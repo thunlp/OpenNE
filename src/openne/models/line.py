@@ -10,20 +10,30 @@ from .models import *
 
 # todo: add validation hook (see openne/line.py)
 class _LINE(ModelWithEmbeddings):
-    def __init__(self, rep_size=128, order=2, table_size=1e8):
-        super(ModelWithEmbeddings, self).__init__(rep_size=rep_size, order=order, table_size=table_size)
+    def __init__(self, dim=128, order=2, table_size=1e8):
+        super(ModelWithEmbeddings, self).__init__(dim=dim, order=order, table_size=table_size)
         self.cur_epoch = 0
 
     @classmethod
-    def check_train_parameters(cls, graphtype, **kwargs):
-        check_existance(kwargs, {'lr': 0.001, 'batch_size': 1000, 'negative_ratio': 5})
-        check_range(kwargs, {'lr': (0, np.inf), 'batch_size': (0, np.inf), 'negative_ratio': (0, np.inf)})
+    def check_train_parameters(cls, **kwargs):
+        check_existance(kwargs, {'dim': 128,
+                                 'order': 2,
+                                 'table_size': 1e8,
+                                 'lr': 0.001,
+                                 'batch_size': 1000,
+                                 'negative_ratio': 5})
+        check_range(kwargs, {'dim': 'positive',
+                             'order': 'positive',
+                             'table_size': 'positive',
+                             'lr': 'positive',
+                             'batch_size': 'positive',
+                             'negative_ratio': 'positive'})
 
     def build(self, graph, *, lr=0.001, batch_size=1000, negative_ratio=5, **kwargs):
         cur_seed = random.getrandbits(32)
         torch.manual_seed(cur_seed)
-        self.embeddings = torch.nn.init.xavier_normal_(torch.zeros(self.node_size, self.rep_size).requires_grad_(True))
-        self.context_embeddings = torch.nn.init.xavier_normal_(torch.zeros(self.node_size, self.rep_size).requires_grad_(True))
+        self.embeddings = torch.nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim).requires_grad_(True))
+        self.context_embeddings = torch.nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim).requires_grad_(True))
         self.second_loss = lambda s, h, t: -(F.logsigmoid(
             s*(self.embeddings[h]*self.context_embeddings[t]).sum(dim=1))).mean()
         self.first_loss = lambda s, h, t: -(F.logsigmoid(
@@ -156,20 +166,20 @@ class _LINE(ModelWithEmbeddings):
 
 
 class LINE(ModelWithEmbeddings):
-    def __init__(self, rep_size=128, order=3):
-        super(LINE, self).__init__(rep_size=rep_size, order=order)
+    def __init__(self, dim=128, order=3):
+        super(LINE, self).__init__(dim=dim, order=order)
         self.best_result = 0
         if order == 3:
-            self.model1 = _LINE(rep_size=rep_size//2, order=1)
-            self.model2 = _LINE(rep_size=rep_size//2, order=2)
+            self.model1 = _LINE(dim=dim // 2, order=1)
+            self.model2 = _LINE(dim=dim // 2, order=2)
         else:
-            self.model = _LINE(rep_size=rep_size, order=order)
+            self.model = _LINE(dim=dim, order=order)
 
 
     @classmethod
     def check_train_parameters(cls, graphtype, **kwargs):
         check_existance(kwargs, {'lr': 0.001, 'batch_size': 1000, 'negative_ratio': 5, 'debug_output_interval': 1})
-        check_range(kwargs, {'lr': (0, np.inf), 'batch_size': (0, np.inf), 'negative_ratio': (0, np.inf)})
+        check_range(kwargs, {'lr': 'positive', 'batch_size': 'positive', 'negative_ratio': 'positive'})
 
     def build(self, graph, **kwargs):
         if self.order == 3:

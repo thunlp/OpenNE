@@ -15,14 +15,16 @@ __email__ = "alan1995wang@outlook.com"
 
 
 class HOPE(ModelWithEmbeddings):
-    def __init__(self, d):
+    def __init__(self, dim):
         """
-        :param d: representation dim
+        :param dim: representation dim
         """
-        super(HOPE, self).__init__(_d=d)
+        super(HOPE, self).__init__(dim=dim)
 
     @classmethod
-    def check_train_parameters(cls, graphtype, **kwargs):
+    def check_train_parameters(cls, **kwargs):
+        check_existance(kwargs, {'dim': 128})
+        check_range(kwargs, {'dim': 'positive'})
         check_existance(kwargs, {'measurement': 'katz'})
         check_range(kwargs, {'measurement': ['katz', 'cn', 'rpr', 'aa']})
         if kwargs['measurement'] == 'katz':
@@ -33,15 +35,15 @@ class HOPE(ModelWithEmbeddings):
     def get_train(self, graph, *, measurement='katz', **kwargs):
         n = graph.nodesize
         A = graph.adjmat(directed=True, weighted=False)  # brute force...
-        if measurement == 'katz': # Katz: M_g^-1 * M_l = (I - beta * A)^-1 - I
+        if measurement == 'katz':  # Katz: M_g^-1 * M_l = (I - beta * A)^-1 - I
             S = ((np.eye(n) - kwargs['beta'] * A).I - np.eye(n))
             # M_g = np.eye(n) - kwargs['beta'] * A
             # M_l = kwargs['beta'] * A
-        elif measurement == 'cn': # Common Neighbors: S = A^2
+        elif measurement == 'cn':  # Common Neighbors: S = A^2
             S = np.matmul(A, A)
             # M_g = I
             # M_l = A^2
-        elif measurement == 'rpr': # Rooted PageRank: (1 - alpha)(I - alpha * P)^-1
+        elif measurement == 'rpr':  # Rooted PageRank: (1 - alpha)(I - alpha * P)^-1
             P = graph.adjmat(directed=True, weighted=False, scaled=1)  # scaled=0 in paper but possibly wrong?
             S = (1 - kwargs['alpha']) * (np.eye(n) - kwargs['alpha'] * P).I
         else: # Adamic-Adar: Mg^-1 * M_l
@@ -52,7 +54,7 @@ class HOPE(ModelWithEmbeddings):
             S = np.matmul(np.matmul(A, D), A)
 
         # todo: check if the models REALLY DON'T NEED M_g and M_l!
-        u, s, vt = lg.svds(S, k=self._d // 2)  # this one directly use the d/2-dim core for svd
+        u, s, vt = lg.svds(S, k=self.dim // 2)  # this one directly use the d/2-dim core for svd
 
         sigma = np.diagflat(np.sqrt(s))
         X1 = normalize(np.matmul(u, sigma))

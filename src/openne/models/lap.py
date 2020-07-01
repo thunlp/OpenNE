@@ -16,8 +16,13 @@ def getLap(adj_mat):
 
 
 class LaplacianEigenmaps(ModelWithEmbeddings):
-    def __init__(self, rep_size=128):
-        super(LaplacianEigenmaps, self).__init__(rep_size=rep_size)
+    def __init__(self, dim=128):
+        super(LaplacianEigenmaps, self).__init__(dim=dim)
+
+    @classmethod
+    def check_train_parameters(cls, **kwargs):
+        check_existance(kwargs, {'dim': 128})
+        check_range(kwargs, {'dim': 'positive'})
 
     def get_train(self, graph, **kwargs):
         adj_mat = graph.adjmat(directed=True, weighted=False)
@@ -28,5 +33,5 @@ class LaplacianEigenmaps(ModelWithEmbeddings):
             if w[i] > 1e-10:
                 start = i
                 break
-        vec = vec[:, start:start+self.rep_size]
+        vec = vec[:, start:start+self.dim]
         return vec

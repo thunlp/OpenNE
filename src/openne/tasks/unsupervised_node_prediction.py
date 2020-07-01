@@ -9,7 +9,7 @@ class UnsupervisedNodePrediction(BaseTask):
 
     def check(self, modelclass, datasetclass):
         assert(issubclass(modelclass, ModelWithEmbeddings))
-        self.kwargs = modelclass.check_train_parameters(datasetclass, **self.train_kwargs)
+        self.kwargs = modelclass.check(datasetclass, **self.train_kwargs)
 
     @property
     def train_kwargs(self):

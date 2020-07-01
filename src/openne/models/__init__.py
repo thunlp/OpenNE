@@ -11,5 +11,5 @@ from .gcn.gcnAPI import GCN
 from .models import ModelWithEmbeddings, BaseModel
 
 modellist = [GraphFactorization, GraRep, HOPE, LaplacianEigenmaps, LINE, LLE, Node2vec, DeepWalk, SDNE, TADW, GCN]
-modeldict = {Cls.__name__: Cls for Cls in modellist}
+modeldict = {Cls.__name__.lower(): Cls for Cls in modellist}
 

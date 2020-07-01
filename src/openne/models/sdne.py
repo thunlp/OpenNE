@@ -165,8 +165,13 @@ class SDNE(ModelWithEmbeddings):
         super(SDNE, self).__init__(encoder_layer_list=encoder_layer_list, alpha=alpha, beta=beta, nu1=nu1, nu2=nu2)
 
     @classmethod
-    def check_train_parameters(cls, graphtype, **kwargs):
-        check_existance(kwargs, {'batch_size': 200,
+    def check_train_parameters(cls, **kwargs):
+        check_existance(kwargs, {'encoder_layer_list': [1000, 128],
+                                 'alpha': 1e-6,
+                                 'beta': 5.,
+                                 'nu1': 1e-8,
+                                 'nu2': 1e-4,
+                                 'batch_size': 200,
                                  'epochs': 100,
                                  'learning_rate': 0.01,
                                  'decay': False,

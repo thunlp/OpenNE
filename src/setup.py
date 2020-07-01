@@ -5,6 +5,7 @@ setup(
     url="https://github.com/thunlp/OpenNE",
     license="MIT",
     author="THUNLP",
+    version="2.0",
     description="Open Source Network Embedding toolkit",
     packages=find_packages(),
     long_description=open("../README.md").read(),
