@@ -11,8 +11,9 @@ class Node2vec(ModelWithEmbeddings):
         super(Node2vec, self).__init__(dim=dim, dw=dw)
 
     @classmethod
-    def check_train_parameters(cls, graphtype, **kwargs):
-        check_existance(kwargs, {'path_length': 80,
+    def check_train_parameters(cls, **kwargs):
+        check_existance(kwargs, {'dim': 128,
+                                 'path_length': 80,
                                  'num_paths': 10,
                                  'p': 1.0,
                                  'q': 1.0,

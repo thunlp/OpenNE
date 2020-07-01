@@ -29,10 +29,16 @@ class TADW(ModelWithEmbeddings):
         return features.t()
 
     @classmethod
-    def check_train_parameters(cls, graphtype, **kwargs):
+    def check_train_parameters(cls, **kwargs):
+        check_existance(kwargs, {'dim': 128,
+                                 'lamb': 0.2,
+                                 'epochs': 20})
+        assert kwargs['dim'] % 2 == 0
+
+    @classmethod
+    def check_graphtype(cls, graphtype, **kwargs):
         if not graphtype.attributed():
             raise TypeError("TADW only accepts attributed graphs.")
-        check_existance(kwargs, {'epochs': 20})
 
     def build(self, graph, **kwargs):
         self.adj = graph.adjmat(weighted=False, directed=False, scaled=1)

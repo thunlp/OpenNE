@@ -15,19 +15,19 @@ __email__ = "alan1995wang@outlook.com"
 
 class LLE(ModelWithEmbeddings):
 
-    def __init__(self, d):
+    def __init__(self, dim):
         """ Initialize the LocallyLinearEmbedding class
 
         Args:
-          d: int
+          dim: int
             dimension of the embedding
         """
-        super(LLE, self).__init__(_d=d)
+        super(LLE, self).__init__(dim=dim)
 
     @classmethod
-    def check_train_parameters(cls, graphtype, **kwargs):
-        check_existance(kwargs, {'sparse': False})
-        check_range(kwargs, {'sparse': [1, 0, True, False]})
+    def check_train_parameters(cls, **kwargs):
+        check_existance(kwargs, {'dim': 128, 'sparse': False})
+        check_range(kwargs, {'dim': 'positive', 'sparse': [1, 0, True, False]})
 
     def get_train(self, graph, *, sparse=False, **kwargs):
         A = graph.adjmat(directed=False, weighted=True, sparse=sparse)  # todo: check when sparse matrix is better
@@ -37,6 +37,6 @@ class LLE(ModelWithEmbeddings):
         else:
             I_n = np.eye(graph.nodesize())  # sp.eye(graph.number_of_nodes())
         I_min_A = I_n - A
-        u, s, vt = lg.svds(I_min_A, k=self._d + 1, which='SM')  # todo: check SM or LM
+        u, s, vt = lg.svds(I_min_A, k=self.dim + 1, which='SM')  # todo: check SM or LM
         vt = torch.tensor(vt)
         return vt.t()[:, 1:]

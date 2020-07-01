@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 import scipy.sparse.linalg as lg
 from ..utils import *
 from .models import *
@@ -13,9 +14,14 @@ def GetProbTranMat(Ak, node_size):
 
 
 class GraRep(ModelWithEmbeddings):
-    def __init__(self, Kstep, dim):
-        assert dim % Kstep == 0
-        super(GraRep, self).__init__(Kstep=Kstep, dim=int(dim/Kstep))
+    def __init__(self, kstep, dim):
+        super(GraRep, self).__init__(kstep=kstep, dim=int(dim/kstep))
+
+    @classmethod
+    def check_train_parameters(cls, **kwargs):
+        check_existance(kwargs, {'kstep': 4, 'dim': 128})
+        check_range(kwargs, {"kstep": 'positive', 'dim': 'positive'})
+        assert kwargs['dim'] % kwargs['kstep'] == 0
 
     def GetRepUseSVD(self, probTranMat, alpha):
         U, S, VT = lg.svds(probTranMat, k=self.dim)
@@ -26,9 +32,9 @@ class GraRep(ModelWithEmbeddings):
     def get_train(self, graph, **kwargs):
         adj = torch.from_numpy(graph.adjmat(directed=False, weighted=False, scaled=1))
         Ak = torch.eye(graph.nodesize)
-        RepMat = torch.zeros((graph.nodesize, int(self.dim * self.Kstep)))
-        for i in range(self.Kstep):
-            print('Kstep =', i)
+        RepMat = torch.zeros((graph.nodesize, int(self.dim * self.kstep)))
+        for i in range(self.kstep):
+            print('kstep =', i)
             Ak = torch.mm(Ak, adj)
             probTranMat = GetProbTranMat(Ak, graph.nodesize)
             Rk = self.GetRepUseSVD(probTranMat, 0.5)

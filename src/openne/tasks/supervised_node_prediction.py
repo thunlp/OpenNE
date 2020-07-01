@@ -10,7 +10,7 @@ class SupervisedNodePrediction(BaseTask):
 
     def check(self, modelclass, datasetclass):
         assert(any(issubclass(modelclass, cls) for cls in supervisedmodels))
-        self.kwargs = modelclass.check_train_parameters(datasetclass, **self.train_kwargs)
+        self.kwargs = modelclass.check(datasetclass, **self.train_kwargs)
         
     def train(self, model, graph):
         self.split_dataset(graph)

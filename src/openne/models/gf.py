@@ -13,9 +13,10 @@ class GraphFactorization(ModelWithEmbeddings):
         super(GraphFactorization, self).__init__(rep_size=rep_size)
 
     @classmethod
-    def check_train_parameters(cls, graphtype, **kwargs):
-        check_existance(kwargs, {'epoch': 120, 'learning_rate': 0.003, 'weight_decay': 1.})
-        check_range(kwargs, {'epoch': (0, np.inf), 'learning_rate': (0, np.inf), 'weight_decay': (0, np.inf)})
+    def check_train_parameters(cls, **kwargs):
+        check_existance(kwargs, {'epoch': 120, 'learning_rate': 0.003, 'weight_decay': 1., 'rep_size': 128})
+        check_range(kwargs, {'epoch': 'positive', 'learning_rate': 'positive',
+                             'weight_decay': 'positive', 'rep_size': 'positive'})
 
     def build(self, graph, *, learning_rate=0.003, **kwargs):
         self.adj_mat = torch.from_numpy(graph.adjmat(directed=True, weighted=True))

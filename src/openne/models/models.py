@@ -2,6 +2,7 @@ import torch
 import os
 from time import time
 from ..utils import *
+import inspect
 
 class BaseModel(torch.nn.Module):
     def __init__(self, **kwargs):
@@ -86,8 +87,12 @@ class ModelWithEmbeddings(BaseModel):
         self.load_state_dict(torch.load(path))
 
     @classmethod
-    def check_train_parameters(cls, graphtype, **kwargs):
+    def check_train_parameters(cls, **kwargs):
         return kwargs
+
+    @classmethod
+    def check_graphtype(cls, graphtype, **kwargs):
+        pass
 
     def get_vectors(self, graph):
         self.vectors = {}
@@ -95,18 +100,25 @@ class ModelWithEmbeddings(BaseModel):
             self.vectors[graph.look_back_list[i]] = embedding
         return self.vectors
 
-    def _check_train_parameters(self, graphtype, **kwargs):
+    @classmethod
+    def check(cls, graphtype=None, **kwargs):
         new_kwargs = kwargs.copy()
-        ret_args = self.check_train_parameters(graphtype, **new_kwargs)
+        ret_args = cls.check_train_parameters(**new_kwargs)
+        if graphtype:
+            cls.check_graphtype(graphtype, **ret_args)
         if ret_args is not None:
             new_kwargs = ret_args
         if 'epochs' not in new_kwargs:
             epoch_debug_output = None
         else:
             epoch_debug_output = 5
-        check_existance(new_kwargs, {'epochs': 1,
+        check_existance(new_kwargs, {'dim': 128,
+                                     'epochs': 1,
                                      'validation_hooks': [],
-                                     'debug_output_interval': epoch_debug_output})
+                                     'validation_interval': 1,
+                                     'debug_output_interval': epoch_debug_output,
+                                     'output': None,
+                                     'save': True})
         return new_kwargs
 
     def build(self, graph, **kwargs):
@@ -135,11 +147,11 @@ class ModelWithEmbeddings(BaseModel):
         for i in range(epochs):
             time0 = time()
             self.embeddings = self.get_train(graph, step=i, **kwargs)
-            if epochs > 1:
+            if epochs > 1 and (i + 1) % kwargs['validation_interval'] == 0:
                 for f_v in kwargs['validation_hooks']:
                     f_v(self, graph, step=i, **kwargs)
-            if kwargs['debug_output_interval'] and i % kwargs['debug_output_interval'] == 0:
-                print("epoch {}: {}, time used = {} s".format(i, self.debug_info, time()-time0))
+            if kwargs['debug_output_interval'] and (i + 1) % kwargs['debug_output_interval'] == 0:
+                print("epoch {}: {}, time used = {} s".format(i + 1, self.debug_info, time()-time0))
             if self.early_stopping_judge(graph, step=i, **kwargs):
                 print("Early stopping condition satisfied. Abort training.")
                 break
@@ -154,3 +166,7 @@ class ModelWithEmbeddings(BaseModel):
         t2 = time()
         print("Finished training. Time used = {}.".format(t2 - t1))
         return self.vectors
+
+    @classmethod
+    def args(cls):
+        return cls.check()

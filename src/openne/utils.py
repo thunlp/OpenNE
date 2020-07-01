@@ -1,4 +1,5 @@
 from numbers import Number
+import numpy as np
 def check_existance(src_dict, req_items, defaults=None):
     """
     Check if each required item is in the given dict.
@@ -42,12 +43,15 @@ def check_range(src_dict, req_ranges):
         range, arange, list, dict and other iterables
         (a,b): closed interval
         (a,b, 'open' or 'closed' or 'open-closed' or 'closed-open'): interval
+        'positive': (0, np.inf)
     :raise: ValueError.
     """
 
     for i in src_dict:
         if i in req_ranges:
             r = req_ranges[i]
+            if r == 'positive':
+                r = (0, np.inf)
             if isinstance(r, tuple) and len(r) in (2, 3):
                 if not in_interval(src_dict[i], *r):
                     raise ValueError('arg value {} not in interval {}'.format(src_dict[i], r))

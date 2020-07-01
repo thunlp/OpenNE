@@ -5,5 +5,5 @@ from .wiki import Wiki
 from .planetoid_dataset import PubMed, Reddit, Cora, CiteSeer
 
 datasetlist = [Karate, PPI, Wikipedia, Flickr, Wiki, PubMed, Reddit, Cora, CiteSeer]
-datasetdict = {Cls.__name__: Cls for Cls in datasetlist}
+datasetdict = {Cls.__name__.lower(): Cls for Cls in datasetlist}
 
