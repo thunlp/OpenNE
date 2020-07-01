@@ -64,59 +64,10 @@ class Model(torch.nn.Module):
         self.load_state_dict(state_dict)
         print("Model restored from file: %s" % save_path)
 
-# ignore this class
-"""
-class MLP(Model):
-    def __init__(self, placeholders, input_dim, **kwargs):
-        super(MLP, self).__init__(**kwargs)
 
-        self.inputs = placeholders['features']
-        self.input_dim = input_dim
-        # self.input_dim = self.inputs.get_shape().as_list()[1]  # To be supported in future Tensorflow versions
-        self.output_dim = placeholders['labels'].get_shape().as_list()[1]
-        self.placeholders = placeholders
-
-        self.optimizer = tf.train.AdamOptimizer(
-            learning_rate=FLAGS.learning_rate)
-
-        self.build()
-
-    def _loss(self):
-        # Weight decay loss
-        for var in self.layers[0].vars.values():
-            self.loss += FLAGS.weight_decay * tf.nn.l2_loss(var)
-
-        # Cross entropy error
-        self.loss += masked_softmax_cross_entropy(self.outputs, self.placeholders['labels'],
-                                                  self.placeholders['labels_mask'])
-
-    def _accuracy(self):
-        self.accuracy = masked_accuracy(self.outputs, self.placeholders['labels'],
-                                        self.placeholders['labels_mask'])
-
-    def _build(self):
-        self.layers.append(Dense(input_dim=self.input_dim,
-                                 output_dim=FLAGS.hidden1,
-                                 placeholders=self.placeholders,
-                                 act=tf.nn.relu,
-                                 dropout=True,
-                                 sparse_inputs=True,
-                                 logging=self.logging))
-
-        self.layers.append(Dense(input_dim=FLAGS.hidden1,
-                                 output_dim=self.output_dim,
-                                 placeholders=self.placeholders,
-                                 act=lambda x: x,
-                                 dropout=True,
-                                 logging=self.logging))
-
-    def predict(self):
-        return tf.nn.softmax(self.outputs)
-"""
-
-class GCN(Model):
+class GCNModel(Model):
     def __init__(self, input_dim, output_dim, hidden_dims, supports, dropout=0., weight_decay=0.,num_features_nonzero=0, logging=False, sparse_inputs=False, **kwargs):
-        super(GCN, self).__init__(**kwargs)
+        super(GCNModel, self).__init__(**kwargs)
         self.dimensions = [input_dim]+hidden_dims+[output_dim]
         self.weight_decay = weight_decay
         self.input_dim = input_dim

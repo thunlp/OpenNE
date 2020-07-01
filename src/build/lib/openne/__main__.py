@@ -38,7 +38,7 @@ def parse_args():
     parser.add_argument('--representation-size', default=128, type=int,
                         help='Number of latent dimensions to learn for each node.')
     parser.add_argument('--window-size', default=10, type=int,
-                        help='Window size of skipgram model.')
+                        help='Window size of skipgram models.')
     parser.add_argument('--epochs', default=5, type=int,
                         help='The training epochs of LINE and GCN')
     parser.add_argument('--iterations', default=20, type=int,
