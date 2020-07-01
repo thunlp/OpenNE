@@ -9,10 +9,10 @@ import torch
 
 class GCN(ModelWithEmbeddings):
 
-    def __init__(self, hiddens=None, max_degree=0):
+    def __init__(self, hiddens=None, max_degree=0, **kwargs):
         if hiddens is None:
             hiddens = [16]
-        super(GCN, self).__init__(hiddens=hiddens, max_degree=max_degree)
+        super(GCN, self).__init__(hiddens=hiddens, max_degree=max_degree, **kwargs)
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
@@ -22,6 +22,7 @@ class GCN(ModelWithEmbeddings):
                                  "weight_decay": 1e-4,
                                  "early_stopping": 100,
                                  "clf_ratio": 0.1,
+                                 "hiddens": [16],
                                  "max_degree": 0})
         check_range(kwargs, {"learning_rate": (0, np.inf),
                              "epochs": (0, np.inf),
@@ -30,6 +31,7 @@ class GCN(ModelWithEmbeddings):
                              "early_stopping": (0, np.inf),
                              "clf_ratio": (0, 1),
                              "max_degree": (0, np.inf)})
+        return kwargs
 
     @classmethod
     def check_graphtype(cls, graphtype, **kwargs):

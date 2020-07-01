@@ -1,13 +1,7 @@
-import networkx as nx
-import numpy as np
-import torch
-from ..utils import *
-import scipy.io as sio
-import scipy.sparse as sp
-import scipy.sparse.linalg as lg
-import tensorflow as tf
-from time import time
+import scipy.sparse.linalg as sla
+import scipy.linalg as la
 from sklearn.preprocessing import normalize
+
 from .models import *
 
 __author__ = "Alan WANG"
@@ -15,11 +9,11 @@ __email__ = "alan1995wang@outlook.com"
 
 
 class HOPE(ModelWithEmbeddings):
-    def __init__(self, dim):
+    def __init__(self, dim, **kwargs):
         """
         :param dim: representation dim
         """
-        super(HOPE, self).__init__(dim=dim)
+        super(HOPE, self).__init__(dim=dim, **kwargs)
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
@@ -31,12 +25,14 @@ class HOPE(ModelWithEmbeddings):
             check_existance(kwargs, {'beta': 0.1})
         elif kwargs['measurement'] == 'rpr':
             check_existance(kwargs, {'alpha': 0.5})
+        return kwargs
 
     def get_train(self, graph, *, measurement='katz', **kwargs):
         n = graph.nodesize
         A = graph.adjmat(directed=True, weighted=False)  # brute force...
         if measurement == 'katz':  # Katz: M_g^-1 * M_l = (I - beta * A)^-1 - I
-            S = ((np.eye(n) - kwargs['beta'] * A).I - np.eye(n))
+            S = (la.inv(np.identity(n) - kwargs['beta'] * A) - np.identity(n))
+
             # M_g = np.eye(n) - kwargs['beta'] * A
             # M_l = kwargs['beta'] * A
         elif measurement == 'cn':  # Common Neighbors: S = A^2
@@ -45,7 +41,7 @@ class HOPE(ModelWithEmbeddings):
             # M_l = A^2
         elif measurement == 'rpr':  # Rooted PageRank: (1 - alpha)(I - alpha * P)^-1
             P = graph.adjmat(directed=True, weighted=False, scaled=1)  # scaled=0 in paper but possibly wrong?
-            S = (1 - kwargs['alpha']) * (np.eye(n) - kwargs['alpha'] * P).I
+            S = (1 - kwargs['alpha']) * la.inv(np.eye(n) - kwargs['alpha'] * P)
         else: # Adamic-Adar: Mg^-1 * M_l
             D = np.eye(n)
             for i in range(n):
@@ -54,7 +50,7 @@ class HOPE(ModelWithEmbeddings):
             S = np.matmul(np.matmul(A, D), A)
 
         # todo: check if the models REALLY DON'T NEED M_g and M_l!
-        u, s, vt = lg.svds(S, k=self.dim // 2)  # this one directly use the d/2-dim core for svd
+        u, s, vt = sla.svds(S, k=self.dim // 2)  # this one directly use the d/2-dim core for svd
 
         sigma = np.diagflat(np.sqrt(s))
         X1 = normalize(np.matmul(u, sigma))

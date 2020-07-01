@@ -14,14 +14,15 @@ def GetProbTranMat(Ak, node_size):
 
 
 class GraRep(ModelWithEmbeddings):
-    def __init__(self, kstep, dim):
-        super(GraRep, self).__init__(kstep=kstep, dim=int(dim/kstep))
+    def __init__(self, kstep, dim, **kwargs):
+        super(GraRep, self).__init__(kstep=kstep, dim=int(dim/kstep), **kwargs)
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
         check_existance(kwargs, {'kstep': 4, 'dim': 128})
         check_range(kwargs, {"kstep": 'positive', 'dim': 'positive'})
         assert kwargs['dim'] % kwargs['kstep'] == 0
+        return kwargs
 
     def GetRepUseSVD(self, probTranMat, alpha):
         U, S, VT = lg.svds(probTranMat, k=self.dim)

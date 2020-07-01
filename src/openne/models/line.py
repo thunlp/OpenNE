@@ -166,8 +166,8 @@ class _LINE(ModelWithEmbeddings):
 
 
 class LINE(ModelWithEmbeddings):
-    def __init__(self, dim=128, order=3):
-        super(LINE, self).__init__(dim=dim, order=order)
+    def __init__(self, dim=128, order=3, **kwargs):
+        super(LINE, self).__init__(dim=dim, order=order, **kwargs)
         self.best_result = 0
         if order == 3:
             self.model1 = _LINE(dim=dim // 2, order=1)
@@ -175,11 +175,11 @@ class LINE(ModelWithEmbeddings):
         else:
             self.model = _LINE(dim=dim, order=order)
 
-
     @classmethod
-    def check_train_parameters(cls, graphtype, **kwargs):
+    def check_train_parameters(cls, **kwargs):
         check_existance(kwargs, {'lr': 0.001, 'batch_size': 1000, 'negative_ratio': 5, 'debug_output_interval': 1})
         check_range(kwargs, {'lr': 'positive', 'batch_size': 'positive', 'negative_ratio': 'positive'})
+        return kwargs
 
     def build(self, graph, **kwargs):
         if self.order == 3:

@@ -1,5 +1,10 @@
 from numbers import Number
 import numpy as np
+import collections
+import os
+import os.path as osp
+import errno
+
 def check_existance(src_dict, req_items, defaults=None):
     """
     Check if each required item is in the given dict.
@@ -57,3 +62,22 @@ def check_range(src_dict, req_ranges):
                     raise ValueError('arg value {} not in interval {}'.format(src_dict[i], r))
             elif src_dict[i] not in r:
                 raise ValueError('arg value {} not in {}'.format(src_dict[i], r))
+
+def to_list(x):
+    if x is None:
+        return []
+    if not isinstance(x, collections.Iterable) or isinstance(x, str):
+        x = [x]
+    return x
+
+
+def files_exist(files):
+    return all([osp.exists(f) for f in files])
+
+
+def makedirs(path):
+    try:
+        os.makedirs(osp.expanduser(osp.normpath(path)))
+    except OSError as e:
+        if e.errno != errno.EEXIST and osp.isdir(path):
+            raise e

@@ -39,7 +39,8 @@ class ModelWithEmbeddings(BaseModel):
         self.debug_info = None
         if save:
             if output is None:
-                outputpath = os.path.join('result', type(self).__name__)
+                outputpath = os.path.join(osp.dirname(osp.realpath(__file__)),
+                                          '..', '..', 'results', type(self).__name__)
                 outputmodelfile = type(self).__name__ + '_model.txt'
                 outputembeddingfile = type(self).__name__ + '_embeddings.txt'
             else:
@@ -48,8 +49,15 @@ class ModelWithEmbeddings(BaseModel):
                     outputpath = '.'
                 outputmodelfile = type(self).__name__ + 'models.txt'
                 outputembeddingfile = os.path.basename(output)
+            super(ModelWithEmbeddings, self).__init__(outputpath=outputpath,
+                                                      outputmodelfile=outputmodelfile,
+                                                      outputembeddingfile=outputembeddingfile,
+                                                      save=save,
+                                                      **kwargs)
+            print(self.outputpath)
+            print(osp.abspath(self.outputpath))
             if not os.path.isdir(self.outputpath):
-                os.mkdir(self.outputpath)
+                makedirs(self.outputpath)
             try:
                 with open(os.path.join(self.outputpath, self.outputembeddingfile), 'a'):
                     pass
@@ -63,11 +71,7 @@ class ModelWithEmbeddings(BaseModel):
                 raise FileNotFoundError('Failed to open target models file "{}": {}. '.format(
                     os.path.join(self.outputpath, self.outputembeddingfile), str(e)))
 
-            super(ModelWithEmbeddings, self).__init__(outputpath=outputpath,
-                                                      outputmodelfile=outputmodelfile,
-                                                      outputembeddingfile=outputembeddingfile,
-                                                      save=save,
-                                                      **kwargs)
+
         else:
             super(ModelWithEmbeddings, self).__init__(save=save, **kwargs)
 
@@ -77,7 +81,7 @@ class ModelWithEmbeddings(BaseModel):
     def save_embeddings(self, filename):
         with open(filename, 'w') as fout:
             node_num = len(self.vectors)
-            fout.write("{} {}\n".format(node_num, self.rep_size))
+            fout.write("{} {}\n".format(node_num, self.dim))
             for node, vec in self.vectors.items():
                 fout.write("{} {}\n".format(node, ' '.join([str(float(x)) for x in vec])))
 
@@ -104,10 +108,10 @@ class ModelWithEmbeddings(BaseModel):
     def check(cls, graphtype=None, **kwargs):
         new_kwargs = kwargs.copy()
         ret_args = cls.check_train_parameters(**new_kwargs)
+        new_kwargs = ret_args
         if graphtype:
-            cls.check_graphtype(graphtype, **ret_args)
-        if ret_args is not None:
-            new_kwargs = ret_args
+            cls.check_graphtype(graphtype, **new_kwargs)
+
         if 'epochs' not in new_kwargs:
             epoch_debug_output = None
         else:
@@ -134,7 +138,7 @@ class ModelWithEmbeddings(BaseModel):
         pass
 
     def forward(self, graph, **kwargs):
-        kwargs = self._check_train_parameters(type(graph), **kwargs)
+        kwargs = self.check(type(graph), **kwargs)
         self.vectors = {}
         self.embeddings = None
         t1 = time()
@@ -159,10 +163,12 @@ class ModelWithEmbeddings(BaseModel):
         if not self.vectors:
             self.get_vectors(graph)
         if self.save:
-            print("Saving embeddings...")
-            self.save_embeddings(os.path.join(self.outputpath, self.outputembeddingfile))
-            print("Saving models...")
-            self.save_model(os.path.join(self.outputpath, self.outputmodelfile))
+            embeddingpath = os.path.join(self.outputpath, self.outputembeddingfile)
+            print("Saving embeddings to {}...".format(embeddingpath))
+            self.save_embeddings(embeddingpath)
+            modelpath = os.path.join(self.outputpath, self.outputmodelfile)
+            print("Saving model to {}...".format(modelpath))
+            self.save_model(modelpath)
         t2 = time()
         print("Finished training. Time used = {}.".format(t2 - t1))
         return self.vectors

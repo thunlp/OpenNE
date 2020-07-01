@@ -7,8 +7,8 @@ from .models import *
 
 class Node2vec(ModelWithEmbeddings):
 
-    def __init__(self, dim=128, dw=False):
-        super(Node2vec, self).__init__(dim=dim, dw=dw)
+    def __init__(self, dim=128, dw=False, **kwargs):
+        super(Node2vec, self).__init__(dim=dim, dw=dw, **kwargs)
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
@@ -20,6 +20,7 @@ class Node2vec(ModelWithEmbeddings):
                                  'workers': 1,
                                  'min_count': 0,
                                  'sg': 1})
+        return kwargs
 
     def build(self, graph, *, path_length=80, num_paths=10, p=1.0, q=1.0, **kwargs):
 
@@ -48,5 +49,5 @@ class Node2vec(ModelWithEmbeddings):
         del word2vec
 
 class DeepWalk(Node2vec):
-    def __init__(self, dim=128):
-        super(DeepWalk, self).__init__(dim, True)
+    def __init__(self, dim=128, **kwargs):
+        super(DeepWalk, self).__init__(dim, True, **kwargs)

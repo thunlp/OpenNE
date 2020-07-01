@@ -154,7 +154,7 @@ class SDNENet(torch.nn.Module):
 
 
 class SDNE(ModelWithEmbeddings):
-    def __init__(self, encoder_layer_list, alpha=1e-6, beta=5., nu1=1e-8, nu2=1e-4):
+    def __init__(self, encoder_layer_list, alpha=1e-6, beta=5., nu1=1e-8, nu2=1e-4, **kwargs):
         """
         encoder_layer_list: a list of numbers of the neuron at each encoder layer, the last number is the
         dimension of the output node representation
@@ -162,7 +162,8 @@ class SDNE(ModelWithEmbeddings):
         if node size is 2000, encoder_layer_list=[1000, 128], then the whole neural network would be
         2000(input)->1000->128->1000->2000, SDNE extract the middle layer as the node representation
         """
-        super(SDNE, self).__init__(encoder_layer_list=encoder_layer_list, alpha=alpha, beta=beta, nu1=nu1, nu2=nu2)
+        super(SDNE, self).__init__(encoder_layer_list=encoder_layer_list, alpha=alpha, beta=beta,
+                                   nu1=nu1, nu2=nu2, **kwargs)
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
@@ -181,6 +182,7 @@ class SDNE(ModelWithEmbeddings):
                              'learning_rate': (0, np.inf),
                              'decay': [True, False, 0, 1],
                              'pretrain': [True, False, 0, 1]})
+        return kwargs
 
     def build(self, graph, *, batch_size=200, epochs=100, learning_rate=0.01, decay=False, pretrain=False, **kwargs):
         self.node_size = graph.nodesize
