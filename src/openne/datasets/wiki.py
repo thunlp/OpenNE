@@ -2,7 +2,7 @@ from .dataset import *
 
 class Wiki(LocalFile):
     def __init__(self):
-        root = '../../../data/wiki'
+        root = '../data/wiki'
         super(Wiki, self).__init__(root, {'edgefile': 'Wiki_edgelist.txt', 'labelfile': 'wiki_labels.txt'})
 
     @classmethod

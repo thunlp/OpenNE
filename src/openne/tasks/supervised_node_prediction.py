@@ -10,7 +10,7 @@ class SupervisedNodePrediction(BaseTask):
 
     def check(self, modelclass, datasetclass):
         assert(any(issubclass(modelclass, cls) for cls in supervisedmodels))
-        self.kwargs = modelclass.check(datasetclass, **self.train_kwargs)
+        self.kwargs = modelclass.check(datasetclass, **self.train_kwargs())
         
     def train(self, model, graph):
         self.split_dataset(graph)
@@ -39,14 +39,15 @@ class SupervisedNodePrediction(BaseTask):
         self.test_mask = sample_mask(training_size, g.number_of_nodes())
         self.kwargs['train_mask'] = self.train_mask
 
-    @property
     def train_kwargs(self):
+        check_existance(self.kwargs, {"validate": True, 'clf_ratio': 0.1})
+
         def validation_hook(model, graph, **kwargs):
             _, cost, acc, duration = model.evaluate(self.val_mask)
             model.cost_val.append(cost)
             model.debug_info['val_loss'] = "{:.5f}".format(cost)
             model.debug_info['val_acc'] = "{:.5f}".format(acc)
-        check_existance(self.kwargs, {'validation_hooks': [validation_hook]})
+        check_existance(self.kwargs, {'_validation_hooks': [validation_hook] if self.kwargs['validate'] else []})
         return self.kwargs
 
     def evaluate(self, model, res, dataset):
