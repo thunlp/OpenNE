@@ -199,7 +199,7 @@ class SDNE(ModelWithEmbeddings):
             self.lr = lambda x: 0.03 / (1 + 0.9999 * x)
         else:
             self.lr = lambda x: learning_rate
-        self.adj_mat = torch.from_numpy(graph.adjmat(weighted=True, directed=True))
+        self.adj_mat = torch.from_numpy(graph.adjmat(weighted=True, directed=True)).type(torch.float32)
 
         self.model = SDNENet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2)
         if self.pretrain:

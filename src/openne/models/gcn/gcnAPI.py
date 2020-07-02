@@ -122,11 +122,9 @@ class GCN(ModelWithEmbeddings):
         """
         g = graph.G
         look_back = graph.look_back_list
-        self.features = torch.stack([g.nodes[look_back[i]]['feature']
-                                     for i in range(g.number_of_nodes())])
+        self.features = torch.from_numpy(graph.features())
         self.features = preprocess_features(self.features, sparse=self.sparse)
         self.build_label(graph)
-        self.build_train_val_test(graph)
         adj = nx.adjacency_matrix(g)  # the type of graph
         if self.max_degree == 0:
             self.support = [preprocess_adj(adj)]

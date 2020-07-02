@@ -30,10 +30,7 @@ class Node2vec(ModelWithEmbeddings):
             p = 1.0
             q = 1.0
 
-        self.args['p'] = p
-        self.args['q'] = q
         self.args['workers'] = kwargs["workers"]
-
 
         if self.dw:
             self.walker = walker.BasicWalker(graph, workers=kwargs["workers"])
@@ -48,7 +45,7 @@ class Node2vec(ModelWithEmbeddings):
             self.args[s] = kwargs[s]
 
     def get_train(self, graph, **kwargs):
-        word2vec = Word2Vec(self.args)
+        word2vec = Word2Vec(**self.args)
         self.vectors = {}
 
         for word in graph.G.nodes():
