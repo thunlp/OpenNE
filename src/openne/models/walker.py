@@ -17,9 +17,9 @@ class BasicWalker:
         self.look_up_dict = G.look_up_dict
 
     def deepwalk_walk(self, walk_length, start_node):
-        '''
+        """
         Simulate a random walk starting from start node.
-        '''
+        """
         G = self.G
         # look_up_dict = self.look_up_dict
         # node_size = self.node_size
@@ -36,9 +36,9 @@ class BasicWalker:
         return walk
 
     def simulate_walks(self, num_walks, walk_length):
-        '''
+        """
         Repeatedly simulate random walks from each node.
-        '''
+        """
         G = self.G
         walks = []
         nodes = list(G.nodes())
@@ -62,16 +62,17 @@ class Walker:
         self.G = G.G
         self.p = p
         self.q = q
-        self.node_size = G.node_size
+        self.node_size = G.nodesize
         self.look_up_dict = G.look_up_dict
 
     def node2vec_walk(self, walk_length, start_node):
-        '''
+        """
         Simulate a random walk starting from start node.
-        '''
+        """
         G = self.G
         alias_nodes = self.alias_nodes
         alias_edges = self.alias_edges
+        print(alias_edges)
         look_up_dict = self.look_up_dict
         node_size = self.node_size
 
@@ -87,18 +88,18 @@ class Walker:
                 else:
                     prev = walk[-2]
                     pos = (prev, cur)
-                    next = cur_nbrs[alias_draw(alias_edges[pos][0],
+                    nxt = cur_nbrs[alias_draw(alias_edges[pos][0],
                                                alias_edges[pos][1])]
-                    walk.append(next)
+                    walk.append(nxt)
             else:
                 break
 
         return walk
 
     def simulate_walks(self, num_walks, walk_length):
-        '''
+        """
         Repeatedly simulate random walks from each node.
-        '''
+        """
         G = self.G
         walks = []
         nodes = list(G.nodes())
@@ -113,9 +114,9 @@ class Walker:
         return walks
 
     def get_alias_edge(self, src, dst):
-        '''
+        """
         Get the alias edge setup lists for a given edge.
-        '''
+        """
         G = self.G
         p = self.p
         q = self.q

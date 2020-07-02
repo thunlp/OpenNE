@@ -37,9 +37,10 @@ def legal_arg_name(arg):
 def addarg(arg, group, used_names, val):
     if arg not in used_names and legal_arg_name(arg):
         used_names.add(arg)
-        if xtype(val) == bool:
+        if xtype(val) is bool:
             group.add_argument(toargstr(arg), action="store_true")
-        group.add_argument(toargstr(arg), type=xtype(val))
+        else:
+            group.add_argument(toargstr(arg), type=xtype(val))
 
 def parse_args():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
