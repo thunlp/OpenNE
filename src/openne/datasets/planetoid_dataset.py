@@ -1,13 +1,13 @@
 from abc import ABC
-from torch_geometric.datasets import Planetoid
-import torch_geometric.datasets as datasets
-import torch_geometric.transforms as T
 from .dataset import *
 
-class TorchGeometricAttributed(Adapter, ABC):
-    def __init__(self, AdapteeClass):
-        super(TorchGeometricAttributed, self).__init__(AdapteeClass, self.root_dir,
-                                                       type(self).__name__, T.TargetIndegree())
+
+class Planetoid(NetResources, ABC):
+    def __init__(self):
+        url = 'https://github.com/kimiyoung/planetoid/raw/master/data'
+        names = ['x', 'tx', 'allx', 'y', 'ty', 'ally', 'graph', 'test.index']
+        name_dict = {name: 'ind.' + type(self).__name__ + '.' + name for name in names}
+        super(Planetoid, self).__init__(url, name_dict)
         # edge_attr, edge_index, test_mask, train_mask, val_mask, x, y
 
     def read(self):
