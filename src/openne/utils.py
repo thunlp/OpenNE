@@ -70,6 +70,8 @@ def to_list(x):
         x = [x]
     return x
 
+def split_to_int(l):
+    return [int(i) for i in l.split()]
 
 def files_exist(files):
     return all([osp.exists(f) for f in files])

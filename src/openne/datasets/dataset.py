@@ -154,26 +154,26 @@ class Graph(Dataset, ABC):
             self.G = nx.DiGraph()
 
             def read_unweighted(l):
-                src, dst = l.split()
+                src, dst = split_to_int(l)
                 self.G.add_edge(src, dst)
                 self.G[src][dst]['weight'] = 1.0
 
             def read_weighted(l):
-                src, dst, w = l.split()
+                src, dst, w = split_to_int(l)
                 self.G.add_edge(src, dst)
                 self.G[src][dst]['weight'] = float(w)
         else:
             self.G = nx.Graph()
 
             def read_unweighted(l):
-                src, dst = l.split()
+                src, dst = split_to_int(l)
                 self.G.add_edge(src, dst)
                 self.G.add_edge(dst, src)
                 self.G[src][dst]['weight'] = 1.0
                 self.G[dst][src]['weight'] = 1.0
 
             def read_weighted(l):
-                src, dst, w = l.split()
+                src, dst, w = split_to_int(l)
                 self.G.add_edge(src, dst)
                 self.G.add_edge(dst, src)
                 self.G[src][dst]['weight'] = float(w)
@@ -197,7 +197,7 @@ class Graph(Dataset, ABC):
             l = fin.readline()
             if l == '':
                 break
-            vec = l.split()
+            vec = split_to_int(l)
             self.G.nodes[vec[0]]['label'] = vec[1:]
         fin.close()
 
@@ -213,7 +213,7 @@ class Graph(Dataset, ABC):
     def read_node_features(self, filename):
         fin = open(filename, 'r')
         for l in fin.readlines():
-            vec = l.split()
+            vec = split_to_int(l)
             self.G.nodes[vec[0]]['feature'] = np.array([float(x) for x in vec[1:]])
         fin.close()
 
@@ -233,7 +233,7 @@ class Graph(Dataset, ABC):
             l = fin.readline()
             if l == '':
                 break
-            vec = l.split()
+            vec = split_to_int(l)
             self.G.nodes[vec[0]]['status'] = vec[1]  # train test valid
         fin.close()
 
@@ -243,7 +243,7 @@ class Graph(Dataset, ABC):
             l = fin.readline()
             if l == '':
                 break
-            vec = l.split()
+            vec = split_to_int(l)
             self.G[vec[0]][vec[1]]['label'] = vec[2:]
         fin.close()
 

@@ -34,10 +34,10 @@ class LLE(ModelWithEmbeddings):
         A = graph.adjmat(directed=False, weighted=True, sparse=sparse)  # todo: check when sparse matrix is better
         normalize(A, norm='l1', axis=1, copy=False)
         if sparse:
-            I_n = sp.eye(graph.nodesize())
+            I_n = sp.eye(graph.nodesize)
         else:
-            I_n = np.eye(graph.nodesize())  # sp.eye(graph.number_of_nodes())
+            I_n = np.eye(graph.nodesize)
         I_min_A = I_n - A
-        u, s, vt = lg.svds(I_min_A, k=self.dim + 1, which='SM')  # todo: check SM or LM
+        u, s, vt = lg.svds(I_min_A, k=self.dim + 1, which='LM') #todo: should be SM
         vt = torch.tensor(vt)
         return vt.t()[:, 1:]
