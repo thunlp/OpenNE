@@ -20,6 +20,7 @@ class Dataset(torch.utils.data.Dataset):
         :param root_dir:
         :param filenames: local filenames
         """
+
         super(Dataset, self).__init__()
         self.resource_url = resource_url
         self.dir = root_dir
@@ -27,6 +28,7 @@ class Dataset(torch.utils.data.Dataset):
         self.filenames = to_list(filenames)
         self.paths = [self.full(f) for f in self.filenames]
 
+        print("Loading {} Dataset from root dir: {}".format(type(self).__name__, self.dir))
         self.load_data()
 
 
@@ -35,7 +37,6 @@ class Dataset(torch.utils.data.Dataset):
         return osp.join(self.dir, filename)
 
     def load_data(self):
-        print("Loading {} Dataset from root dir: {}".format(type(self).__name__, self.dir))
         if not files_exist(self.paths):
             if self.resource_url is None:
                 errmsg = '\n'.join([f for f in self.paths if osp.exists(f)])
@@ -222,6 +223,7 @@ class Graph(Dataset, ABC):
             if split:
                 self.G.nodes[vec[0]]['feature'] = vec[1:]
             else:
+                #print(i)
                 self.G.nodes[i]['feature'] = vec
 
     # use after encode_node()
@@ -266,7 +268,8 @@ class NetResources(Graph, ABC):
 class Adapter(Graph, ABC):
     def __init__(self, AdapteeClass, *args, **kwargs):
         self.data = AdapteeClass(*args, **kwargs)
-        super(Adapter, self).__init__( None, self.root_dir, {}, **kwargs)
+        super(Adapter, self).__init__(None, self.root_dir, {}, **kwargs)
+
 
     @property
     def root_dir(self):

@@ -12,4 +12,4 @@ from .models import ModelWithEmbeddings, BaseModel
 
 modellist = [GraphFactorization, GraRep, HOPE, LaplacianEigenmaps, LINE, LLE, Node2vec, DeepWalk, SDNE, TADW, GCN]
 modeldict = {Cls.__name__.lower(): Cls for Cls in modellist}
-
+modeldict.update({Cls.othername.lower(): Cls for Cls in modellist if 'othername' in Cls.__dict__})

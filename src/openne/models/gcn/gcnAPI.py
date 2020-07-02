@@ -115,34 +115,6 @@ class GCN(ModelWithEmbeddings):
                 l_id = label_dict[ll]
                 self.labels[node_id][l_id] = 1
 
-
-        # # Testing
-        # test_res, test_cost, test_acc, test_duration = self.evaluate(self.test_mask, False)
-        # print("Test set results:", "cost=", "{:.5f}".format(test_cost),
-        #       "accuracy=", "{:.5f}".format(test_acc), "time=", "{:.5f}".format(test_duration))
-
-    def build_train_val_test(self, graph):
-        """
-            build train_mask test_mask val_mask
-        """
-        train_precent = self.clf_ratio
-        training_size = int(train_precent * graph.G.number_of_nodes())
-        state = torch.random.get_rng_state()
-        torch.random.manual_seed(0)
-        shuffle_indices = torch.randperm(graph.G.number_of_nodes())
-        torch.random.set_rng_state(state)
-        g = graph.G
-
-        def sample_mask(begin, end):
-            mask = torch.zeros(g.number_of_nodes())
-            for i in range(begin, end):
-                mask[shuffle_indices[i]] = 1
-            return mask
-
-        self.train_mask = sample_mask(0, training_size - 100)
-        self.val_mask = sample_mask(training_size - 100, training_size)
-        self.test_mask = sample_mask(training_size, g.number_of_nodes())
-
     def preprocess_data(self, graph):
         """
             adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask

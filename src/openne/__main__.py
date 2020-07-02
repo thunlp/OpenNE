@@ -29,6 +29,18 @@ def toargstr(s):
     s = s.replace('_', '-')
     return s
 
+def legal_arg_name(arg):
+    if arg[0] == '_':
+        return False
+    return True
+
+def addarg(arg, group, used_names, val):
+    if arg not in used_names and legal_arg_name(arg):
+        used_names.add(arg)
+        if xtype(val) == bool:
+            group.add_argument(toargstr(arg), action="store_true")
+        group.add_argument(toargstr(arg), type=xtype(val))
+
 def parse_args():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
                             conflict_handler='resolve')
@@ -56,23 +68,21 @@ def parse_args():
     local_inputs.add_argument('--weighted', action='store_true', help='View graph as weighted.')
     local_inputs.add_argument('--directed', action='store_true', help='View graph as directed.')
 
+    used_names = set()
     # structure & training args
-    used_names = {'validation_hooks'}
-    group = parser.add_argument_group("GENERAL TRAINING ARGUMENTS")
+    group = parser.add_argument_group("GENERAL MODEL ARGUMENTS")
+    addarg("clf_ratio", group, used_names, 0.1)
+    group.add_argument('--validate', type=bool)
     model_args = models.ModelWithEmbeddings.args()
     for arg in model_args:
-        if arg not in used_names:
-            used_names.add(arg)
-            group.add_argument(toargstr(arg), type=xtype(model_args[arg]), default=model_args[arg])
+        addarg(arg, group, used_names, model_args[arg])
 
     for modelname in models.modeldict:
         model = models.modeldict[modelname]
         group = parser.add_argument_group(modelname.upper())
         model_args = model.args()
         for arg in model_args:
-            if arg not in used_names:
-                used_names.add(arg)
-                group.add_argument(toargstr(arg), type=xtype(model_args[arg]), default=model_args[arg])
+            addarg(arg, group, used_names, model_args[arg])
 
     args = parser.parse_args()
 
@@ -96,16 +106,22 @@ def parse(**kwargs):
 def main(args):
 
     # parsing
-    args = args.__dict__
-    Task, Dataset, Model = parse(**args)  # parse required Task, Dataset, Model (classes)
+    args = {x: y for x, y in args.__dict__.items() if y is not None}
 
+    print("actual args:",args)
+
+    Task, Dataset, Model = parse(**args)  # parse required Task, Dataset, Model (classes)
+    args.__delitem__('dataset')
+    if 'task' in args:
+        args.__delitem__('task')
+    args.__delitem__('model')
     # preparation
     task = Task(**args)                 # prepare task
     task.check(Model, Dataset)          # check parameters
+    args = task.kwargs
     model = Model(**args)               # prepare model
     dataset = Dataset()                 # prepare dataset
 
-    # training
     res = task.train(model, dataset)    # train
 
     # evaluation

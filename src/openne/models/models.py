@@ -111,16 +111,18 @@ class ModelWithEmbeddings(BaseModel):
         new_kwargs = ret_args
         if graphtype:
             cls.check_graphtype(graphtype, **new_kwargs)
-
         if 'epochs' not in new_kwargs:
-            epoch_debug_output = None
+            epoch_debug_output = 10000
+            _debug_output = False
         else:
             epoch_debug_output = 5
+            _debug_output = True
         check_existance(new_kwargs, {'dim': 128,
                                      'epochs': 1,
-                                     'validation_hooks': [],
-                                     'validation_interval': 1,
+                                     '_validation_hooks': [],
+                                     'validation_interval': 5,
                                      'debug_output_interval': epoch_debug_output,
+                                     '_debug_output': _debug_output,
                                      'output': None,
                                      'save': True})
         return new_kwargs
@@ -145,17 +147,17 @@ class ModelWithEmbeddings(BaseModel):
         print("Start training...")
         self.build(graph, **kwargs)
         epochs = kwargs['epochs']
-        if kwargs['debug_output_interval']:
+        if kwargs['_debug_output']:
             print("total iter: %i" % epochs)
-
+        time0 = time()
         for i in range(epochs):
-            time0 = time()
             self.embeddings = self.get_train(graph, step=i, **kwargs)
             if epochs > 1 and (i + 1) % kwargs['validation_interval'] == 0:
-                for f_v in kwargs['validation_hooks']:
+                for f_v in kwargs['_validation_hooks']:
                     f_v(self, graph, step=i, **kwargs)
-            if kwargs['debug_output_interval'] and (i + 1) % kwargs['debug_output_interval'] == 0:
-                print("epoch {}: {}, time used = {} s".format(i + 1, self.debug_info, time()-time0))
+            if kwargs['_debug_output'] and (i + 1) % kwargs['debug_output_interval'] == 0:
+                print("epoch {}: {}; time used = {}s".format(i + 1, self.debug_info, time()-time0))
+                time0 = time()
             if self.early_stopping_judge(graph, step=i, **kwargs):
                 print("Early stopping condition satisfied. Abort training.")
                 break

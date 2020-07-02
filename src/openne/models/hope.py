@@ -22,7 +22,7 @@ class HOPE(ModelWithEmbeddings):
         check_existance(kwargs, {'measurement': 'katz'})
         check_range(kwargs, {'measurement': ['katz', 'cn', 'rpr', 'aa']})
         if kwargs['measurement'] == 'katz':
-            check_existance(kwargs, {'beta': 0.1})
+            check_existance(kwargs, {'beta': 0.02})
         elif kwargs['measurement'] == 'rpr':
             check_existance(kwargs, {'alpha': 0.5})
         return kwargs
@@ -52,7 +52,13 @@ class HOPE(ModelWithEmbeddings):
         # todo: check if the models REALLY DON'T NEED M_g and M_l!
         u, s, vt = sla.svds(S, k=self.dim // 2)  # this one directly use the d/2-dim core for svd
 
-        sigma = np.diagflat(np.sqrt(s))
-        X1 = normalize(np.matmul(u, sigma))
-        X2 = normalize(np.matmul(vt.T, sigma))
+        sigma = np.sqrt(s)
+        X1 = normalize(u * sigma)
+        X2 = normalize(vt.T * sigma)
+
+        # another implementation
+        # sigma = np.diagflat(np.sqrt(s))
+        # X1 = normalize(np.matmul(u, sigma))
+        # X2 = normalize(np.matmul(vt.T, sigma))
+
         return torch.cat((torch.tensor(X1), torch.tensor(X2)), dim=1)

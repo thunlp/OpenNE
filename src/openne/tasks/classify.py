@@ -54,7 +54,8 @@ class Classifier(object):
     def split_train_evaluate(self, X, Y, train_percent, seed=None):
         state = torch.random.get_rng_state()
         training_size = int(train_percent * len(X))
-        torch.random.manual_seed(seed)
+        if seed is not None:
+            torch.random.manual_seed(seed)
         shuffle_indices = torch.randperm(len(X))
         X_train = [X[shuffle_indices[i]] for i in range(training_size)]
         Y_train = [Y[shuffle_indices[i]] for i in range(training_size)]

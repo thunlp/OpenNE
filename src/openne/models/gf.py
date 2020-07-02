@@ -12,10 +12,12 @@ class GraphFactorization(ModelWithEmbeddings):
     def __init__(self, dim=128, **kwargs):
         super(GraphFactorization, self).__init__(dim=dim, **kwargs)
 
+    othername = 'gf'
+
     @classmethod
     def check_train_parameters(cls, **kwargs):
-        check_existance(kwargs, {'epoch': 120, 'learning_rate': 0.003, 'weight_decay': 1., 'dim': 128})
-        check_range(kwargs, {'epoch': 'positive', 'learning_rate': 'positive',
+        check_existance(kwargs, {'epochs': 120, 'learning_rate': 0.003, 'weight_decay': 1., 'dim': 128})
+        check_range(kwargs, {'epochs': 'positive', 'learning_rate': 'positive',
                              'weight_decay': 'positive', 'dim': 'positive'})
         return kwargs
 
@@ -23,9 +25,8 @@ class GraphFactorization(ModelWithEmbeddings):
         self.adj_mat = torch.from_numpy(graph.adjmat(directed=True, weighted=True))
         self.mat_mask = torch.as_tensor(self.adj_mat > 0, dtype=torch.float32)
 
-        self._embeddings = torch.tensor(torch.nn.init.xavier_uniform_(torch.zeros(graph.nodesize, self.rep_size,
-                                                                                  dtype=torch.float32)),
-                                        requires_grad=True)
+        self._embeddings = torch.nn.init.xavier_uniform_(torch.zeros(graph.nodesize, self.dim,
+                                                                     dtype=torch.float32)).requires_grad_(True)
         # print(_embeddings)
         self.optimizer = torch.optim.Adam([self._embeddings], lr=learning_rate)
 
