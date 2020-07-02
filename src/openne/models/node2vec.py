@@ -18,7 +18,7 @@ class Node2vec(ModelWithEmbeddings):
                                  'num_paths': 10,
                                  'p': 1.0,
                                  'q': 1.0,
-                                 'workers': 3,
+                                 'workers': 1,
                                  'min_count': 0,
                                  'sg': 1})
         return kwargs
@@ -43,11 +43,14 @@ class Node2vec(ModelWithEmbeddings):
             self.walker.preprocess_transition_probs()
         sentences = self.walker.simulate_walks(num_walks=num_paths, walk_length=path_length)
         self.args["sentences"] = sentences
-        self.args["size"] = kwargs.get("size", self.dim)
+        self.args["size"] = self.dim
+        for s in ["min_count", "sg"]:
+            self.args[s] = kwargs[s]
 
     def get_train(self, graph, **kwargs):
-        word2vec = Word2Vec(**kwargs)
+        word2vec = Word2Vec(self.args)
         self.vectors = {}
+
         for word in graph.G.nodes():
             self.vectors[word] = torch.Tensor(word2vec.wv[word])
         del word2vec
