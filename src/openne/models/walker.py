@@ -72,7 +72,6 @@ class Walker:
         G = self.G
         alias_nodes = self.alias_nodes
         alias_edges = self.alias_edges
-        print(alias_edges)
         look_up_dict = self.look_up_dict
         node_size = self.node_size
 

@@ -127,11 +127,11 @@ class Graph(Dataset, ABC):
     def encode_node(self):
         look_up = self.look_up_dict
         look_back = self.look_back_list
-        node_size = 0
+        look_up.clear()
+        look_back.clear()
         for node in self.G.nodes():
-            look_up[node] = node_size
+            look_up[node] = len(look_back)
             look_back.append(node)
-            node_size += 1
             self.G.nodes[node]['status'] = ''
 
     def set_g(self, g):
@@ -149,10 +149,9 @@ class Graph(Dataset, ABC):
         self.encode_node()
 
     def read_edgelist(self, filename):
+        self.G = nx.DiGraph()
 
         if self.directed():
-            self.G = nx.DiGraph()
-
             def read_unweighted(l):
                 src, dst = split_to_int(l)
                 self.G.add_edge(src, dst)
@@ -163,8 +162,6 @@ class Graph(Dataset, ABC):
                 self.G.add_edge(src, dst)
                 self.G[src][dst]['weight'] = float(w)
         else:
-            self.G = nx.Graph()
-
             def read_unweighted(l):
                 src, dst = split_to_int(l)
                 self.G.add_edge(src, dst)
