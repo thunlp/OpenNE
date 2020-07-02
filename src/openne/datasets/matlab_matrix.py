@@ -13,10 +13,12 @@ class MatlabMatrix(NetResources, ABC):
         path = self.paths[0]
         smat = scipy.io.loadmat(path)
         adjmat, group = smat["network"], smat["group"]
-        self.G = nx.from_scipy_sparse_matrix(adjmat)
+        self.G = nx.from_scipy_sparse_matrix(adjmat).to_directed()
         label = [lbl.tocoo().col for lbl in group]
         self.set_node_label(label)
+        self.G = nx.relabel_nodes(self.G, {i: str(i) for i in range(self.nodesize)})
         self.encode_node()
+
 
 
 class BlogCatalog(MatlabMatrix):

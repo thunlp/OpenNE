@@ -13,6 +13,7 @@ import os
 import errno
 from ..utils import *
 
+
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, resource_url, root_dir, filenames):
         """
@@ -30,7 +31,6 @@ class Dataset(torch.utils.data.Dataset):
 
         print("Loading {} Dataset from root dir: {}".format(type(self).__name__, self.dir))
         self.load_data()
-
 
     # "edgelist.txt" -> "OPENNE/edgelist.txt"
     def full(self, filename):
@@ -95,11 +95,15 @@ class Graph(Dataset, ABC):
     def attributed(cls):
         raise NotImplementedError
 
+    def features(self):
+        return np.vstack([self.G.nodes[self.look_back_list[i]]['feature']
+                          for i in range(self.G.number_of_nodes())])
+
     def adjmat(self, directed, weighted, scaled=None, sparse=False):
         G = self.G
         if type(self).directed() and not directed:
             G = nx.to_undirected(G)
-        A = nx.adjacency_matrix(G)
+        A = nx.adjacency_matrix(G).astype(np.float32)
         if not sparse:
             A = np.array(nx.adjacency_matrix(G).todense())
         if type(self).weighted() and not weighted:
@@ -220,7 +224,7 @@ class Graph(Dataset, ABC):
             if split:
                 self.G.nodes[vec[0]]['feature'] = vec[1:]
             else:
-                #print(i)
+                # print(i)
                 self.G.nodes[i]['feature'] = vec
 
     # use after encode_node()
@@ -260,13 +264,14 @@ class NetResources(Graph, ABC):
 
     @property
     def root_dir(self):
-        return osp.join(osp.dirname(osp.realpath(__file__)), '..', '..', 'data', type(self).__name__)  #########################
+        return osp.join(osp.dirname(osp.realpath(__file__)), '..', '..', 'data',
+                        type(self).__name__)  #########################
+
 
 class Adapter(Graph, ABC):
     def __init__(self, AdapteeClass, *args, **kwargs):
         self.data = AdapteeClass(*args, **kwargs)
         super(Adapter, self).__init__(None, self.root_dir, {}, **kwargs)
-
 
     @property
     def root_dir(self):

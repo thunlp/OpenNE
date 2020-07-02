@@ -16,11 +16,8 @@ class TADW(ModelWithEmbeddings):
     @staticmethod
     def getT(graph):
         g = graph.G
-        look_back = g.look_back_list
-        features = torch.from_numpy(
-            np.vstack([g.nodes[look_back[i]]['feature']
-                       for i in range(g.number_of_nodes())])
-        )
+        look_back = graph.look_back_list
+        features = torch.from_numpy(graph.features())
         if features.shape[1] > 200:
             U, S, VT = lg.svds(features, k=200)
             Ud = torch.from_numpy(U)
@@ -42,13 +39,14 @@ class TADW(ModelWithEmbeddings):
             raise TypeError("TADW only accepts attributed graphs.")
 
     def build(self, graph, **kwargs):
-        self.adj = graph.adjmat(weighted=False, directed=False, scaled=1)
+        self.adj = torch.from_numpy(graph.adjmat(weighted=False, directed=False, scaled=1)).type(torch.float32)
         # M = (A + A^2) / 2, A = adj (row-normalized adjmat)
         self.M = (self.adj + torch.mm(self.adj, self.adj)) / 2
         # T: text feature matrix (feature_size * node_num)
         self.T = self.getT(graph)
         self.node_size = graph.nodesize
-        self.feature_size = self.features.shape[1]
+        self.feature_size = self.T.shape[0]
+        print(self.T.shape, self.node_size)
         self.W = torch.randn(self.dim, self.node_size)
         self.H = torch.randn(self.dim, self.feature_size)
 
