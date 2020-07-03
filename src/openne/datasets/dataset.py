@@ -8,11 +8,9 @@ import collections
 import os.path as osp
 import networkx as nx
 import numpy as np
-from torch_geometric.data import download_url
 import os
 import errno
 from ..utils import *
-
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, resource_url, root_dir, filenames):
