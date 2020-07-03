@@ -26,13 +26,17 @@ class Dataset(torch.utils.data.Dataset):
 
         self.filenames = to_list(filenames)
         self.paths = [self.full(f) for f in self.filenames]
-
-        print("Loading {} Dataset from root dir: {}".format(type(self).__name__, self.dir))
+        rootprompt = ""
+        if self.dir:
+            rootprompt = "from root dir: {}".format(self.dir)
+        print("Loading {} Dataset {}".format(type(self).__name__, rootprompt))
         self.load_data()
 
     # "edgelist.txt" -> "OPENNE/edgelist.txt"
     def full(self, filename):
-        return osp.join(self.dir, filename)
+        if self.dir:
+            return osp.join(self.dir, filename)
+        return filename
 
     def load_data(self):
         if not files_exist(self.paths):
@@ -68,18 +72,19 @@ class Graph(Dataset, ABC):
 
         super(Graph, self).__init__(resource_url, root_dir, [i for k, i in name_dict.items()])
 
+    @property
+    def read_operation(self):
+        return {'edgefile':  self.read_edgelist,
+                'adjfile':   self.read_adjlist,
+                'labelfile': self.read_node_label,
+                'features':  self.read_node_features,
+                'status':    self.read_node_status}
+
     def read(self):
         name_dict = self.name_dict
-        if 'edgefile' in name_dict:
-            self.read_edgelist(self.full(name_dict['edgefile']))
-        elif 'adjfile' in name_dict:
-            self.read_adjlist(self.full(name_dict['adjfile']))
-        if 'labelfile' in name_dict:
-            self.read_node_label(self.full(name_dict['labelfile']))
-        if 'features' in name_dict:
-            self.read_node_features(self.full(name_dict['features']))
-        if 'status' in name_dict:
-            self.read_node_status(self.full(name_dict['status']))
+        for k, v in name_dict.items():
+            if k in self.read_operation:
+                self.read_operation[k](self.full(v))
 
     @classmethod
     def directed(cls):
@@ -255,6 +260,25 @@ class LocalFile(Graph, ABC):
     def __init__(self, root_dir, name_dict, **kwargs):
         super(LocalFile, self).__init__(None, root_dir, name_dict, **kwargs)
 
+def create_self_defined_dataset(root_dir, name_dict, name, weighted, directed, attributed):
+    class SelfDefined(LocalFile):
+        def __init__(self):
+            super(SelfDefined, self).__init__(root_dir, name_dict)
+
+        __name__ = name
+
+        @classmethod
+        def weighted(cls):
+            return weighted
+
+        @classmethod
+        def directed(cls):
+            return directed
+
+        @classmethod
+        def attributed(cls):
+            return attributed
+    return SelfDefined
 
 class NetResources(Graph, ABC):
     def __init__(self, resource_url, name_dict, **kwargs):
