@@ -8,7 +8,8 @@ import collections
 import os.path as osp
 import networkx as nx
 import numpy as np
-from torch_geometric.data import download_url
+from ..utils import *
+# from torch_geometric.data import download_url
 import os
 import errno
 
