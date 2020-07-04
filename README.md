@@ -1,11 +1,42 @@
-# OpenNE: An open source toolkit for Network Embedding
+# OpenNE-PyTorch
 
-This repository provides a standard NE/NRL(Network Representation Learning）training and testing framework. In this framework, we unify the input and output interfaces of different NE models and provide scalable options for each self. Moreover, we implement typical NE models under this framework based on tensorflow, which enables these models to be trained with GPUs.
+This is an open-source framework for self-supervised/unsupervised graph embedding implemented by PyTorch, migrated from the earlier version implemented by Tensorflow. 
 
-We develop this toolkit according to the settings of DeepWalk. The implemented or modified models include [DeepWalk](https://github.com/phanein/deepwalk), [LINE](https://github.com/tangjianpku/LINE), [node2vec](https://github.com/aditya-grover/node2vec), [GraRep](https://github.com/ShelsonCao/GraRep), [TADW](https://github.com/thunlp/TADW), [GCN](https://github.com/tkipf/gcn), HOPE, GF, SDNE and LE. We will implement more representative NE models continuously according to our released [NRL paper list](https://github.com/thunlp/nrlpapers). Specifically, we welcome other researchers to contribute NE models into this toolkit based on our framework. We will announce the contribution in this project.
+
+## Overview
+#### New Features
+
+- **A unified framework**: We provide a unified framework for self-supervised/unsupervised node representation learning. Our models include unsupervised network embedding (NE) methods (DeepWalk, Node2vec, HOPE, GraRep, LLE, Lap, TADW, GF, LINE, SDNE) and recent self-supervised graph embedding methods (GAE, VGAE).
+
+- **Efficiency**: We provide faster and more efficient models than those in the previous version.
+
+| Method | Time | | Accuracy | | 
+| | OpenNE | OpenNE-PyTorch | OpenNE | OpenNE-PyTorch |
+| ---- | ---- | ---- | ---- | ---- |
+DeepWalk | 77.26 | **73.87** | **.828** | .827 
+Node2vec | 42.25 | **33.86** | **.820** | .812
+HOPE | 132.52 | **3.50** | .308 | **.751**
+GraRep | 60.64 | **4.90** | .770 | **.785**
+LLE | 792.28 | **17.67** | .301 | **.306**
+Lap | **6.13** | 6.47 | .305 | **.315**
+TADW | 35.71 | **21.28** | **.853** | .850
+GF | **15.64** | 22.24 | .521 | **.577**
+LINE | 86.75 | **64.72** | **.611** | .597
+SDNE | **11.07** | 16.5 | .683 | **.725**
+
+
+- **Modularity**: We entangle the codes into three parts: Dataset, Model and Task. Users can easily customize the datasets, methods and tasks. It is also easy to define their specific datasets and methods.
+
+#### Future Plan
+We plan to add more models and tasks in our framework. Our future plan includes:
+
+- More self-supervised models such as ARGA/ARVGA, GALA and AGE.
+
+- New tasks for link prediction, graph clustering and graph classification.
+
+You are welcomed to add your own datasets and methods by proposing new pull requests. 
 
 ## Usage
-
 #### Installation
 
 - Clone this repo.
@@ -27,22 +58,12 @@ You can check out the other options available to use with *OpenNE* using:
 - --graph-format, the format of input graph, adjlist or edgelist;
 - --output, the output file of representation (GCN doesn't need it);
 - --representation-size, the number of latent dimensions to learn for each node; the default is 128
-- --method, the NE self to learn, including deepwalk, line, node2vec, grarep, tadw, gcn, lap, gf, hope and sdne;
+- --method, the NE model to learn, including deepwalk, line, node2vec, grarep, tadw, gcn, lap, gf, hope and sdne;
 - --directed, treat the graph as directed; this is an action;
 - --weighted, treat the graph as weighted; this is an action;
 - --label-file, the file of node label; ignore this option if not testing;
 - --clf-ratio, the ratio of training data for node classification; the default is 0.5;
 - --epochs, the training epochs of LINE and GCN; the default is 5;
-
-#### Example
-
-To run "node2vec" on BlogCatalog network and evaluate the learned representations on multi-label node classification task, run the following command in the home directory of this project:
-
-    python -m openne --method node2vec --label-file data/blogCatalog/bc_labels.txt --input data/blogCatalog/bc_adjlist.txt --graph-format adjlist --output vec_all.txt --q 0.25 --p 0.25
-
-To run "gcn" on Cora network and evaluate the learned representations on multi-label node classification task, run the following command in the home directory of this project:
-
-    python -m openne --method gcn --label-file data/cora/cora_labels.txt --input data/cora/cora_edgelist.txt --graph-format edgelist --feature-file data/cora/cora.features  --epochs 200 --output vec_all.txt --clf-ratio 0.1
 
 #### Specific Options
 
@@ -51,7 +72,7 @@ DeepWalk and node2vec:
 - --number-walks, the number of random walks to start at each node; the default is 10;
 - --walk-length, the length of random walk started at each node; the default is 80;
 - --workers, the number of parallel processes; the default is 8;
-- --window-size, the window size of skip-gram self; the default is 10;
+- --window-size, the window size of skip-gram model; the default is 10;
 - --q, only for node2vec; the default is 1.0;
 - --p, only for node2vec; the default is 1.0;
 
@@ -93,112 +114,6 @@ SDNE:
 - --nu2, parameter controls l2-loss of weights in autoencoder, the default is 1e-4
 - --bs, batch size, the default is 200
 - --lr, learning rate, the default is 0.01
-
-#### Input
-The supported input format is an edgelist or an adjlist:
-
-    edgelist: node1 node2 <weight_float, optional>
-    adjlist: node n1 n2 n3 ... nk
-The graph is assumed to be undirected and unweighted by default. These options can be changed by setting the appropriate flags.
-
-If the self needs additional features, the supported feature input format is as follow (**feature_i** should be a float number):
-
-    node feature_1 feature_2 ... feature_n
-
-
-#### Output
-The output file has *n+1* lines for a graph with *n* nodes. 
-The first line has the following format:
-
-    num_of_nodes dim_of_representation
-
-The next *n* lines are as follows:
-    
-    node_id dim1 dim2 ... dimd
-
-where dim1, ... , dimd is the *d*-dimensional representation learned by *OpenNE*.
-
-#### Evaluation
-
-If you want to evaluate the learned node representations, you can input the node labels. It will use a portion (default: 50%) of nodes to train a classifier and calculate F1-score on the rest dataset.
-
-The supported input label format is
-
-    node label1 label2 label3...
-
-#### Embedding visualization
-
-To show how to apply dimension reduction methods like t-SNE and PCA to embedding visualization, we choose the 20 newsgroups dataset. Using the text feature, we built the news network by `kneighbors_graph` in scikit-learn. We uploaded the results of different methods in **t-SNE-PCA.pptx** where the colors of nodes represent the labels of nodes. A simple script is shown as follows:
-
-    cd visualization_example
-    python 20newsgroup.py
-    tensorboard --logdir=log/
-
-After running the tensorboard, visit `localhost:6006` to view the result.
-
-## Comparisons with other implementations
-
-Running environment:  <br />
-BlogCatalog: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz. <br />
-Wiki, Cora: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz. <br />
-
-We show the node classification results of various methods in different datasets. We set representation dimension to 128, **kstep=4** in GraRep. 
-
-Note that, both GCN(a semi-supervised NE self) and TADW need additional text features as inputs. Thus, we evaluate these two models on Cora in which each node has text information. We use 10% labeled data to train GCN.
-
-[BlogCatalog](http://leitang.net/social_dimension.html): 10312 nodes, 333983 edges, 39 labels,  undirected:
-
-- data/blogCatalog/bc_adjlist.txt
-- data/blogCatalog/bc_edgelist.txt
-- data/blogCatalog/bc_labels.txt
-
-|Algorithm | Time| Micro-F1 | Macro-F1|
-|:------------|-------------:|------------:|-------:|
-|[DeepWalk](https://github.com/phanein/deepwalk) | 271s | 0.385 | 0.238|
-|[LINE 1st+2nd](https://github.com/tangjianpku/LINE) | 2008s | 0.398 | 0.235|
-|[Node2vec](https://github.com/aditya-grover/node2vec) | 2623s  | 0.404| 0.264|
-|[GraRep](https://github.com/ShelsonCao/GraRep) | - | - | - |
-|OpenNE(DeepWalk) | 986s  | 0.394 | 0.249|
-|OpenNE(LINE 1st+2nd) | 1555s | 0.390 | 0.253|
-|OpenNE(node2vec) | 3501s  | 0.405 | 0.275|
-|OpenNE(GraRep) | 4178s | 0.393 | 0.230 |
-
-[Wiki](https://github.com/thunlp/MMDW/tree/master/data) (Wiki dataset is provided by [LBC project](http://www.cs.umd.edu/~sen/lbc-proj/LBC.html). But the original link failed.): 2405 nodes, 17981 edges, 19 labels, directed:
-
-- data/wiki/Wiki_edgelist.txt
-- data/wiki/Wiki_category.txt
-
-|Algorithm | Time| Micro-F1 | Macro-F1|
-|:------------|-------------:|------------:|-------:|
-|[DeepWalk](https://github.com/phanein/deepwalk) | 52s | 0.669 | 0.560|
-|[LINE 2nd](https://github.com/tangjianpku/LINE) | 70s | 0.576 | 0.387|
-|[node2vec](https://github.com/aditya-grover/node2vec) | 32s  | 0.651 | 0.541|
-|[GraRep](https://github.com/ShelsonCao/GraRep) | 19.6s | 0.633 | 0.476|
-|OpenNE(DeepWalk) | 42s  | 0.658 | 0.570|
-|OpenNE(LINE 2nd) | 90s | 0.661 | 0.521|
-|OpenNE(Node2vec) | 33s  | 0.655 | 0.538|
-|OpenNE(GraRep) | 23.7s | 0.649 | 0.507 |
-|OpenNE(GraphFactorization) | 12.5s | 0.637 | 0.450 |
-|OpenNE(HOPE) | 3.2s | 0.601 | 0.438 |
-|OpenNE(LaplacianEigenmaps) | 4.9s | 0.277 | 0.073 |
-|OpenNE(SDNE) | 39.6s | 0.643 | 0.498 |
-
-
-[Cora](https://linqs.soe.ucsc.edu/data): 2708 nodes, 5429 edges, 7 labels, directed:
-
-- data/cora/cora_edgelist.txt
-- data/cora/cora.features
-- data/cora/cora_labels.txt
-
-|Algorithm | Dropout | Weight_decay | Hidden | Dimension | Time| Accuracy |
-|:------------|-------------:|-------:|-------:|-------:|-------:|-------:|
-| [TADW](https://github.com/thunlp/TADW) | - | - | - | 80*2 | 13.9s | 0.780 |
-| [GCN](https://github.com/tkipf/gcn) | 0.5 | 5e-4 | 16 | - | 4.0s | 0.790 |
-| OpenNE(TADW) | - | - | - | 80*2 | 20.8s | 0.791 |
-| OpenNE(GCN) | 0.5 | 5e-4 | 16 | - | 5.5s | 0.789 |
-| OpenNE(GCN) | 0 | 5e-4 | 16 | - | 6.1s | 0.779 |
-| OpenNE(GCN) | 0.5 | 1e-4 | 16 | - | 5.4s | 0.783 |
-| OpenNE(GCN) | 0.5 | 5e-4 | 64 | - | 6.5s | 0.779 |
 
 
 ## Citing
@@ -305,3 +220,4 @@ This research is supported by Tencent, MSRA, NSFC and [BBDM-Lab](http://www.bioi
 <img src="http://net.pku.edu.cn/~xjl/images/msra.png" width = "200" height = "100" alt="MSRA" align=center />
 
 <img src="http://www.dragon-star.eu/wp-content/uploads/2014/04/NSFC_logo.jpg" width = "100" height = "80" alt="NSFC" align=center />
+
