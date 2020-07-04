@@ -1,3 +1,4 @@
+six
 torch
 numpy==1.14
 networkx==2.0

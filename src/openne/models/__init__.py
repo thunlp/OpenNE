@@ -8,7 +8,7 @@ from .node2vec import Node2vec, DeepWalk
 from .sdne import SDNE
 from .tadw import TADW
 from .gcn.gcnAPI import GCN
-from .models import ModelWithEmbeddings, BaseModel
+from .models import ModelWithEmbeddings
 
 modellist = [GraphFactorization, GraRep, HOPE, LaplacianEigenmaps, LINE, LLE, Node2vec, DeepWalk, SDNE, TADW, GCN]
 modeldict = {Cls.__name__.lower(): Cls for Cls in modellist}

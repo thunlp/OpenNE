@@ -1,9 +1,6 @@
 from .layers import *
 from .metrics import *
 
-#flags = tf.app.flags
-#FLAGS = flags.FLAGS
-
 
 class Model(torch.nn.Module):
     def __init__(self, **kwargs):
