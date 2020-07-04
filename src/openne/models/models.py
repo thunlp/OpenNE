@@ -4,43 +4,17 @@ from time import time
 from ..utils import *
 import inspect
 
-class BaseModel(torch.nn.Module):
-    def __init__(self, **kwargs):
-        super(BaseModel, self).__init__()
 
-        for i in kwargs:
-            self.__setattr__(i, kwargs[i])
-
-    def forward(self, dataset):
-        raise NotImplementedError
-
-    def setvalue(self, attribute_name, value, compare_function=lambda x, y: True if x < y else False):
-        """
-        Update certain attribute with given new value.
-        :param attribute_name: attribute name.
-        :param value: new value.
-        :param compare_function: Bool type. Accepts two values, the old and the new.
-                Returns True if the new is to be updated.
-        :return: bool, whether the new one is updated.
-        """
-        if attribute_name not in self.__dict__:
-            self.__dict__[attribute_name] = value
-            return True
-        else:
-            if compare_function(self.__dict__[attribute_name], value):
-                self.__dict__[attribute_name] = value
-                return True
-            return False
-
-class ModelWithEmbeddings(BaseModel):
+class ModelWithEmbeddings(torch.nn.Module):
     def __init__(self, *, output=None, save=True, **kwargs):
+        super(ModelWithEmbeddings, self).__init__()
         self.vectors = {}
         self.embeddings = None
         self.debug_info = None
         if save:
             if output is None:
                 outputpath = os.path.join(osp.dirname(osp.realpath(__file__)),
-                                          '..', '..', 'results', type(self).__name__)
+                                          '..', '..', '..', 'results', type(self).__name__)
                 outputmodelfile = type(self).__name__ + '_model.txt'
                 outputembeddingfile = type(self).__name__ + '_embeddings.txt'
             else:
@@ -49,11 +23,10 @@ class ModelWithEmbeddings(BaseModel):
                     outputpath = '.'
                 outputmodelfile = type(self).__name__ + 'models.txt'
                 outputembeddingfile = os.path.basename(output)
-            super(ModelWithEmbeddings, self).__init__(outputpath=outputpath,
-                                                      outputmodelfile=outputmodelfile,
-                                                      outputembeddingfile=outputembeddingfile,
-                                                      save=save,
-                                                      **kwargs)
+            kwargs['outputpath'] = outputpath
+            kwargs['outputmodelfile'] = outputmodelfile
+            kwargs['outputembeddingfile'] = outputembeddingfile
+            kwargs['save'] = save
             print(self.outputpath)
             print(osp.abspath(self.outputpath))
             if not os.path.isdir(self.outputpath):
@@ -71,9 +44,11 @@ class ModelWithEmbeddings(BaseModel):
                 raise FileNotFoundError('Failed to open target models file "{}": {}. '.format(
                     os.path.join(self.outputpath, self.outputembeddingfile), str(e)))
 
-
         else:
-            super(ModelWithEmbeddings, self).__init__(save=save, **kwargs)
+            kwargs['save'] = save
+
+        for i in kwargs:
+            self.__setattr__(i, kwargs[i])
 
     def save_model(self, filename):
         torch.save(self.state_dict(), filename)
@@ -178,3 +153,21 @@ class ModelWithEmbeddings(BaseModel):
     @classmethod
     def args(cls):
         return cls.check()
+
+    def setvalue(self, attribute_name, value, compare_function=lambda x, y: True if x < y else False):
+        """
+        Update certain attribute with given new value.
+        :param attribute_name: attribute name.
+        :param value: new value.
+        :param compare_function: Bool type. Accepts two values, the old and the new.
+                Returns True if the new is to be updated.
+        :return: bool, whether the new one is updated.
+        """
+        if attribute_name not in self.__dict__:
+            self.__dict__[attribute_name] = value
+            return True
+        else:
+            if compare_function(self.__dict__[attribute_name], value):
+                self.__dict__[attribute_name] = value
+                return True
+            return False

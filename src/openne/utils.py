@@ -4,7 +4,7 @@ import collections
 import os
 import os.path as osp
 import errno
-
+from six.moves import urllib
 def check_existance(src_dict, req_items, defaults=None):
     """
     Check if each required item is in the given dict.

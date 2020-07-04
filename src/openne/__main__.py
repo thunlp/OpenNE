@@ -8,7 +8,7 @@ import random
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from sklearn.linear_model import LogisticRegression
 
-from . import tasks, datasets, models
+from . import tasks, dataloaders, models
 
 
 def ListInput(s: str):
@@ -46,14 +46,14 @@ def parse_args():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
                             conflict_handler='resolve')
 
-    # tasks, models, datasets
+    # tasks, models, dataloaders
     parser.add_argument('--task', choices=tasks.taskdict.keys(), type=str.lower,
                         help='Assign a task.\n If unassigned, OpenNE will '
                              'automatically assign one according to the model.')
     parser.add_argument('--model', choices=models.modeldict.keys(), type=str.lower,
                         help='Assign a model.', required=True)
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--dataset', choices=datasets.datasetdict.keys(), type=str.lower,
+    group.add_argument('--dataset', choices=dataloaders.datasetdict.keys(), type=str.lower,
                        help='Assign a dataset as provided by OpenNE.\n'
                             'Use --local-dataset if you want to load dataset from file.')
 
@@ -97,11 +97,11 @@ def parse_args():
 
 def parse(**kwargs):
     if 'dataset' in kwargs:
-        Dataset = datasets.datasetdict[kwargs['dataset']]
+        Dataset = dataloaders.datasetdict[kwargs['dataset']]
     else:
         name_dict = {k: v for k,v in kwargs.items() if k in ['edgefile', 'adjfile', 'labelfile', 'features', 'status']}
-        Dataset = datasets.create_self_defined_dataset(kwargs['root_dir'], name_dict, kwargs['name'],
-                                                       kwargs['weighted'], kwargs['directed'], 'features' in kwargs)
+        Dataset = dataloaders.create_self_defined_dataset(kwargs['root_dir'], name_dict, kwargs['name'],
+                                                          kwargs['weighted'], kwargs['directed'], 'features' in kwargs)
     Model = models.modeldict[kwargs['model']]
     taskname = kwargs.get('task', None)
     if taskname is None:
