@@ -19,11 +19,14 @@ class HOPE(ModelWithEmbeddings):
     def check_train_parameters(cls, **kwargs):
         check_existance(kwargs, {'dim': 128})
         check_range(kwargs, {'dim': 'positive'})
+        if 'measurement' not in kwargs:
+            check_existance(kwargs, {'beta': 0.02})
+            check_existance(kwargs, {'alpha': 0.5})
         check_existance(kwargs, {'measurement': 'katz'})
         check_range(kwargs, {'measurement': ['katz', 'cn', 'rpr', 'aa']})
         if kwargs['measurement'] == 'katz':
             check_existance(kwargs, {'beta': 0.02})
-        elif kwargs['measurement'] == 'rpr':
+        if kwargs['measurement'] == 'rpr':
             check_existance(kwargs, {'alpha': 0.5})
         return kwargs
 

@@ -49,7 +49,7 @@ class Dataset(torch.utils.data.Dataset):
         super(Dataset, self).__init__()
         self.name = name
         self.resource_url = resource_url
-        self.dir = root_dir
+        self.dir = osp.expanduser(osp.normpath(root_dir))
 
         if downloaded_dir is not None:
             self.downloaded_dir = osp.join(root_dir, downloaded_dir)
