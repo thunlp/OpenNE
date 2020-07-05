@@ -87,17 +87,15 @@ class ModelWithEmbeddings(torch.nn.Module):
         if graphtype:
             cls.check_graphtype(graphtype, **new_kwargs)
         if 'epochs' not in new_kwargs:
-            epoch_debug_output = 10000
-            _debug_output = False
+            _multiple_epochs = False
         else:
-            epoch_debug_output = 5
-            _debug_output = True
+            _multiple_epochs = True
         check_existance(new_kwargs, {'dim': 128,
                                      'epochs': 1,
                                      '_validation_hooks': [],
                                      'validation_interval': 5,
-                                     'debug_output_interval': epoch_debug_output,
-                                     '_debug_output': _debug_output,
+                                     'debug_output_interval': 5,
+                                     '_multiple_epochs': _multiple_epochs,
                                      'output': None,
                                      'save': True})
         return new_kwargs
@@ -121,17 +119,22 @@ class ModelWithEmbeddings(torch.nn.Module):
         t1 = time()
         print("Start training...")
         self.build(graph, **kwargs)
-        epochs = kwargs['epochs']
-        if kwargs['_debug_output']:
+        if kwargs['_multiple_epochs']:
+            epochs = kwargs['epochs']
             print("total iter: %i" % epochs)
+        else:
+            epochs = 1
         time0 = time()
         for i in range(epochs):
             self.embeddings = self.get_train(graph, step=i, **kwargs)
-            if epochs > 1 and (i + 1) % kwargs['validation_interval'] == 0:
+            if kwargs['_multiple_epochs'] and (i + 1) % kwargs['validation_interval'] == 0:
                 for f_v in kwargs['_validation_hooks']:
                     f_v(self, graph, step=i, **kwargs)
-            if kwargs['_debug_output'] and (i + 1) % kwargs['debug_output_interval'] == 0:
-                print("epoch {}: {}; time used = {}s".format(i + 1, self.debug_info, time()-time0))
+            if kwargs['_multiple_epochs'] and (i + 1) % kwargs['debug_output_interval'] == 0:
+                print("epoch {}: {}; time used = {}s".format(i + 1, self.debug_info, time() - time0))
+                time0 = time()
+            elif not kwargs['_multiple_epochs']:
+                print("{}\n Time used = {}s".format(i + 1, self.debug_info, time() - time0))
                 time0 = time()
             if self.early_stopping_judge(graph, step=i, **kwargs):
                 print("Early stopping condition satisfied. Abort training.")
@@ -139,15 +142,15 @@ class ModelWithEmbeddings(torch.nn.Module):
         self.make_output(graph, **kwargs)
         if not self.vectors:
             self.get_vectors(graph)
-        if self.save:
-            embeddingpath = os.path.join(self.outputpath, self.outputembeddingfile)
-            print("Saving embeddings to {}...".format(embeddingpath))
-            self.save_embeddings(embeddingpath)
-            modelpath = os.path.join(self.outputpath, self.outputmodelfile)
-            print("Saving model to {}...".format(modelpath))
-            self.save_model(modelpath)
         t2 = time()
         print("Finished training. Time used = {}.".format(t2 - t1))
+        if self.save:
+            embeddingpath = osp.abspath(osp.join(self.outputpath, self.outputembeddingfile))
+            print("Saving embeddings to {}...".format(embeddingpath))
+            self.save_embeddings(embeddingpath)
+            modelpath = osp.abspath(osp.join(self.outputpath, self.outputmodelfile))
+            print("Saving model to {}...".format(modelpath))
+            self.save_model(modelpath)
         return self.vectors
 
     @classmethod

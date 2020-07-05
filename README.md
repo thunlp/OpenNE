@@ -56,67 +56,127 @@ You can check out the other options available to use with *OpenNE* using:
 - --model {deepwalk, line, node2vec, grarep, tadw, gcn, lap, gf, hope and sdne} the specified NE model;
 - --dataset {ppi, wikipedia, flickr, blogcatalog, wiki, pubmed, cora, citeseer} standard dataset as provided by OpenNE;
 
-If instead you want to create a dataset from file:
+If instead you want to create a dataset from file, you can provide your own graph by using switch
+- --local-dataset (action store_true; mutually exclusive with --dataset)
 
-- --input, the input file of a network;
-- --graph-format, the format of input graph, adjlist or edgelist;
-- --output, the output file of representation (GCN doesn't need it);
-- --representation-size, the number of latent dimensions to learn for each node; the default is 128
-- --directed, treat the graph as directed; this is an action;
-- --weighted, treat the graph as weighted; this is an action;
-- --label-file, the file of node label; ignore this option if not testing;
-- --clf-ratio, the ratio of training data for node classification; the default is 0.5;
-- --epochs, the training epochs of LINE and GCN; the default is 5;
+and the following arguments:
+- --root-dir, root directory of input files. If empty, you should provide absolute paths for graph files;
+- --edgefile, description of input graph in edgelist format;
+- --adjfile, description of input graph in adjlist format (mutually exclusive with --edgefile);
+- --label-file, node label file; 
+- --features, node feature file for certain models (optional);
+- --name, dataset name, "SelfDefined" by default;
+- --weighted, view graph as weighted (action store_true);
+- --directed, view graph as directed (action store_true);
+
+For general training options:
+- --dim, dimension of node representation, 128 by default;
+- --clf-ratio, the ratio of training data for node classification, 0.5 by default;
+- --no-save, choose not to save the result (action store_false, dest=save);
+- --output, output file for vectors, which will be saved to "results" by default;
+- --sparse, calculate by sparse matrices (action store_true) (only supports lle & gcn);
+
+For models with multiple epochs:
+- --epochs, number of epochs;
+- --validate, True if validation is needed; by default it is False except with GCN;
+- --validation-interval, number of epochs between two validations, 5 by default;
+- --debug-output-interval, number of epochs between two debug outputs, 5 by default;
+
 
 #### Specific Options
 
-DeepWalk and node2vec:
-
-- --number-walks, the number of random walks to start at each node; the default is 10;
-- --walk-length, the length of random walk started at each node; the default is 80;
-- --workers, the number of parallel processes; the default is 8;
-- --window-size, the window size of skip-gram model; the default is 10;
-- --q, only for node2vec; the default is 1.0;
-- --p, only for node2vec; the default is 1.0;
-
-LINE:
-
-- --negative-ratio, the default is 5;
-- --order, 1 for the 1st-order, 2 for the 2nd-order and 3 for 1st + 2nd; the default is 3;
-- --no-auto-save, no early save when training LINE; this is an action; when training LINE, we will calculate F1 scores every epoch. If current F1 is the best F1, the embeddings will be saved.
+GraphFactorization:
+- --weight-decay, weight for l2-loss of embedding matrix (1.0 by default);
+- --lr, learning rate (0.003 by default)
 
 GraRep:
 
-- --kstep, use k-step transition probability matrix（make sure representation-size%k-step == 0).
+- --kstep, use k-step transition probability matrix（requires dim % kstep == 0).
 
-TADW:
 
-- --feature-file, The file of node features;
-- --lamb, lamb is a hyperparameter in TADW that controls the weight of regularization terms.
+HOPE:
+- --measurement {katz, cn, rpr, aa}  mesurement matrix, katz by default;
+- --beta, parameter with katz measurement, 0.02 by default;
+- --alpha, parameter with rpr measurement, 0.5 by default;
 
-GCN:
-
-- --feature-file, The file of node features;
-- --epochs, the training epochs of GCN; the default is 5;
-- --dropout, dropout rate;
-- --weight-decay, weight for l2-loss of embedding matrix;
-- --hidden, number of units in the first hidden layer.
-
-GraphFactorization:
-
-- --epochs, the training epochs of GraphFactorization; the default is 5;
-- --weight-decay, weight for l2-loss of embedding matrix;
-- --lr, learning rate, the default is 0.01
+LINE:
+- --lr, learning rate, 0.001 by default;
+- --batch-size, 1000 by default;
+- --negative-ratio, 5 by default;
+- --order, 1 for the 1st-order, 2 for the 2nd-order and 3 for 1st + 2nd, 3 by default;
 
 SDNE:
 
-- --encoder-list, a list of numbers of the neuron at each encoder layer, the last number is the dimension of the output node representation, the default is [1000, 128]
-- --alpha, alpha is a hyperparameter in SDNE that controls the first order proximity loss, the default is 1e-6
-- --beta, beta is used for construct matrix B, the default is 5
-- --nu1, parameter controls l1-loss of weights in autoencoder, the default is 1e-5
-- --nu2, parameter controls l2-loss of weights in autoencoder, the default is 1e-4
-- --bs, batch size, the default is 200
-- --lr, learning rate, the default is 0.01
+- --encoder-list, list of neuron numbers at each encoder layer. The last number is the dimension of the output node representation. [1000, 128] by default. See "Input Instructions";
+- --alpha, parameter that controls the first-order proximity loss, 1e-6 by default;
+- --beta, parameter used for construct matrix B, 5 by default;
+- --nu1, parameter that controls l1-loss of weights in autoencoder, 1e-8 by default;
+- --nu2, parameter that controls l2-loss of weights in autoencoder, 1e-5 by default;
+- --bs, batch size, 200 by default;
+- --lr, learning rate, 0.01 by default;
+- --decay, allow decay in learning rate (action store_true);
+
+TADW: (requires attributed graph, eg. cora, pubmed, citeseer)
+- --lamb, parameter that controls the weight of regularization terms, 0.2 by default;
+
+GCN: (requires attributed graph)
+- --lr, learning rate, 0.01 by default;
+- --dropout, dropout rate, 0.5 by default;
+- --weight-decay, weight for l2-loss of embedding matrix, 0.0001 by default;
+- --hiddens, list of neuron numbers in each hidden layer, [16] by default;
+- --max-degree, maximum Chebyshev polynomial degree. 0 (disable Chebyshev polynomial) by default;
+
+
+DeepWalk and node2vec:
+- --num-paths, number of random walks that starts at each node, 10 by default;
+- --path-length, length of random walk started at each node, 80 by default;
+- --window-size, the window size of skip-gram model; 10 by default;
+- --q (only node2vec), 1.0 by default;
+- --p (only node2vec), 1.0 by default.
+
+#### Input Instructions
+
+##### Use default values
+
+For the simplest use, if you want to run GraphFactorization on BlogCatalog, input the following command:
+
+    python -m openne --model gf --dataset blogcatalog
+
+##### store_true and store_false parameters
+
+Parameters like --sparse have action "store_true", which means they are False by default, and should be specified if you want to assign True. Run GCN with sparsed matrices by the following command:
+    
+    python -m openne --model gcn --dataset cora --sparse
+
+You can use store_false parameters, eg. --no-save, in a similar way:
+
+    python -m openne --model gcn --dataset cora --sparse --no-save
+    
+The above command asks for not saving the trained results (while it is saved by default).
+    
+##### Use your own datasets
+
+Use --local-dataset (which is also a store_true parameter!) and specify --root-dir, --edgefile or --adjfile, --labelfile, --features and --status to import dataset from file. 
+
+Optionally, specify store_true parameters --weighted and --directed to view the graph as weighted and/or directed.
+
+If you wish to use your dataset in "~/mydataset", which includes edges.txt, an edgelist file, and labels.txt, a label file, input the following:
+    
+    python -m openne --model gf --local-dataset --root-dir ~/mydataset --edgefile edges.txt --labelfile labels.txt
+
+
+##### Input values
+
+While all parameter names must be provided in lower case, string input values are case insensitive:
+
+    python -m openne --model SDnE --dataset coRA
+
+The simplest way to provide a Python list (as of --encoder-layer-list in SDNE and --hiddens in GCN) is to directly input it without space. You can also wrap the list in double quotes (") to input spaces. The following commands are the same:
+
+    python -m openne --model sdne --dataset cora --encoder-layer-list [1000,128]
+    python -m openne --model sdne --dataset cora --encoder-layer-list "[1000,128]"
+    python -m openne --model sdne --dataset cora --encoder-layer-list "[1000, 128]"
+    
 
 
 ## Citing

@@ -14,7 +14,7 @@ def init_weights(m):
         m.bias.data.fill_(0.)
 
 
-def adjust_learning_rate(optimizer, step, decay_strategy=lambda x: 0.03):
+def adjust_lr(optimizer, step, decay_strategy=lambda x: 0.03):
     for param_group in optimizer.param_groups:
         param_group['lr'] = decay_strategy(step)
 
@@ -174,17 +174,17 @@ class SDNE(ModelWithEmbeddings):
                                  'nu2': 1e-4,
                                  'batch_size': 200,
                                  'epochs': 100,
-                                 'learning_rate': 0.01,
+                                 'lr': 0.01,
                                  'decay': False,
                                  'pretrain': False})
         check_range(kwargs, {'batch_size': (0, np.inf),
                              'epochs': (0, np.inf),
-                             'learning_rate': (0, np.inf),
+                             'lr': (0, np.inf),
                              'decay': [True, False, 0, 1],
                              'pretrain': [True, False, 0, 1]})
         return kwargs
 
-    def build(self, graph, *, batch_size=200, epochs=100, learning_rate=0.01, decay=False, pretrain=False, **kwargs):
+    def build(self, graph, *, batch_size=200, epochs=100, lr=0.01, decay=False, pretrain=False, **kwargs):
         self.node_size = graph.nodesize
         self.dim = self.encoder_layer_list[-1]
         self.encoder_layer_list = [self.node_size]
@@ -198,7 +198,7 @@ class SDNE(ModelWithEmbeddings):
         if self.decay:
             self.lr = lambda x: 0.03 / (1 + 0.9999 * x)
         else:
-            self.lr = lambda x: learning_rate
+            self.lr = lambda x: lr
         self.adj_mat = torch.from_numpy(graph.adjmat(weighted=True, directed=True)).type(torch.float32)
 
         self.model = SDNENet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2)
@@ -220,7 +220,7 @@ class SDNE(ModelWithEmbeddings):
         loss.backward()
         self.optimizer.step()
         if self.decay:
-            adjust_learning_rate(self.optimizer, step, decay_strategy=self.lr)
+            adjust_lr(self.optimizer, step, decay_strategy=self.lr)
         self.debug_info = "total loss: {}, l1 loss: {}, l2 loss: {}".format(loss, l1, l2)
 
     def make_output(self, graph, **kwargs):

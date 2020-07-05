@@ -18,7 +18,7 @@ class Node2vec(ModelWithEmbeddings):
                                  'num_paths': 10,
                                  'p': 1.0,
                                  'q': 1.0,
-                                 'workers': 1,
+                                 # 'workers': 1,
                                  'min_count': 0,
                                  'sg': 1})
         return kwargs
@@ -29,7 +29,7 @@ class Node2vec(ModelWithEmbeddings):
             self.args['hs'] = 1
             p = 1.0
             q = 1.0
-
+        kwargs['workers'] = 1
         self.args['workers'] = kwargs["workers"]
 
         if self.dw:
