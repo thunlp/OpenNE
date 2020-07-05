@@ -34,13 +34,18 @@ def legal_arg_name(arg):
         return False
     return True
 
-def addarg(arg, group, used_names, val):
+def addarg(arg, group, used_names, val, default=False):
     if arg not in used_names and legal_arg_name(arg):
         used_names.add(arg)
+        kwargs = {}
         if xtype(val) is bool:
-            group.add_argument(toargstr(arg), action="store_true")
+            kwargs['action'] = 'store_true'
         else:
-            group.add_argument(toargstr(arg), type=xtype(val))
+            kwargs['type'] = xtype(val)
+        if default:
+            kwargs['default'] = val
+        group.add_argument(toargstr(arg), **kwargs)
+
 
 def parse_args():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
@@ -77,18 +82,18 @@ def parse_args():
     used_names = set()
     # structure & training args
     group = parser.add_argument_group("GENERAL MODEL ARGUMENTS")
-    addarg("clf_ratio", group, used_names, 0.1)
+    addarg("clf_ratio", group, used_names, 0.5, True)
     group.add_argument('--validate', type=bool)
     model_args = models.ModelWithEmbeddings.args()
     for arg in model_args:
-        addarg(arg, group, used_names, model_args[arg])
+        addarg(arg, group, used_names, model_args[arg], True)
 
     for modelname in models.modeldict:
         model = models.modeldict[modelname]
         group = parser.add_argument_group(modelname.upper())
         model_args = model.args()
         for arg in model_args:
-            addarg(arg, group, used_names, model_args[arg])
+            addarg(arg, group, used_names, model_args[arg], True)
 
     args = parser.parse_args()
 
