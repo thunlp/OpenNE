@@ -18,9 +18,9 @@ class Node2vec(ModelWithEmbeddings):
                                  'num_paths': 10,
                                  'p': 1.0,
                                  'q': 1.0,
+                                 'window': 10,
                                  # 'workers': 1,
-                                 'min_count': 0,
-                                 'sg': 1})
+                                 })
         return kwargs
 
     def build(self, graph, *, path_length=80, num_paths=10, p=1.0, q=1.0, **kwargs):
@@ -41,8 +41,8 @@ class Node2vec(ModelWithEmbeddings):
         sentences = self.walker.simulate_walks(num_walks=num_paths, walk_length=path_length)
         self.args["sentences"] = sentences
         self.args["size"] = self.dim
-        for s in ["min_count", "sg"]:
-            self.args[s] = kwargs[s]
+        self.args['min_count'] = 0
+        self.args['window'] = kwargs['window']
 
     def get_train(self, graph, **kwargs):
         word2vec = Word2Vec(**self.args)
