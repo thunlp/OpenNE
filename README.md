@@ -53,12 +53,15 @@ You can check out the other options available to use with *OpenNE* using:
 
     python -m openne --help
 
+- --model {deepwalk, line, node2vec, grarep, tadw, gcn, lap, gf, hope and sdne} the specified NE model;
+- --dataset {ppi, wikipedia, flickr, blogcatalog, wiki, pubmed, cora, citeseer} standard dataset as provided by OpenNE;
+
+If instead you want to create a dataset from file:
 
 - --input, the input file of a network;
 - --graph-format, the format of input graph, adjlist or edgelist;
 - --output, the output file of representation (GCN doesn't need it);
 - --representation-size, the number of latent dimensions to learn for each node; the default is 128
-- --method, the NE model to learn, including deepwalk, line, node2vec, grarep, tadw, gcn, lap, gf, hope and sdne;
 - --directed, treat the graph as directed; this is an action;
 - --weighted, treat the graph as weighted; this is an action;
 - --label-file, the file of node label; ignore this option if not testing;
