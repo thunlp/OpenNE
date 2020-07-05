@@ -130,7 +130,7 @@ GCN: (requires attributed graph)
 DeepWalk and node2vec:
 - --num-paths, number of random walks that starts at each node, 10 by default;
 - --path-length, length of random walk started at each node, 80 by default;
-- --window-size, the window size of skip-gram model; 10 by default;
+- --window, window size of skip-gram model; 10 by default;
 - --q (only node2vec), 1.0 by default;
 - --p (only node2vec), 1.0 by default.
 
