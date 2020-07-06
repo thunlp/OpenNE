@@ -12,17 +12,76 @@ This is an open-source framework for self-supervised/unsupervised graph embeddin
 performances of OpenNE-PyTorch models with default arguments on Cora Dataset as compared with the previous version, 
 where "F1/Accuracy" refers to accuracy in GCN and micro F1-scores in other models, and "Time" refers to training time.
 
-| Method | Time | | F1/Accuracy | |
-| | OpenNE | OpenNE-PyTorch | OpenNE | OpenNE-PyTorch |
-| ---- | ---- | ---- | ---- | ---- |
-DeepWalk | 85.85     | **74.98** | .832     | .832
-Node2vec | 143.67    | **38.18** | **.814** | .807
-HOPE     | 2.66      | **2.45**  | .634     | **.743**
-GraRep   | 44.27     | **4.04**  | **.776** | .770
-TADW     | **43.42** | 59.12     | **.852** | .843
-GF       | **15.01** | 45.78     | .546     | **.763**
-LINE     | **86.75** | 102       | .417     | **.685**
-SDNE     | 195.02    | **73.45** | .532     | **.680**
+
+<table cellspacing='1' bgcolor='#fefefe'>
+<tr>
+    <th rowspan="2" bgcolor='#ffffff'>method</th>
+    <th colspan="2" bgcolor='#eeeeee'>Time</th>
+    <th colspan="2" bgcolor='#eeeeee'>F1/Accuracy</th>
+</tr>
+<tr bgcolor='#ffffff'>
+    <th>OpenNE</th>
+    <th>OpenNE-Pytorch</th>
+    <th>OpenNE</th>
+    <th>OpenNE-Pytorch</th>
+</tr>
+<tr bgcolor='#eeeeee'>
+    <td>DeepWalk</td>
+    <td>85.85</td>
+    <td><strong>74.98</strong></td>
+    <td>.832</td>
+    <td>.832</td>
+</tr>
+<tr bgcolor='#ffffff'>
+    <td>Node2vec</td>
+    <td>143.67</td>
+    <td><strong>38.18</strong></td>
+    <td><strong>.814</strong></td>
+    <td>.807</td>
+</tr>
+<tr bgcolor='#eeeeee'>
+    <td>HOPE</td>
+    <td>2.66</td>
+    <td><strong>2.45</strong></td>
+    <td>.634</td>
+    <td><strong>.743</strong></td>
+</tr>
+<tr bgcolor='#ffffff'>
+    <td>GraRep</td>
+    <td>44.27</td>
+    <td><strong>4.04</strong></td>
+    <td><strong>.776</strong></td>
+    <td>.770</td>
+</tr>
+<tr bgcolor='#eeeeee'>
+    <td>TADW</td>
+    <td><strong>43.42</strong></td>
+    <td>59.12</td>
+    <td><strong>.852</strong></td>
+    <td>.843</td>
+</tr>
+<tr bgcolor='#ffffff'>
+    <td>GF</td>
+    <td><strong>15.01</strong></td>
+    <td>45.78</td>
+    <td>.546</td>
+    <td><strong>.763</strong></td>
+</tr>
+<tr bgcolor='#eeeeee'>
+    <td>LINE</td>
+    <td><strong>86.75</strong></td>
+    <td>102</td>
+    <td>.417</td>
+    <td><strong>.685</strong></td>
+</tr>
+<tr bgcolor='#ffffff'>
+    <td>SDNE</td>
+    <td>195.02</td>
+    <td><strong>73.45</strong></td>
+    <td>.532</td>
+    <td><strong>.680</strong></td>
+</tr>
+</table>
 
 
 - **Modularity**: We entangle the codes into three parts: Dataloader, Model and Task. Users can easily customize the datasets, methods and tasks. It is also easy to define their specific datasets and methods.
