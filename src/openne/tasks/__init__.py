@@ -1,7 +1,7 @@
 from .classify import Classifier, TopKRanker
-from .supervised_node_prediction import SupervisedNodePrediction, supervisedmodels
-from .unsupervised_node_prediction import UnsupervisedNodePrediction
+from .supervised_node_classification import SupervisedNodeClassification, supervisedmodels
+from .unsupervised_node_classification import UnsupervisedNodeClassification
 from .tasks import BaseTask
 
-tasklist = [SupervisedNodePrediction, UnsupervisedNodePrediction]
+tasklist = [SupervisedNodeClassification, UnsupervisedNodeClassification]
 taskdict = {Cls.__name__.lower(): Cls for Cls in tasklist}

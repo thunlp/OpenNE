@@ -4,9 +4,9 @@ from ..utils import *
 from ..models import ModelWithEmbeddings
 from sklearn.linear_model import LogisticRegression
 
-class UnsupervisedNodePrediction(BaseTask):
+class UnsupervisedNodeClassification(BaseTask):
     def __init__(self, **kwargs):
-        super(UnsupervisedNodePrediction, self).__init__(**kwargs)
+        super(UnsupervisedNodeClassification, self).__init__(**kwargs)
 
     def check(self, modelclass, datasetclass):
         assert(issubclass(modelclass, ModelWithEmbeddings))

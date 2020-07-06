@@ -4,9 +4,9 @@ from ..utils import *
 from ..models import GCN
 
 supervisedmodels = [GCN]
-class SupervisedNodePrediction(BaseTask):
+class SupervisedNodeClassification(BaseTask):
     def __init__(self, **kwargs):
-        super(SupervisedNodePrediction, self).__init__(**kwargs)
+        super(SupervisedNodeClassification, self).__init__(**kwargs)
 
     def check(self, modelclass, datasetclass):
         assert(any(issubclass(modelclass, cls) for cls in supervisedmodels))
@@ -14,7 +14,7 @@ class SupervisedNodePrediction(BaseTask):
         
     def train(self, model, graph):
         self.split_dataset(graph)
-        return super(SupervisedNodePrediction, self).train(model, graph)
+        return super(SupervisedNodeClassification, self).train(model, graph)
 
     def split_dataset(self, graph):
         """

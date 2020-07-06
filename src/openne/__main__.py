@@ -175,9 +175,9 @@ def parse(**kwargs):
     taskname = kwargs.get('task', None)
     if taskname is None:
         if Model in tasks.supervisedmodels:
-            Task = tasks.SupervisedNodePrediction
+            Task = tasks.SupervisedNodeClassification
         else:
-            Task = tasks.UnsupervisedNodePrediction
+            Task = tasks.UnsupervisedNodeClassification
     else:
         Task = tasks.taskdict[taskname]
     return Task, Dataset, Model
