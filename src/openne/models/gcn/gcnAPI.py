@@ -23,7 +23,8 @@ class GCN(ModelWithEmbeddings):
                                  "early_stopping": 100,
                                  "clf_ratio": 0.1,
                                  "hiddens": [16],
-                                 "max_degree": 0})
+                                 "max_degree": 0,
+                                 "sparse": False})
         check_range(kwargs, {"learning_rate": (0, np.inf),
                              "epochs": (0, np.inf),
                              "dropout": (0, 1),
@@ -40,7 +41,7 @@ class GCN(ModelWithEmbeddings):
 
     def build(self, graph, *, learning_rate=0.01, epochs=200,
               dropout=0.5, weight_decay=1e-4, early_stopping=100,
-              clf_ratio=0.1, **kwargs):
+              clf_ratio=0.1, sparse=False, **kwargs):
         """
                         learning_rate: Initial learning rate
                         epochs: Number of epochs to train
@@ -56,7 +57,7 @@ class GCN(ModelWithEmbeddings):
         self.dropout = dropout
         self.weight_decay = weight_decay
         self.early_stopping = early_stopping
-        self.sparse = False
+        self.sparse = sparse
 
         self.preprocess_data(graph)
         # Create models

@@ -60,12 +60,17 @@ def parse_args():
     # self-defined dataset
     local_inputs = parser.add_argument_group('LOCAL DATASET INPUTS')
     group.add_argument('--local-dataset', action='store_true',
-                       help='Load dataset from file. Check LOCAK DATASET INPUTS for more details.')
+                       help='Load dataset from file. Check LOCAL DATASET INPUTS for more details.')
+    local_inputs.add_argument('--root-dir', help='Root directory of input files. If empty, you should provide'
+                                                 'absolute paths for graph files.',
+                              default=None)
     local_input_format = local_inputs.add_mutually_exclusive_group()
-    local_input_format.add_argument('--edgelist', help='Graph description in edgelist format.')
-    local_input_format.add_argument('--adjlist', help='Graph description in adjlist format.')
-    local_inputs.add_argument('--label-file', help='Node labels.')
-    local_inputs.add_argument('--feature-file', help='Node features.')
+    local_input_format.add_argument('--edgefile', help='Graph description in edgelist format.')
+    local_input_format.add_argument('--adjfile', help='Graph description in adjlist format.')
+    local_inputs.add_argument('--labelfile', help='Node labels.')
+    local_inputs.add_argument('--features', help='Node features.')
+    local_inputs.add_argument('--status', help="Dataset status.")
+    local_inputs.add_argument('--name', help="Dataset name.", default='SelfDefined')
     local_inputs.add_argument('--weighted', action='store_true', help='View graph as weighted.')
     local_inputs.add_argument('--directed', action='store_true', help='View graph as directed.')
 
@@ -91,7 +96,12 @@ def parse_args():
 
 
 def parse(**kwargs):
-    Dataset = datasets.datasetdict[kwargs['dataset']]
+    if 'dataset' in kwargs:
+        Dataset = datasets.datasetdict[kwargs['dataset']]
+    else:
+        name_dict = {k: v for k,v in kwargs.items() if k in ['edgefile', 'adjfile', 'labelfile', 'features', 'status']}
+        Dataset = datasets.create_self_defined_dataset(kwargs['root_dir'], name_dict, kwargs['name'],
+                                                       kwargs['weighted'], kwargs['directed'], 'features' in kwargs)
     Model = models.modeldict[kwargs['model']]
     taskname = kwargs.get('task', None)
     if taskname is None:
@@ -112,10 +122,11 @@ def main(args):
     print("actual args:",args)
 
     Task, Dataset, Model = parse(**args)  # parse required Task, Dataset, Model (classes)
-    args.__delitem__('dataset')
-    if 'task' in args:
-        args.__delitem__('task')
-    args.__delitem__('model')
+    dellist = ['dataset', 'edgefile', 'adjfile', 'labelfile', 'features',
+               'status', 'weighted', 'directed', 'root_dir', 'task', 'model']
+    for item in dellist:
+        if item in args:
+            args.__delitem__(item)
     # preparation
     task = Task(**args)                 # prepare task
     task.check(Model, Dataset)          # check parameters

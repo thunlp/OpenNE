@@ -1,4 +1,4 @@
-from .dataset import Dataset, Graph, LocalFile, Adapter, NetResources
+from .dataset import Dataset, Graph, LocalFile, Adapter, NetResources, create_self_defined_dataset
 from .karate import Karate
 from .matlab_matrix import MatlabMatrix, PPI, Wikipedia, Flickr, BlogCatalog
 from .wiki import Wiki
