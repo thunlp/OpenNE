@@ -10,7 +10,8 @@ This is an open-source framework for self-supervised/unsupervised graph embeddin
 
 - **Efficiency**: We provide faster and more efficient models than those in the previous version.
 
-| Method | Time | | Accuracy | | 
+
+| Method | Time | | Accuracy | |
 | | OpenNE | OpenNE-PyTorch | OpenNE | OpenNE-PyTorch |
 | ---- | ---- | ---- | ---- | ---- |
 DeepWalk | 77.26 | **73.87** | **.828** | .827 
