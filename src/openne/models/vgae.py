@@ -77,7 +77,8 @@ class VGAE(ModelWithEmbeddings):
     def get_train(self, graph, **kwargs):
         # Train models
         output, train_loss,  __ = self.evaluate(torch.ones(graph.nodesize))
-        self.debug_info = {"train_loss": "{:.5f}".format(train_loss)}
+        self.debug_info = "train_loss = {:.5f}".format(train_loss)
+        return output
         
     def build_label(self, graph):
         g = graph.G

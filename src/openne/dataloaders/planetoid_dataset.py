@@ -47,7 +47,7 @@ class Planetoid(NetResources, ABC):
             ty_extended[test_idx_range - min(test_idx_range), :] = ty
             ty = ty_extended
 
-        self.G = nx.from_dict_of_lists(graph)
+        self.G = nx.from_dict_of_lists(graph).to_directed()
 
         features = sp.vstack((allx, tx)).tolil()
         features[test_idx, :] = features[test_idx_range, :]

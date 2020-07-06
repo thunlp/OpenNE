@@ -72,8 +72,7 @@ class GCN(ModelWithEmbeddings):
     def get_train(self, graph, **kwargs):
         # Train models
         output, train_loss, train_acc, __ = self.evaluate(kwargs['train_mask'])
-        self.debug_info = {"train_loss": "{:.5f}".format(train_loss),
-                           "train_acc=": "{:.5f}".format(train_acc)}
+        self.debug_info = "train_loss = {:.5f}, train_acc = {:.5f}".format(train_loss, train_acc)
         return output
 
     def early_stopping_judge(self, graph, *, step=0, **kwargs):

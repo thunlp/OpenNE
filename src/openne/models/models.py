@@ -131,10 +131,18 @@ class ModelWithEmbeddings(torch.nn.Module):
                 for f_v in kwargs['_validation_hooks']:
                     f_v(self, graph, step=i, **kwargs)
             if kwargs['_multiple_epochs'] and (i + 1) % kwargs['debug_output_interval'] == 0:
-                print("epoch {}: {}; time used = {}s".format(i + 1, self.debug_info, time() - time0))
+                if self.debug_info:
+                    self.debug_info += '; '
+                else:
+                    self.debug_info = ''
+                print("epoch {}: {}time used = {}s".format(i + 1, self.debug_info, time() - time0))
                 time0 = time()
             elif not kwargs['_multiple_epochs']:
-                print("{}\n Time used = {}s".format(i + 1, self.debug_info, time() - time0))
+                if self.debug_info:
+                    self.debug_info += '\n'
+                else:
+                    self.debug_info = ''
+                print("{}Time used = {}s".format(self.debug_info, time() - time0))
                 time0 = time()
             if self.early_stopping_judge(graph, step=i, **kwargs):
                 print("Early stopping condition satisfied. Abort training.")

@@ -73,7 +73,7 @@ class GAE(ModelWithEmbeddings):
     def get_train(self, graph, **kwargs):
         # Train models
         output, train_loss,  __ = self.evaluate(torch.ones(graph.nodesize))
-        self.debug_info = {"train_loss": "{:.5f}".format(train_loss)}
+        self.debug_info = "train_loss = {:.5f}".format(train_loss)
         
     def build_label(self, graph):
         g = graph.G
@@ -125,28 +125,6 @@ class GAE(ModelWithEmbeddings):
 
     def make_output(self, graph, **kwargs):
         self.embeddings = self.model(self.features).detach()
-
-    def build_train_val_test(self, graph):
-        """
-            build train_mask test_mask val_mask
-        """
-        train_precent = self.clf_ratio
-        training_size = int(train_precent * graph.G.number_of_nodes())
-        state = torch.random.get_rng_state()
-        torch.random.manual_seed(0)
-        shuffle_indices = torch.randperm(graph.G.number_of_nodes())
-        torch.random.set_rng_state(state)
-        g = graph.G
-
-        def sample_mask(begin, end):
-            mask = torch.zeros(g.number_of_nodes())
-            for i in range(begin, end):
-                mask[shuffle_indices[i]] = 1
-            return mask
-
-        self.train_mask = sample_mask(0, training_size - 100)
-        self.val_mask = sample_mask(training_size - 100, training_size)
-        self.test_mask = sample_mask(training_size, g.number_of_nodes())
 
     def preprocess_data(self, graph):
         """

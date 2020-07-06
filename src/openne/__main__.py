@@ -121,6 +121,7 @@ def parse_args():
     simpledict.__delitem__('node2vec')
     simpledict.__delitem__('deepwalk')
     simpledict.__delitem__('gf')
+    simpledict.__delitem__('lap')
     simpledict['node2vec & deepwalk'] = models.Node2vec
 
     # add duplicate args as general model args

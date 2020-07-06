@@ -45,8 +45,7 @@ class SupervisedNodePrediction(BaseTask):
         def validation_hook(model, graph, **kwargs):
             _, cost, acc, duration = model.evaluate(self.val_mask)
             model.cost_val.append(cost)
-            model.debug_info['val_loss'] = "{:.5f}".format(cost)
-            model.debug_info['val_acc'] = "{:.5f}".format(acc)
+            model.debug_info += '; val_loss = {:.5f}, val_acc = {:.5f}'.format(cost, acc)
         check_existance(self.kwargs, {'_validation_hooks': [validation_hook] if self.kwargs['validate'] else []})
         return self.kwargs
 

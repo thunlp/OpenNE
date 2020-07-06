@@ -18,7 +18,7 @@ def getLap(adj_mat):
 class LaplacianEigenmaps(ModelWithEmbeddings):
     def __init__(self, dim=128, **kwargs):
         super(LaplacianEigenmaps, self).__init__(dim=dim, **kwargs)
-
+    othername = 'lap'
     @classmethod
     def check_train_parameters(cls, **kwargs):
         check_existance(kwargs, {'dim': 128})
@@ -26,11 +26,11 @@ class LaplacianEigenmaps(ModelWithEmbeddings):
         return kwargs
 
     def get_train(self, graph, **kwargs):
-        adj_mat = graph.adjmat(directed=True, weighted=False)
+        adj_mat = torch.from_numpy(graph.adjmat(directed=True, weighted=False))
         lap_mat = getLap(adj_mat)
         w, vec = torch.symeig(lap_mat, eigenvectors=True)
         start = 0
-        for i in range(graph.node_size):
+        for i in range(graph.nodesize):
             if w[i] > 1e-10:
                 start = i
                 break
