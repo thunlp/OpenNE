@@ -15,6 +15,7 @@ openne/datasets/matlab_matrix.py
 openne/datasets/planetoid_dataset.py
 openne/datasets/wiki.py
 openne/models/__init__.py
+openne/models/gae.py
 openne/models/gf.py
 openne/models/grarep.py
 openne/models/hope.py

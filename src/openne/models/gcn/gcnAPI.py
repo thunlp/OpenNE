@@ -91,7 +91,7 @@ class GCN(ModelWithEmbeddings):
         accuracy = self.model.accuracy(self.labels, mask)
         if train:
             loss.backward()
-            # print([(name, param.grad) for name,param in self.models.named_parameters()])
+            # print([(name, param.grad) for name,param in self.model.named_parameters()])
             self.model.optimizer.step()
         return output, loss, accuracy, (time.time() - t_test)
 
