@@ -1,6 +1,6 @@
 from .layers import *
 from .metrics import *
-
+import torch.nn.functional as F
 #flags = tf.app.flags
 #FLAGS = flags.FLAGS
 
@@ -85,6 +85,12 @@ class GCNModel(Model):
             self._loss += self.weight_decay * torch.norm(i, 2)
         self._loss += masked_softmax_cross_entropy(self.output, labels, labels_mask)
         return self._loss
+    
+    def gae_loss(self, adj_label, pos_weight, norm):
+        self._loss = 0
+        self._loss += norm * F.binary_cross_entropy_with_logits(torch.sigmoid(torch.mm(self.output, self.output.t())), adj_label, pos_weight=adj_label * pos_weight)
+        
+        return self._loss
 
     def accuracy(self, labels, labels_mask):
         self._accuracy = masked_accuracy(self.output, labels,
@@ -110,7 +116,7 @@ class GCNModel(Model):
                                             sparse_inputs=False,
                                             num_features_nonzero=self.num_features_nonzero,
                                             logging=self.logging))
-        self.layers.append(torch.nn.Softmax())
+        ##self.layers.append(torch.nn.Softmax())
 
     def _optim(self):
         self.optimizer = torch.optim.Adam(self.parameters(), lr=1e-2)

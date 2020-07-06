@@ -4,6 +4,9 @@ import collections
 import os
 import os.path as osp
 import errno
+import urllib
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 def check_existance(src_dict, req_items, defaults=None):
     """

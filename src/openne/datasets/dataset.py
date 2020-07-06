@@ -9,6 +9,7 @@ import os.path as osp
 import networkx as nx
 import numpy as np
 import os
+import urllib
 import errno
 from ..utils import *
 

@@ -8,7 +8,7 @@ Author-email: UNKNOWN
 License: MIT
 Description: # OpenNE: An open source toolkit for Network Embedding
         
-        This repository provides a standard NE/NRL(Network Representation Learning锛塼raining and testing framework. In this framework, we unify the input and output interfaces of different NE models and provide scalable options for each model. Moreover, we implement typical NE models under this framework based on tensorflow, which enables these models to be trained with GPUs.
+        This repository provides a standard NE/NRL(Network Representation Learning）training and testing framework. In this framework, we unify the input and output interfaces of different NE models and provide scalable options for each model. Moreover, we implement typical NE models under this framework based on tensorflow, which enables these models to be trained with GPUs.
         
         We develop this toolkit according to the settings of DeepWalk. The implemented or modified models include [DeepWalk](https://github.com/phanein/deepwalk), [LINE](https://github.com/tangjianpku/LINE), [node2vec](https://github.com/aditya-grover/node2vec), [GraRep](https://github.com/ShelsonCao/GraRep), [TADW](https://github.com/thunlp/TADW), [GCN](https://github.com/tkipf/gcn), HOPE, GF, SDNE and LE. We will implement more representative NE models continuously according to our released [NRL paper list](https://github.com/thunlp/nrlpapers). Specifically, we welcome other researchers to contribute NE models into this toolkit based on our framework. We will announce the contribution in this project.
         
@@ -71,7 +71,7 @@ Description: # OpenNE: An open source toolkit for Network Embedding
         
         GraRep:
         
-        - --kstep, use k-step transition probability matrix锛坢ake sure representation-size%k-step == 0).
+        - --kstep, use k-step transition probability matrix（make sure representation-size%k-step == 0).
         
         TADW:
         
