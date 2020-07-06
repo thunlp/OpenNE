@@ -12,22 +12,20 @@ This is an open-source framework for self-supervised/unsupervised graph embeddin
 performances of OpenNE-PyTorch models with default arguments on Cora Dataset as compared with the previous version, 
 where "F1/Accuracy" refers to accuracy in GCN and micro F1-scores in other models, and "Time" refers to training time.
 
-| Method | Time | | Accuracy | |
+| Method | Time | | F1/Accuracy | |
 | | OpenNE | OpenNE-PyTorch | OpenNE | OpenNE-PyTorch |
 | ---- | ---- | ---- | ---- | ---- |
-DeepWalk | 77.26 | **73.87** | **.828** | .827 ---------
-Node2vec | 42.25 | **33.86** | **.820** | .812---------
-HOPE | 132.52 | **3.50** | .308 | **.751**
-GraRep | 60.64 | **4.90** | .770 | **.785**
-LLE | 792.28 | **17.67** | .301 | **.306**
-Lap | **6.13** | 6.47 | .305 | **.315**
-TADW | 35.71 | **21.28** | **.853** | .850-------------
-GF | 15.01 | 45.78 | .546 | **.763**
-LINE | **86.75** | 102 | .417 | **.685**
-SDNE | 195.02 | **73.45** | .532 | **.680**
+DeepWalk | 85.85     | **74.98** | .832     | .832
+Node2vec | 143.67    | **38.18** | **.814** | .807
+HOPE     | 2.66      | **2.45**  | .634     | **.743**
+GraRep   | 44.27     | **4.04**  | **.776** | .770
+TADW     | **43.42** | 59.12     | **.852** | .843
+GF       | **15.01** | 45.78     | .546     | **.763**
+LINE     | **86.75** | 102       | .417     | **.685**
+SDNE     | 195.02    | **73.45** | .532     | **.680**
 
 
-- **Modularity**: We entangle the codes into three parts: Dataset, Model and Task. Users can easily customize the datasets, methods and tasks. It is also easy to define their specific datasets and methods.
+- **Modularity**: We entangle the codes into three parts: Dataloader, Model and Task. Users can easily customize the datasets, methods and tasks. It is also easy to define their specific datasets and methods.
 
 #### Future Plan
 We plan to add more models and tasks in our framework. Our future plan includes:
