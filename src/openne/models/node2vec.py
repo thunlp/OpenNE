@@ -19,7 +19,7 @@ class Node2vec(ModelWithEmbeddings):
                                  'p': 1.0,
                                  'q': 1.0,
                                  'window': 10,
-                                 # 'workers': 1,
+                                 'workers': 8,
                                  })
         return kwargs
 
@@ -29,7 +29,6 @@ class Node2vec(ModelWithEmbeddings):
             self.args['hs'] = 1
             p = 1.0
             q = 1.0
-        kwargs['workers'] = 1
         self.args['workers'] = kwargs["workers"]
 
         if self.dw:
@@ -43,11 +42,13 @@ class Node2vec(ModelWithEmbeddings):
         self.args["size"] = self.dim
         self.args['min_count'] = 0
         self.args['window'] = kwargs['window']
+        self.args['sg'] = 1
 
     def get_train(self, graph, **kwargs):
+        print("training Word2Vec model...")
         word2vec = Word2Vec(**self.args)
         self.vectors = {}
-
+        print("Obtaining vectors...")
         for word in graph.G.nodes():
             self.vectors[word] = torch.Tensor(word2vec.wv[word])
         del word2vec
