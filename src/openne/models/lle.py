@@ -38,6 +38,6 @@ class LLE(ModelWithEmbeddings):
         else:
             I_n = np.eye(graph.nodesize)
         I_min_A = I_n - A
-        u, s, vt = lg.svds(I_min_A, k=self.dim + 1, which='LM') #todo: should be SM
+        u, s, vt = lg.svds(I_min_A, k=self.dim + 1, which='SM') #todo: should be SM
         vt = torch.tensor(vt)
         return vt.t()[:, 1:]
