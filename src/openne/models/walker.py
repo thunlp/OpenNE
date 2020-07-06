@@ -13,7 +13,7 @@ def deepwalk_walk_wrapper(class_instance, walk_length, start_node):
 class BasicWalker:
     def __init__(self, G, workers):
         self.G = G.G
-        self.node_size = G.node_size
+        self.node_size = G.nodesize
         self.look_up_dict = G.look_up_dict
 
     def deepwalk_walk(self, walk_length, start_node):
@@ -87,8 +87,7 @@ class Walker:
                 else:
                     prev = walk[-2]
                     pos = (prev, cur)
-                    nxt = cur_nbrs[alias_draw(alias_edges[pos][0],
-                                               alias_edges[pos][1])]
+                    nxt = cur_nbrs[alias_draw(alias_edges[pos][0], alias_edges[pos][1])]
                     walk.append(nxt)
             else:
                 break
