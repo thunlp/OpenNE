@@ -8,22 +8,23 @@ This is an open-source framework for self-supervised/unsupervised graph embeddin
 
 - **A unified framework**: We provide a unified framework for self-supervised/unsupervised node representation learning. Our models include unsupervised network embedding (NE) methods (DeepWalk, Node2vec, HOPE, GraRep, LLE, Lap, TADW, GF, LINE, SDNE) and recent self-supervised graph embedding methods (GAE, VGAE).
 
-- **Efficiency**: We provide faster and more efficient models than those in the previous version.
-
+- **Efficiency**: We provide faster and more efficient models than those in the previous version. The table below shows 
+performances of OpenNE-PyTorch models with default arguments on Cora Dataset as compared with the previous version, 
+where "F1/Accuracy" refers to accuracy in GCN and micro F1-scores in other models, and "Time" refers to training time.
 
 | Method | Time | | Accuracy | |
 | | OpenNE | OpenNE-PyTorch | OpenNE | OpenNE-PyTorch |
 | ---- | ---- | ---- | ---- | ---- |
-DeepWalk | 77.26 | **73.87** | **.828** | .827 
-Node2vec | 42.25 | **33.86** | **.820** | .812
+DeepWalk | 77.26 | **73.87** | **.828** | .827 ---------
+Node2vec | 42.25 | **33.86** | **.820** | .812---------
 HOPE | 132.52 | **3.50** | .308 | **.751**
 GraRep | 60.64 | **4.90** | .770 | **.785**
 LLE | 792.28 | **17.67** | .301 | **.306**
 Lap | **6.13** | 6.47 | .305 | **.315**
-TADW | 35.71 | **21.28** | **.853** | .850
-GF | **15.64** | 22.24 | .521 | **.577**
-LINE | 86.75 | **64.72** | **.611** | .597
-SDNE | **11.07** | 16.5 | .683 | **.725**
+TADW | 35.71 | **21.28** | **.853** | .850-------------
+GF | 15.01 | 45.78 | .546 | **.763**
+LINE | **86.75** | 102 | .417 | **.685**
+SDNE | 195.02 | **73.45** | .532 | **.680**
 
 
 - **Modularity**: We entangle the codes into three parts: Dataset, Model and Task. Users can easily customize the datasets, methods and tasks. It is also easy to define their specific datasets and methods.

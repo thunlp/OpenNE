@@ -63,7 +63,6 @@ class _LINE(ModelWithEmbeddings):
             self.optimizer.step()
             batch_id += 1
         self.debug_info = sum_loss
-        self.embeddings = self.embeddings.detach()
         return self.embeddings
 
     def batch_iter(self, data_size):
@@ -181,8 +180,8 @@ class LINE(ModelWithEmbeddings):
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
-        check_existance(kwargs, {'lr': 0.001, 'batch_size': 1000, 'negative_ratio': 5, 'debug_output_interval': 1})
-        check_range(kwargs, {'lr': 'positive', 'batch_size': 'positive', 'negative_ratio': 'positive'})
+        check_existance(kwargs, {'lr': 0.001, 'batch_size': 1000, 'negative_ratio': 5, 'debug_output_interval': 1, 'epochs': 20})
+        check_range(kwargs, {'lr': 'positive', 'batch_size': 'positive', 'negative_ratio': 'positive', 'epochs': 'positive'})
         return kwargs
 
     def build(self, graph, **kwargs):
@@ -205,9 +204,11 @@ class LINE(ModelWithEmbeddings):
         self.last_vectors = self.vectors
         self.vectors = {}
         if self.order == 3:
+            self.model1.embeddings = self.model1.embeddings.detach()
+            self.model2.embeddings = self.model2.embeddings.detach()
             vectors1 = self.model1.get_vectors(graph)
             vectors2 = self.model2.get_vectors(graph)
             for node in vectors1.keys():
                 self.vectors[node] = torch.from_numpy(np.append(vectors1[node], vectors2[node]))
         else:
-            self.vectors = self.model.get_vectors(graph)
+            self.vectors = self.model.get_vectors(graph).detach()
