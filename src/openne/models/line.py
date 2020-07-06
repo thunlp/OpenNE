@@ -10,8 +10,8 @@ from .models import *
 
 # todo: add validation hook (see openne/line.py)
 class _LINE(ModelWithEmbeddings):
-    def __init__(self, dim=128, order=2, table_size=1e8):
-        super(ModelWithEmbeddings, self).__init__(dim=dim, order=order, table_size=table_size)
+    def __init__(self, dim=128, order=2, table_size=1e8, **kwargs):
+        super(_LINE, self).__init__(dim=dim, order=order, table_size=table_size, **kwargs)
         self.cur_epoch = 0
 
     @classmethod
@@ -32,6 +32,7 @@ class _LINE(ModelWithEmbeddings):
     def build(self, graph, *, lr=0.001, batch_size=1000, negative_ratio=5, **kwargs):
         cur_seed = random.getrandbits(32)
         torch.manual_seed(cur_seed)
+        self.node_size = graph.nodesize
         self.embeddings = torch.nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim).requires_grad_(True))
         self.context_embeddings = torch.nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim).requires_grad_(True))
         self.second_loss = lambda s, h, t: -(F.logsigmoid(
@@ -42,15 +43,16 @@ class _LINE(ModelWithEmbeddings):
             self.loss = self.first_loss
         else:
             self.loss = self.second_loss
-        self.optimizer = torch.optim.Adam([self.embeddings, self.context_embeddings], lr=self.lr)
+        self.optimizer = torch.optim.Adam([self.embeddings, self.context_embeddings], lr=lr)
         look_up = graph.look_up_dict
         self.edges = [(look_up[x[0]], look_up[x[1]]) for x in graph.G.edges()]
         self.batch_size = batch_size
         self.negative_ratio = negative_ratio
+        self.gen_sampling_table(graph)
 
     def get_train(self, graph, **kwargs):
         sum_loss = 0.0
-        batches = self.batch_iter(graph.edge_size)
+        batches = self.batch_iter(graph.edgesize)
         batch_id = 0
         for batch in batches:
             h, t, sign = batch
@@ -61,6 +63,8 @@ class _LINE(ModelWithEmbeddings):
             self.optimizer.step()
             batch_id += 1
         self.debug_info = sum_loss
+        self.embeddings = self.embeddings.detach()
+        return self.embeddings
 
     def batch_iter(self, data_size):
         table_size = self.table_size
@@ -107,7 +111,7 @@ class _LINE(ModelWithEmbeddings):
         print("Pre-processing for non-uniform negative sampling!")
         node_degree = torch.zeros(numNodes)  # out degree
         look_up = graph.look_up_dict
-        for edge in graph.edges():
+        for edge in graph.G.edges():
             node_degree[look_up[edge[0]]
                         ] += graph.G[edge[0]][edge[1]]["weight"]
 
@@ -204,6 +208,6 @@ class LINE(ModelWithEmbeddings):
             vectors1 = self.model1.get_vectors(graph)
             vectors2 = self.model2.get_vectors(graph)
             for node in vectors1.keys():
-                self.vectors[node] = np.append(vectors1[node], vectors2[node])
+                self.vectors[node] = torch.from_numpy(np.append(vectors1[node], vectors2[node]))
         else:
             self.vectors = self.model.get_vectors(graph)
