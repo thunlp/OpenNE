@@ -2,6 +2,7 @@ from abc import ABC
 from .graph import *
 import pickle as pkl
 import scipy.sparse as sp
+import torch
 
 def sample_mask(idx, l):
     """Create mask."""
