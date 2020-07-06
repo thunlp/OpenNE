@@ -13,19 +13,19 @@ class ModelWithEmbeddings(torch.nn.Module):
         self.debug_info = None
         if save:
             if output is None:
-                outputpath = os.path.join(osp.dirname(osp.realpath(__file__)),
-                                          '..', '..', '..', 'results', type(self).__name__)
-                outputmodelfile = type(self).__name__ + '_model.txt'
-                outputembeddingfile = type(self).__name__ + '_embeddings.txt'
+                self.outputpath = os.path.join(osp.dirname(osp.realpath(__file__)),
+                                               '..', '..', '..', 'results', type(self).__name__)
+                self.outputmodelfile = type(self).__name__ + '_model.txt'
+                self.outputembeddingfile = type(self).__name__ + '_embeddings.txt'
             else:
-                outputpath = os.path.dirname(output)
-                if outputpath == '':
-                    outputpath = '.'
-                outputmodelfile = type(self).__name__ + 'models.txt'
-                outputembeddingfile = os.path.basename(output)
-            kwargs['outputpath'] = outputpath
-            kwargs['outputmodelfile'] = outputmodelfile
-            kwargs['outputembeddingfile'] = outputembeddingfile
+                self.outputpath = os.path.dirname(output)
+                if self.outputpath == '':
+                    self.outputpath = '.'
+                self.outputmodelfile = type(self).__name__ + 'models.txt'
+                self.outputembeddingfile = os.path.basename(output)
+            kwargs['outputpath'] = self.outputpath
+            kwargs['outputmodelfile'] = self.outputmodelfile
+            kwargs['outputembeddingfile'] = self.outputembeddingfile
             kwargs['save'] = save
             print(self.outputpath)
             print(osp.abspath(self.outputpath))
