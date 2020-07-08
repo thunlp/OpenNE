@@ -167,14 +167,14 @@ class SDNE(ModelWithEmbeddings):
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
-        check_existance(kwargs, {'encoder_layer_list': [1000, 128],
+        check_existance(kwargs, {'encoder_layer_list': [128],
                                  'alpha': 1e-6,
                                  'beta': 5.,
                                  'nu1': 1e-8,
                                  'nu2': 1e-4,
                                  'batch_size': 200,
                                  'epochs': 100,
-                                 'lr': 0.01,
+                                 'lr': 0.001,
                                  'decay': False,
                                  'pretrain': False})
         check_range(kwargs, {'batch_size': (0, np.inf),
@@ -184,7 +184,7 @@ class SDNE(ModelWithEmbeddings):
                              'pretrain': [True, False, 0, 1]})
         return kwargs
 
-    def build(self, graph, *, batch_size=200, epochs=100, lr=0.01, decay=False, pretrain=False, **kwargs):
+    def build(self, graph, *, batch_size=200, epochs=100, lr=0.001, decay=False, pretrain=False, **kwargs):
         self.node_size = graph.nodesize
         self.dim = self.encoder_layer_list[-1]
         self.encoder_layer_list = [self.node_size]
@@ -196,7 +196,7 @@ class SDNE(ModelWithEmbeddings):
         self.decay = decay
         self.pretrain = pretrain
         if self.decay:
-            self.lr = lambda x: 0.03 / (1 + 0.9999 * x)
+            self.lr = lambda x: lr / (1 + 0.9999 * x)
         else:
             self.lr = lambda x: lr
         self.adj_mat = torch.from_numpy(graph.adjmat(weighted=True, directed=True)).type(torch.float32)

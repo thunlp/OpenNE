@@ -1,6 +1,6 @@
 import numpy as np
 from .utils import *
-from . import models
+from . import gcnModel
 from ..models import *
 import time
 import scipy.sparse as sp
@@ -61,12 +61,15 @@ class GCN(ModelWithEmbeddings):
 
         self.preprocess_data(graph)
         # Create models
-        input_dim = self.features.shape[1] if not self.sparse else self.features[2][1]
-        feature_shape = self.features.shape if not self.sparse else self.features[0].shape[0]
+        input_dim = self.features.shape[1]  # row
+        if self.sparse:
+            feature_shape = self.features.values().shape[0]  # nnz
+        else:
+            feature_shape = self.features.shape  # [col, row]
         output_dim = self.labels.shape[1]
-        self.model = models.GCNModel(input_dim=input_dim, output_dim=output_dim, hidden_dims=self.hiddens,
-                                supports=self.support, dropout=self.dropout, sparse_inputs=self.sparse,
-                                num_features_nonzero=feature_shape, weight_decay=self.weight_decay, logging=False)
+        self.model = gcnModel.GCNModel(input_dim=input_dim, output_dim=output_dim, hidden_dims=self.hiddens,
+                                       supports=self.support, dropout=self.dropout, sparse_inputs=self.sparse,
+                                       num_features_nonzero=feature_shape, weight_decay=self.weight_decay, logging=False)
         self.cost_val = []
 
     def get_train(self, graph, **kwargs):
@@ -113,7 +116,7 @@ class GCN(ModelWithEmbeddings):
             node_id = look_up[node]
             for ll in l:
                 l_id = label_dict[ll]
-                self.labels[node_id][l_id] = 1
+                self.labels[node_id, l_id] = 1
 
     def preprocess_data(self, graph):
         """
@@ -125,7 +128,7 @@ class GCN(ModelWithEmbeddings):
         self.features = torch.from_numpy(graph.features()).type(torch.float32)
         self.features = preprocess_features(self.features, sparse=self.sparse)
         self.build_label(graph)
-        adj = nx.adjacency_matrix(g)  # the type of graph
+        adj = graph.adjmat(weighted=True, directed=True)
         if self.max_degree == 0:
             self.support = [preprocess_adj(adj)]
         else:

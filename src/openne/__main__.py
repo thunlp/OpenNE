@@ -13,6 +13,7 @@ def ListInput(s: str):
     l = list(ast.literal_eval(s))
     if type(l) is not list:
         raise TypeError
+    return l
 
 def xtype(val):
     if type(val) is str:

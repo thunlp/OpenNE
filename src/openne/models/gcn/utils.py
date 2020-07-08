@@ -13,45 +13,27 @@ def parse_index_file(filename):
         index.append(int(line.strip()))
     return index
 
-def scipy_to_torch(scipy_tensor, dtype=None):
-    return torch.sparse_coo_tensor((scipy_tensor.row,scipy_tensor.col),scipy_tensor.data, scipy_tensor.shape, dtype=dtype)
+def scipy_coo_to_torch_sparse(scipy_sparse_coo):
+    values = scipy_sparse_coo.data
+    indices = np.vstack((scipy_sparse_coo.row, scipy_sparse_coo.col))
+    v = torch.tensor(values, dtype=torch.float32)
+    i = torch.tensor(indices, dtype=torch.long)
+    return torch.sparse_coo_tensor(i, v, scipy_sparse_coo.shape)
 
-def sparse_to_tuple(sparse_mx):
-    """Convert sparse matrix to tuple representation."""
-    def to_tuple(mx):
-        if type(mx) == torch.Tensor:
-            mx=mx.coalesce()
-            coords=torch.stack((mx.indices()[0],mx.indices()[1])).t()
-            values=mx.values()
-            shape=mx.shape
-        else:
-            if not sp.isspmatrix_coo(mx):
-                mx = mx.tocoo()
-            coords = torch.stack((torch.tensor(mx.row), torch.tensor(mx.col))).t() #vstack
-            values = mx.data
-            shape = mx.shape
-        return coords, values, shape
+def torch_sparse_to_scipy_coo(torch_sparse):
+    a = torch_sparse.coalesce()
+    (i, j), v = a.indices().numpy(), a.values().numpy()
+    return sp.coo_matrix((v, (i, j)), shape=a.shape)
 
-    if isinstance(sparse_mx, list):
-        for i in range(len(sparse_mx)):
-            sparse_mx[i] = to_tuple(sparse_mx[i])
-    else:
-        sparse_mx = to_tuple(sparse_mx)
-
-    return sparse_mx
-
-def tuple_to_sparse(tuple):
-    w=tuple[0].t()
-    return torch.sparse.FloatTensor(w.to(dtype=torch.long), torch.tensor(tuple[1]), torch.Size(tuple[2]))
 
 def preprocess_features(features, sparse=False):
     """Row-normalize feature matrix and convert to tuple representation"""
-    rowsum = torch.tensor(features.sum(1)) #np.array(features.sum(1))
-    r_inv = (rowsum**-1).flatten() #np.power(rowsum, -1).flatten()
+    rowsum = features.sum(1)
+    r_inv = (rowsum**-1).flatten()
     r_inv[torch.isinf(r_inv)] = 0.
-    r_mat_inv = torch.diag(r_inv)#sp.diags(r_inv)
+    r_mat_inv = torch.diag(r_inv)
     features = r_mat_inv.mm(features)
-    return sparse_to_tuple(features.to_sparse()) if sparse else features
+    return features.to_sparse() if sparse else features
 
 
 def normalize_adj(adj): #  safe. don't change by now
@@ -67,7 +49,7 @@ def normalize_adj(adj): #  safe. don't change by now
 def preprocess_adj(adj):
     """Preprocessing of adjacency matrix for simple GCN models and conversion to tuple representation."""
     adj_normalized = normalize_adj(adj + sp.eye(adj.shape[0]))
-    return scipy_to_torch(adj_normalized, torch.float32)
+    return scipy_coo_to_torch_sparse(adj_normalized)
 
 
 def chebyshev_polynomials(adj, k):
@@ -91,4 +73,4 @@ def chebyshev_polynomials(adj, k):
     for i in range(2, k+1):
         t_k.append(chebyshev_recurrence(t_k[-1], t_k[-2], scaled_laplacian))
 
-    return [scipy_to_torch(st, torch.float32) for st in t_k]
+    return [scipy_coo_to_torch_sparse(st.tocoo()) for st in t_k]

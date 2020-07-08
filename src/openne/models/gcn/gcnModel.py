@@ -95,13 +95,15 @@ class GCNModel(Model):
         return self._accuracy
 
     def _build(self):
+        sparse_inputs = [False] * (len(self.dimensions) - 1)
+        sparse_inputs[0] = self.sparse_inputs
         for i in range(1,len(self.dimensions)-1):
             self.layers.append(GraphConvolution(input_dim=self.dimensions[i-1],
                                                 output_dim=self.dimensions[i],
                                                 act=torch.relu,
                                                 support=self.supports,
                                                 dropout=self.dropout,
-                                                sparse_inputs=self.sparse_inputs,
+                                                sparse_inputs=sparse_inputs[i - 1],
                                                 num_features_nonzero=self.num_features_nonzero,
                                                 logging=self.logging))
 
@@ -110,7 +112,7 @@ class GCNModel(Model):
                                             act=lambda x:x,
                                             support=self.supports,
                                             dropout=self.dropout,
-                                            sparse_inputs=False,
+                                            sparse_inputs=sparse_inputs[-1],
                                             num_features_nonzero=self.num_features_nonzero,
                                             logging=self.logging))
         ##self.layers.append(torch.nn.Softmax())
