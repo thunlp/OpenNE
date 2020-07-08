@@ -180,7 +180,7 @@ class LINE(ModelWithEmbeddings):
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
-        check_existance(kwargs, {'lr': 0.001, 'batch_size': 1000, 'negative_ratio': 5, 'debug_output_interval': 1, 'epochs': 20})
+        check_existance(kwargs, {'lr': 0.001, 'batch_size': 1000, 'negative_ratio': 5, 'epochs': 20})
         check_range(kwargs, {'lr': 'positive', 'batch_size': 'positive', 'negative_ratio': 'positive', 'epochs': 'positive'})
         return kwargs
 

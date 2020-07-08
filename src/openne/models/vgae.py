@@ -1,6 +1,6 @@
 import numpy as np
 from .gcn.utils import *
-from .gcn import models
+from .gcn import gcnModel
 from .gcn.layers import *
 from .models import *
 import time
@@ -26,7 +26,7 @@ class VGAE(ModelWithEmbeddings):
                                  "early_stopping": 100,
                                  "clf_ratio": 0.8,
                                  "hiddens": [16],
-                                 "max_degree": 0})
+                                 "max_degree": 1})
         check_range(kwargs, {"learning_rate": (0, np.inf),
                              "epochs": (0, np.inf),
                              "dropout": (0, 1),
@@ -66,10 +66,10 @@ class VGAE(ModelWithEmbeddings):
         input_dim = self.features.shape[1] if not self.sparse else self.features[2][1]
         feature_shape = self.features.shape if not self.sparse else self.features[0].shape[0]
 
-        self.mumodel = models.GCNModel(input_dim=input_dim, output_dim=self.output_dim, hidden_dims=self.hiddens,
+        self.mumodel = gcnModel.GCNModel(input_dim=input_dim, output_dim=self.output_dim, hidden_dims=self.hiddens,
                                 supports=self.support, dropout=self.dropout, sparse_inputs=self.sparse,
                                 num_features_nonzero=feature_shape, weight_decay=self.weight_decay, logging=False)
-        self.varmodel = models.GCNModel(input_dim=input_dim, output_dim=self.output_dim, hidden_dims=self.hiddens,
+        self.varmodel = gcnModel.GCNModel(input_dim=input_dim, output_dim=self.output_dim, hidden_dims=self.hiddens,
                                 supports=self.support, dropout=self.dropout, sparse_inputs=self.sparse,
                                 num_features_nonzero=feature_shape, weight_decay=self.weight_decay, logging=False)
         
@@ -134,39 +134,10 @@ class VGAE(ModelWithEmbeddings):
             self.varmodel.optimizer.step()
         return output, loss, (time.time() - t_test)
 
-
-
-        # # Testing
-        # test_res, test_cost, test_acc, test_duration = self.evaluate(self.test_mask, False)
-        # print("Test set results:", "cost=", "{:.5f}".format(test_cost),
-        #       "accuracy=", "{:.5f}".format(test_acc), "time=", "{:.5f}".format(test_duration))
-
     def make_output(self, graph, **kwargs):
         mu = self.mumodel(self.features)
         var = self.varmodel(self.features)
         self.embeddings = self.reparameterize(mu, var).detach()
-
-    def build_train_val_test(self, graph):
-        """
-            build train_mask test_mask val_mask
-        """
-        train_precent = self.clf_ratio
-        training_size = int(train_precent * graph.G.number_of_nodes())
-        state = torch.random.get_rng_state()
-        torch.random.manual_seed(0)
-        shuffle_indices = torch.randperm(graph.G.number_of_nodes())
-        torch.random.set_rng_state(state)
-        g = graph.G
-
-        def sample_mask(begin, end):
-            mask = torch.zeros(g.number_of_nodes())
-            for i in range(begin, end):
-                mask[shuffle_indices[i]] = 1
-            return mask
-
-        self.train_mask = sample_mask(0, training_size - 100)
-        self.val_mask = sample_mask(training_size - 100, training_size)
-        self.test_mask = sample_mask(training_size, g.number_of_nodes())
 
     def preprocess_data(self, graph):
         """
@@ -181,11 +152,10 @@ class VGAE(ModelWithEmbeddings):
         n = graph.nodesize
         self.n_nodes = n
         self.build_label(graph)
-        self.build_train_val_test(graph)
         adj_label = graph.adjmat(weighted=False, directed=False, sparse=True)
         
         self.adj_label = torch.FloatTensor((adj_label + sp.eye(n).toarray()))
-        adj = nx.adjacency_matrix(g)  # the type of graph
+        adj = graph.adjmat(weighted=False, directed=False)
         self.pos_weight = float(n * n - adj.sum()) / adj.sum()
         self.norm = n * n / float((n * n - adj.sum()) * 2)
 

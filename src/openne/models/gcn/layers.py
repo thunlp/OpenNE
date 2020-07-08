@@ -25,8 +25,8 @@ def sparse_dropout(x, keep_prob, noise_shape):
     random_tensor = keep_prob
     random_tensor += torch.rand(noise_shape)
     dropout_mask = torch.floor(random_tensor).type(torch.bool)
-    preout=(x[0][dropout_mask], x[1][dropout_mask], x[2])
-    preout=tuple_to_sparse(preout)
+    i = x.indices()[:, dropout_mask]
+    preout = torch.sparse_coo_tensor(i, values=x.values()[dropout_mask], size=x.shape, dtype=torch.float32)
     return preout * (1./keep_prob)
 
 
@@ -46,7 +46,7 @@ class Layer(torch.nn.Module):
 
     def __init__(self, **kwargs):
         super(Layer, self).__init__()
-        allowed_kwargs = {'name','logging'} # logging: added later
+        allowed_kwargs = {'name', 'logging'} # logging: added later
         for kwarg in kwargs.keys():
             assert kwarg in allowed_kwargs, 'Invalid keyword argument: ' + kwarg
         name = kwargs.get('name')
@@ -63,14 +63,12 @@ class Layer(torch.nn.Module):
     def __call__(self, inputs, **kwargs):
         outputs = super(Layer, self).__call__(inputs, **kwargs)
         if self.logging:
-            pass # tf.summary.histogram(self.name + '/outputs', outputs)
+            pass
         return outputs
 
     def _log_vars(self):
         for var in self.parameters():
             pass
-        # for var in self.vars:
-        #     tf.summary.histogram(self.name + '/vars/' + var, self.vars[var])
 
 
 class GraphConvolution(Layer):
@@ -88,7 +86,6 @@ class GraphConvolution(Layer):
         self.featureless = featureless
         self.output_dim = output_dim
         self.input_dim = input_dim
-
         # helper variable for sparse dropout
         self.num_features_nonzero = num_features_nonzero
 
@@ -109,9 +106,8 @@ class GraphConvolution(Layer):
             if self.sparse_inputs:
                 x = sparse_dropout(x, 1-self.dropout, self.num_features_nonzero)
             else:
-                x = torch.dropout(x, 1-self.dropout,True)
-        elif self.sparse_inputs:
-            x = tuple_to_sparse(x)
+                x = torch.dropout(x, 1-self.dropout, True)
+
         # convolve
         output = torch.zeros([self.support[0].size()[0], self.output_dim])
         for i in range(len(self.support)):

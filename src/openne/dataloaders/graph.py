@@ -36,7 +36,7 @@ class Graph(Dataset, ABC):
         self.paths = [self.full(f) for f in self.filenames]
         rootprompt = ""
         if self.dir:
-            rootprompt = "from root dir: {}".format(self.dir)
+            rootprompt = "from root dir: {}".format(osp.abspath(self.dir))
         print("Loading {} Dataset {}".format(type(self).__name__, rootprompt))
         self.load_data()
 
@@ -274,7 +274,7 @@ class NetResources(Graph, ABC):
 
     @property
     def root_dir(self):
-        return osp.join('.', 'data', type(self).__name__)
+        return osp.join('..', 'data', type(self).__name__)
         # return osp.join(osp.dirname(osp.realpath(__file__)), '..', '..', '..', 'data', type(self).__name__)
 
 

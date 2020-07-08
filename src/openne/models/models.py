@@ -14,7 +14,7 @@ class ModelWithEmbeddings(torch.nn.Module):
         if save:
             if output is None:
                 self.outputpath = os.path.join(osp.dirname(osp.realpath(__file__)),
-                                               '..', '..', 'results', type(self).__name__)
+                                               '..', '..', '..', 'results', type(self).__name__)
                 self.outputmodelfile = type(self).__name__ + '_model.txt'
                 self.outputembeddingfile = type(self).__name__ + '_embeddings.txt'
             else:

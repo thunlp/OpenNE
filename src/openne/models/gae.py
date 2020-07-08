@@ -1,6 +1,6 @@
 import numpy as np
 from .gcn.utils import *
-from .gcn import models
+from .gcn import gcnModel
 from .models import *
 import time
 import scipy.sparse as sp
@@ -25,7 +25,7 @@ class GAE(ModelWithEmbeddings):
                                  "early_stopping": 100,
                                  "clf_ratio": 0.8,
                                  "hiddens": [16],
-                                 "max_degree": 0})
+                                 "max_degree": 1})
         check_range(kwargs, {"learning_rate": (0, np.inf),
                              "epochs": (0, np.inf),
                              "dropout": (0, 1),
@@ -65,7 +65,7 @@ class GAE(ModelWithEmbeddings):
         input_dim = self.features.shape[1] if not self.sparse else self.features[2][1]
         feature_shape = self.features.shape if not self.sparse else self.features[0].shape[0]
 
-        self.model = models.GCNModel(input_dim=input_dim, output_dim=self.output_dim, hidden_dims=self.hiddens,
+        self.model = gcnModel.GCNModel(input_dim=input_dim, output_dim=self.output_dim, hidden_dims=self.hiddens,
                                 supports=self.support, dropout=self.dropout, sparse_inputs=self.sparse,
                                 num_features_nonzero=feature_shape, weight_decay=self.weight_decay, logging=False)
         
@@ -116,13 +116,6 @@ class GAE(ModelWithEmbeddings):
             self.model.optimizer.step()
         return output, loss, (time.time() - t_test)
 
-
-
-        # # Testing
-        # test_res, test_cost, test_acc, test_duration = self.evaluate(self.test_mask, False)
-        # print("Test set results:", "cost=", "{:.5f}".format(test_cost),
-        #       "accuracy=", "{:.5f}".format(test_acc), "time=", "{:.5f}".format(test_duration))
-
     def make_output(self, graph, **kwargs):
         self.embeddings = self.model(self.features).detach()
 
@@ -138,7 +131,6 @@ class GAE(ModelWithEmbeddings):
 
         n = graph.nodesize
         self.build_label(graph)
-        self.build_train_val_test(graph)
         adj_label = graph.adjmat(weighted=False, directed=False, sparse=True)
         
         self.adj_label = torch.FloatTensor((adj_label + sp.eye(n).toarray()))

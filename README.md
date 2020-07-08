@@ -8,9 +8,10 @@ This is an open-source framework for self-supervised/unsupervised graph embeddin
 
 - **A unified framework**: We provide a unified framework for self-supervised/unsupervised node representation learning. Our models include unsupervised network embedding (NE) methods (DeepWalk, Node2vec, HOPE, GraRep, LLE, Lap, TADW, GF, LINE, SDNE) and recent self-supervised graph embedding methods (GAE, VGAE).
 
-- **Efficiency**: We provide faster and more efficient models than those in the previous version. The table below shows 
-performances of OpenNE-PyTorch models with default arguments on Cora Dataset as compared with the previous version, 
-where "F1/Accuracy" refers to accuracy in GCN and micro F1-scores in other models, and "Time" refers to training time.
+- **Efficiency**: We provide faster and more efficient models and better default hyper-parameter settings than those in the previous version. The table below shows 
+performances of OpenNE-PyTorch models on Cora Dataset as compared with the previous version, where
+ "F1/Accuracy" refers to accuracy in GCN and micro F1-scores in other models, and "Time" refers to training time. 
+ Hyperparameters are set to default values unless specified in "Remarks". We also list results of our new models, GAE and VGAE.
 
 
 <table cellspacing='1' bgcolor='#fefefe'>
@@ -18,11 +19,12 @@ where "F1/Accuracy" refers to accuracy in GCN and micro F1-scores in other model
     <th rowspan="2" bgcolor='#ffffff'>method</th>
     <th colspan="2" bgcolor='#eeeeee'>Time</th>
     <th colspan="2" bgcolor='#eeeeee'>F1/Accuracy</th>
+    <th rowspan="2">Remarks</th>
 </tr>
 <tr bgcolor='#ffffff'>
-    <th>OpenNE</th>
+    <th>OpenNE(old)</th>
     <th>OpenNE-Pytorch</th>
-    <th>OpenNE</th>
+    <th>OpenNE(old)</th>
     <th>OpenNE-Pytorch</th>
 </tr>
 <tr bgcolor='#eeeeee'>
@@ -31,6 +33,7 @@ where "F1/Accuracy" refers to accuracy in GCN and micro F1-scores in other model
     <td><strong>74.98</strong></td>
     <td>.832</td>
     <td>.832</td>
+    <td>-</td>
 </tr>
 <tr bgcolor='#ffffff'>
     <td>Node2vec</td>
@@ -38,6 +41,7 @@ where "F1/Accuracy" refers to accuracy in GCN and micro F1-scores in other model
     <td><strong>38.18</strong></td>
     <td><strong>.814</strong></td>
     <td>.807</td>
+    <td>-</td>
 </tr>
 <tr bgcolor='#eeeeee'>
     <td>HOPE</td>
@@ -45,13 +49,15 @@ where "F1/Accuracy" refers to accuracy in GCN and micro F1-scores in other model
     <td><strong>2.45</strong></td>
     <td>.634</td>
     <td><strong>.743</strong></td>
+    <td>-</td>
 </tr>
 <tr bgcolor='#ffffff'>
     <td>GraRep</td>
     <td>44.27</td>
     <td><strong>4.04</strong></td>
-    <td><strong>.776</strong></td>
     <td>.770</td>
+    <td><strong>.776</strong></td>
+    <td>-</td>
 </tr>
 <tr bgcolor='#eeeeee'>
     <td>TADW</td>
@@ -59,13 +65,15 @@ where "F1/Accuracy" refers to accuracy in GCN and micro F1-scores in other model
     <td>59.12</td>
     <td><strong>.852</strong></td>
     <td>.843</td>
+    <td>-</td>
 </tr>
 <tr bgcolor='#ffffff'>
     <td>GF</td>
     <td><strong>15.01</strong></td>
     <td>45.78</td>
     <td>.546</td>
-    <td><strong>.763</strong></td>
+    <td><strong>.765</strong></td>
+    <td>-</td>
 </tr>
 <tr bgcolor='#eeeeee'>
     <td>LINE</td>
@@ -73,16 +81,41 @@ where "F1/Accuracy" refers to accuracy in GCN and micro F1-scores in other model
     <td>102</td>
     <td>.417</td>
     <td><strong>.685</strong></td>
+    <td>-</td>
 </tr>
 <tr bgcolor='#ffffff'>
     <td>SDNE</td>
     <td>195.02</td>
-    <td><strong>73.45</strong></td>
+    <td><strong>76.80</strong></td>
     <td>.532</td>
-    <td><strong>.680</strong></td>
+    <td><strong>.750</strong></td>
+    <td>-</td>
+</tr>
+<tr bgcolor='#eeeeee'>
+    <td>GCN</td>
+    <td>17.4</td>
+    <td><strong>11.22</strong></td>
+    <td>.857</td>
+    <td><strong>.861</strong></td>
+    <td rowspan="3">  --sparse  </td>
+</tr>
+<tr bgcolor='#ffffff'>
+    <td>GAE</td>
+    <td>-</td>
+    <td><strong>105.24</strong></td>
+    <td>-</td>
+    <td><strong>.565</strong></td>
+</tr>
+<tr bgcolor='#eeeeee'>
+    <td>VGAE</td>
+    <td>-</td>
+    <td><strong>136.57</strong></td>
+    <td>-</td>
+    <td><strong>.51</strong></td>
 </tr>
 </table>
 
+See Experimental Results for performances on Wiki and BlogCatalog.
 
 - **Modularity**: We entangle the codes into three parts: Dataloader, Model and Task. Users can easily customize the datasets, methods and tasks. It is also easy to define their specific datasets and methods.
 
@@ -105,6 +138,50 @@ You are welcomed to add your own datasets and methods by proposing new pull requ
     cd src
     python setup.py install
     ```
+
+#### Input Instructions
+
+##### Use default values
+
+For the simplest use, if you want to run GraphFactorization on BlogCatalog, input the following command:
+
+    python -m openne --model gf --dataset blogcatalog
+
+##### store_true and store_false parameters
+
+Parameters like --sparse have action "store_true", which means they are False by default, and should be specified if you want to assign True. Run GCN with sparsed matrices by the following command:
+    
+    python -m openne --model gcn --dataset cora --sparse
+
+You can use store_false parameters, eg. --no-save, in a similar way:
+
+    python -m openne --model gcn --dataset cora --sparse --no-save
+    
+OpenNE saves your models and training results to file by default, which may cost longer time. The above command is used when you wish not to save the results.
+    
+##### Use your own datasets
+
+Use --local-dataset (which is also a store_true parameter!) and specify --root-dir, --edgefile or --adjfile, --labelfile, --features and --status to import dataset from file. 
+
+Optionally, specify store_true parameters --weighted and --directed to view the graph as weighted and/or directed.
+
+If you wish to use your dataset in "~/mydataset", which includes edges.txt, an edgelist file, and labels.txt, a label file, input the following:
+    
+    python -m openne --model gf --local-dataset --root-dir ~/mydataset --edgefile edges.txt --labelfile labels.txt
+
+
+##### Input values
+
+While all parameter names must be provided in lower case, string input values are case insensitive:
+
+    python -m openne --model SDnE --dataset coRA
+
+The simplest way to provide a Python list (as of --encoder-layer-list in SDNE and --hiddens in GCN) is to directly input it without space. You can also wrap the list in double quotes (") to input spaces. The following commands are the same:
+
+    python -m openne --model sdne --dataset cora --encoder-layer-list [1000,128]
+    python -m openne --model sdne --dataset cora --encoder-layer-list "[1000,128]"
+    python -m openne --model sdne --dataset cora --encoder-layer-list "[1000, 128]"
+    
 
 #### General Options
 
@@ -166,13 +243,13 @@ LINE:
 
 SDNE:
 
-- --encoder-list, list of neuron numbers at each encoder layer. The last number is the dimension of the output node representation. [1000, 128] by default. See "Input Instructions";
+- --encoder-list, list of neuron numbers at each encoder layer. Instead of --dim, The last number is the dimension of the output node representation. [128] by default. See "Input Instructions";
 - --alpha, parameter that controls the first-order proximity loss, 1e-6 by default;
 - --beta, parameter used for construct matrix B, 5 by default;
 - --nu1, parameter that controls l1-loss of weights in autoencoder, 1e-8 by default;
 - --nu2, parameter that controls l2-loss of weights in autoencoder, 1e-5 by default;
 - --bs, batch size, 200 by default;
-- --lr, learning rate, 0.01 by default;
+- --lr, learning rate, 0.001 by default;
 - --decay, allow decay in learning rate (action store_true);
 
 TADW: (requires attributed graph, eg. cora, pubmed, citeseer)
@@ -193,49 +270,35 @@ DeepWalk and node2vec:
 - --q (only node2vec), 1.0 by default;
 - --p (only node2vec), 1.0 by default.
 
-#### Input Instructions
+## Experimental Results
 
-##### Use default values
+We provide experimental results of OpenNE models on Wiki and BlogCatalog datasets. 
+For performances on Cora, checkout section "Overview" - "New Features".
 
-For the simplest use, if you want to run GraphFactorization on BlogCatalog, input the following command:
+Wiki 
 
-    python -m openne --model gf --dataset blogcatalog
+| Algorithm | F1-micro | F1-macro | Time | Remarks |
+|-----------|----------|----------|------|---------|
+| HOPE      | 0.613|	0.432|	1.89| - |
+| GF	|0.618	|0.432	|61.22|-|
+|GraRep	|0.608	|0.42	|4.33|	-|
+Node2vec	|0.656	|0.535|	49.18|	-|
+DeepWalk	|0.662	|0.522|	97.47|	-|
+SDNE	|0.655	|0.522	|81.19|	-|
+LINE	|0.631	|0.488	|234.12|	epochs=40|
 
-##### store_true and store_false parameters
+BlogCatalog
 
-Parameters like --sparse have action "store_true", which means they are False by default, and should be specified if you want to assign True. Run GCN with sparsed matrices by the following command:
-    
-    python -m openne --model gcn --dataset cora --sparse
+| Algorithm | F1-micro | F1-macro | Time | Remarks |
+|-----------|----------|----------|------|---------|
+|HOPE|	0.336|	0.157	|96.63|-|
+GF|	0.235|	0.066|	800.02|-|
+GraRep|	0.399	|0.233|	103.27|-|
+Node2Vec|	0.396	|0.26|	1962.93|-|
+DeepWalk|	0.398|	0.261|	516.64|-|
+SDNE|	0.372	|0.232|	1323.93|-|
+LINE	|0.384	|0.235|	4739.79|-|
 
-You can use store_false parameters, eg. --no-save, in a similar way:
-
-    python -m openne --model gcn --dataset cora --sparse --no-save
-    
-The above command asks for not saving the trained results (while it is saved by default).
-    
-##### Use your own datasets
-
-Use --local-dataset (which is also a store_true parameter!) and specify --root-dir, --edgefile or --adjfile, --labelfile, --features and --status to import dataset from file. 
-
-Optionally, specify store_true parameters --weighted and --directed to view the graph as weighted and/or directed.
-
-If you wish to use your dataset in "~/mydataset", which includes edges.txt, an edgelist file, and labels.txt, a label file, input the following:
-    
-    python -m openne --model gf --local-dataset --root-dir ~/mydataset --edgefile edges.txt --labelfile labels.txt
-
-
-##### Input values
-
-While all parameter names must be provided in lower case, string input values are case insensitive:
-
-    python -m openne --model SDnE --dataset coRA
-
-The simplest way to provide a Python list (as of --encoder-layer-list in SDNE and --hiddens in GCN) is to directly input it without space. You can also wrap the list in double quotes (") to input spaces. The following commands are the same:
-
-    python -m openne --model sdne --dataset cora --encoder-layer-list [1000,128]
-    python -m openne --model sdne --dataset cora --encoder-layer-list "[1000,128]"
-    python -m openne --model sdne --dataset cora --encoder-layer-list "[1000, 128]"
-    
 
 
 ## Citing
@@ -332,6 +395,15 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       year                     = {2016},
       organization             = {ACM}
     }
+    
+    @inproceedings{kipf2016variational,
+      title                    = {Variational graph auto-encoders},
+      author                   = {Kipf, Thomas N and Welling, Max},
+      booktitle                = {NIPS Workshop on Bayesian Deep Learning},
+      numpages                 = {3},
+      year                     = {2016}
+    }
+    
 
 ## Sponsor
 
