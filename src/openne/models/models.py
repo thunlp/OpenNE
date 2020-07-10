@@ -38,11 +38,11 @@ class ModelWithEmbeddings(torch.nn.Module):
                 raise FileNotFoundError('Failed to open target embedding file "{}": {}. '.format(
                     os.path.join(self.outputpath, self.outputembeddingfile), str(e)))
             try:
-                with open(os.path.join(self.outputpath, self.outputembeddingfile), 'a'):
+                with open(os.path.join(self.outputpath, self.outputmodelfile), 'a'):
                     pass
             except Exception as e:
                 raise FileNotFoundError('Failed to open target models file "{}": {}. '.format(
-                    os.path.join(self.outputpath, self.outputembeddingfile), str(e)))
+                    os.path.join(self.outputpath, self.outputmodelfile), str(e)))
 
         else:
             kwargs['save'] = save
@@ -61,6 +61,8 @@ class ModelWithEmbeddings(torch.nn.Module):
                 fout.write("{} {}\n".format(node, ' '.join([str(float(x)) for x in vec])))
 
     def load(self, path=None):
+        if path is None:
+            path = os.path.join(self.outputpath, self.outputmodelfile)
         if not os.path.isfile(path):
             raise FileNotFoundError("Model file not found.")
         self.load_state_dict(torch.load(path))

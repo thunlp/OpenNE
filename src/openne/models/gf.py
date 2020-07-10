@@ -22,18 +22,18 @@ class GraphFactorization(ModelWithEmbeddings):
         return kwargs
 
     def build(self, graph, *, lr=0.003, **kwargs):
-        self.adj_mat = torch.from_numpy(graph.adjmat(directed=True, weighted=True))
-        self.mat_mask = torch.as_tensor(self.adj_mat > 0, dtype=torch.float32)
+        self.register_buffer('adj_mat', torch.from_numpy(graph.adjmat(directed=True, weighted=True)))
+        self.register_buffer('mat_mask', torch.as_tensor(self.adj_mat > 0, dtype=torch.float32))
 
-        self._embeddings = torch.nn.init.xavier_uniform_(torch.zeros(graph.nodesize, self.dim,
-                                                                     dtype=torch.float32)).requires_grad_(True)
+        self.register_parameter('_embeddings', torch.nn.init.xavier_uniform_(torch.nn.Parameter(
+            torch.zeros(graph.nodesize, self.dim, dtype=torch.float32), True)))
         # print(_embeddings)
         self.optimizer = torch.optim.Adam([self._embeddings], lr=lr)
 
     def get_train(self, graph, *, weight_decay=1., **kwargs):
         self.optimizer.zero_grad()
-        cost = ((self.adj_mat - torch.mm(self._embeddings, self._embeddings.t()) * self.mat_mask) ** 2).sum() \
-               + weight_decay * ((self._embeddings ** 2).sum())
+        cost = ((self.adj_mat - torch.mm(self._embeddings, self._embeddings.t()) * self.mat_mask) ** 2).sum() + \
+               weight_decay * ((self._embeddings ** 2).sum())
         cost.backward()
         self.optimizer.step()
         self.debug_info = "cost: {}".format(float(cost))
