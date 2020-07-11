@@ -105,7 +105,7 @@ class ModelWithEmbeddings(torch.nn.Module):
     def build(self, graph, **kwargs):
         pass
 
-    def get_train(self, graph, **kwargs):
+    def train_model(self, graph, **kwargs):
         raise NotImplementedError
 
     def early_stopping_judge(self, graph, **kwargs):
@@ -128,7 +128,7 @@ class ModelWithEmbeddings(torch.nn.Module):
             epochs = 1
         time0 = time()
         for i in range(epochs):
-            self.embeddings = self.get_train(graph, step=i, **kwargs)
+            self.embeddings = self.train_model(graph, step=i, **kwargs)
             if kwargs['_multiple_epochs'] and (i + 1) % kwargs['validation_interval'] == 0:
                 for f_v in kwargs['_validation_hooks']:
                     f_v(self, graph, step=i, **kwargs)

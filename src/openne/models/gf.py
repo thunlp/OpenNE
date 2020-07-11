@@ -30,7 +30,7 @@ class GraphFactorization(ModelWithEmbeddings):
         # print(_embeddings)
         self.optimizer = torch.optim.Adam([self._embeddings], lr=lr)
 
-    def get_train(self, graph, *, weight_decay=1., **kwargs):
+    def train_model(self, graph, *, weight_decay=1., **kwargs):
         self.optimizer.zero_grad()
         cost = ((self.adj_mat - torch.mm(self._embeddings, self._embeddings.t()) * self.mat_mask) ** 2).sum() + \
                weight_decay * ((self._embeddings ** 2).sum())

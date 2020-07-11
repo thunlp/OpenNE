@@ -132,10 +132,14 @@ You are welcomed to add your own datasets and methods by proposing new pull requ
 #### Installation
 
 - Clone this repo.
-- enter the directory where you clone it, and run the following code
+- Enter the directory where you clone it, and run the following code:
     ```bash
     pip install -r requirements.txt
     cd src
+    ```
+- You can start using OpenNE by simply changing directory to OpenNE/src. 
+If instead you want to install OpenNE as a site-package, run the following command in OpenNE/src:
+    ```bash
     python setup.py install
     ```
 
@@ -143,9 +147,10 @@ You are welcomed to add your own datasets and methods by proposing new pull requ
 
 ##### Use default values
 
-For the simplest use, if you want to run GraphFactorization on BlogCatalog, input the following command:
+It is easy to get started with OpenNE. Here are some commands for basic usages with default values:
 
     python -m openne --model gf --dataset blogcatalog
+    python -m openne --model gcn --dataset cora
 
 ##### store_true and store_false parameters
 

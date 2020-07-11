@@ -44,7 +44,7 @@ class Node2vec(ModelWithEmbeddings):
         self.args['window'] = kwargs['window']
         self.args['sg'] = 1
 
-    def get_train(self, graph, **kwargs):
+    def train_model(self, graph, **kwargs):
         print("training Word2Vec model...")
         word2vec = Word2Vec(**self.args)
         self.vectors = {}

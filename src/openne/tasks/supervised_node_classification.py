@@ -9,7 +9,7 @@ class SupervisedNodeClassification(BaseTask):
         super(SupervisedNodeClassification, self).__init__(**kwargs)
 
     def check(self, modelclass, datasetclass):
-        assert(any(issubclass(modelclass, cls) for cls in supervisedmodels))
+#        assert(any(issubclass(modelclass, cls) for cls in supervisedmodels))
         self.kwargs = modelclass.check(datasetclass, **self.train_kwargs())
         
     def train(self, model, graph):

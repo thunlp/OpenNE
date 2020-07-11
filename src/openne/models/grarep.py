@@ -30,7 +30,7 @@ class GraRep(ModelWithEmbeddings):
         Sd = torch.from_numpy(S)
         return torch.as_tensor(Ud)*torch.pow(Sd, alpha)
 
-    def get_train(self, graph, **kwargs):
+    def train_model(self, graph, **kwargs):
         adj = torch.from_numpy(graph.adjmat(directed=False, weighted=False, scaled=1)).type(torch.float32)
         Ak = torch.eye(graph.nodesize)
         RepMat = torch.zeros((graph.nodesize, int(self.dim * self.kstep)))

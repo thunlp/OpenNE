@@ -69,7 +69,7 @@ class RBM(torch.nn.Module):
             self.h_bias += lr * dhb
         return torch.sum((x - v2) ** 2)  # , torch.mean(torch.sum((x-v2)**2, dim=0))
 
-    def get_train(self, data, epochs=10, batch_size=None):
+    def train_model(self, data, epochs=10, batch_size=None):
         if batch_size:
             self.batch_size = batch_size
         dataloader = DataLoader(data, batch_size=self.batch_size)
@@ -123,7 +123,7 @@ class SDNENet(torch.nn.Module):
                 rbm = RBM(visible_dim=len(layer.weight[0]), hidden_dim=len(layer.weight), batch_size=len(data),
                           lr=self.pretrain_lr * len(data),
                           decay=False)
-                rbm.get_train(data, epochs=self.pretrain_epoch)
+                rbm.train_model(data, epochs=self.pretrain_epoch)
                 layer.weight = torch.nn.Parameter(rbm.weights.t())
                 layer.bias = torch.nn.Parameter(rbm.h_bias)
                 data = rbm.sample(rbm.forward(data))
@@ -206,7 +206,7 @@ class SDNE(ModelWithEmbeddings):
             self.model.pretrain(self.adj_mat)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr(0))
 
-    def get_train(self, graph, *, step=0, **kwargs):
+    def train_model(self, graph, *, step=0, **kwargs):
         index = torch.randint(high=self.node_size,
                               size=[self.bs])
         adj_batch_train = self.adj_mat[index, :]

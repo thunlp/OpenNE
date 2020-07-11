@@ -50,7 +50,7 @@ class TADW(ModelWithEmbeddings):
         self.W = torch.randn(self.dim, self.node_size)
         self.H = torch.randn(self.dim, self.feature_size)
 
-    def get_train(self, graph, **kwargs):  # todo: rewrite with learning-models-based method
+    def train_model(self, graph, **kwargs):  # todo: rewrite with learning-models-based method
 
         # Update W
         B = torch.mm(self.H, self.T)

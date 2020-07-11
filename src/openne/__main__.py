@@ -167,10 +167,10 @@ def parse_args():
 
 def parse(**kwargs):
     if 'dataset' in kwargs:
-        Dataset = dataloaders.datasetdict[kwargs['dataset']]
+        Graph = dataloaders.datasetdict[kwargs['dataset']]
     else:
         name_dict = {k: v for k,v in kwargs.items() if k in ['edgefile', 'adjfile', 'labelfile', 'features', 'status']}
-        Dataset = dataloaders.create_self_defined_dataset(kwargs['root_dir'], name_dict, kwargs['name'],
+        Graph = dataloaders.create_self_defined_dataset(kwargs['root_dir'], name_dict, kwargs['name'],
                                                           kwargs['weighted'], kwargs['directed'], 'features' in kwargs)
     Model = models.modeldict[kwargs['model']]
     taskname = kwargs.get('task', None)
@@ -181,7 +181,7 @@ def parse(**kwargs):
             Task = tasks.UnsupervisedNodeClassification
     else:
         Task = tasks.taskdict[taskname]
-    return Task, Dataset, Model
+    return Task, Graph, Model
 
 
 def main(args):
@@ -191,7 +191,7 @@ def main(args):
 
     print("actual args:",args)
 
-    Task, Dataset, Model = parse(**args)  # parse required Task, Dataset, Model (classes)
+    Task, Graph, Model = parse(**args)  # parse required Task, Dataset, Model (classes)
     dellist = ['dataset', 'edgefile', 'adjfile', 'labelfile', 'features',
                'status', 'weighted', 'directed', 'root_dir', 'task', 'model']
     for item in dellist:
@@ -199,15 +199,15 @@ def main(args):
             args.__delitem__(item)
     # preparation
     task = Task(**args)                 # prepare task
-    task.check(Model, Dataset)          # check parameters
-    args = task.kwargs
-    model = Model(**args)               # prepare model
-    dataset = Dataset()                 # prepare dataset
+    task.check(Model, Graph)          # check parameters
+    train_args = task.kwargs
+    model = Model(**train_args)               # prepare model
+    graph = Graph()                 # prepare dataset
 
-    res = task.train(model, dataset)    # train
+    res = task.train(model, graph)    # train
 
     # evaluation
-    task.evaluate(model, res, dataset)  # evaluate
+    task.evaluate(model, res, graph)  # evaluate
 
 
 if __name__ == "__main__":
