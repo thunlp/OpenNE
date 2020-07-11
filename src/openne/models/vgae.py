@@ -72,7 +72,6 @@ class VGAE(ModelWithEmbeddings):
         self.varmodel = gcnModel.GCNModel(input_dim=input_dim, output_dim=self.output_dim, hidden_dims=self.hiddens,
                                 supports=self.support, dropout=self.dropout, sparse_inputs=self.sparse,
                                 num_features_nonzero=feature_shape, weight_decay=self.weight_decay, logging=False)
-        
 
     def train_model(self, graph, **kwargs):
         # Train models

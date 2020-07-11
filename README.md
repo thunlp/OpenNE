@@ -409,14 +409,23 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       year                     = {2016}
     }
     
+## Contributers
+
+The OpenNE-pytorch Project is contributed by [Yufeng Du](https://github.com/Bznkxs), [Ganqu Cui](https://github.com/cgq15) and [Jie Zhou](https://github.com/jayzzhou-thu).
+
+## Project Organizers
+
+- Zhiyuan Liu
+  - Tsinghua University
+  - [Homepage](http://lzy.thunlp.org/)
+ 
+- Cheng Yang
+  - Beijing University of Posts and Telecommunications
+  - [Homepage](http://nlp.csai.tsinghua.edu.cn/~yangcheng/)
 
 ## Sponsor
 
-This research is supported by Tencent, MSRA, NSFC and [BBDM-Lab](http://www.bioinfotech.cn).
+This research is supported by Tencent.
 
 <img src="http://logonoid.com/images/tencent-logo.png" width = "300" height = "30" alt="tencent" align=center />
-
-<img src="http://net.pku.edu.cn/~xjl/images/msra.png" width = "200" height = "100" alt="MSRA" align=center />
-
-<img src="http://www.dragon-star.eu/wp-content/uploads/2014/04/NSFC_logo.jpg" width = "100" height = "80" alt="NSFC" align=center />
 
