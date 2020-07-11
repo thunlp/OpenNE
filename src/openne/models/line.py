@@ -50,7 +50,7 @@ class _LINE(ModelWithEmbeddings):
         self.negative_ratio = negative_ratio
         self.gen_sampling_table(graph)
 
-    def get_train(self, graph, **kwargs):
+    def train_model(self, graph, **kwargs):
         sum_loss = 0.0
         batches = self.batch_iter(graph.edgesize)
         batch_id = 0
@@ -191,13 +191,13 @@ class LINE(ModelWithEmbeddings):
         else:
             self.model.build(graph, **kwargs)
 
-    def get_train(self, graph, **kwargs):
+    def train_model(self, graph, **kwargs):
         if self.order == 3:
-            self.model1.get_train(graph, **kwargs)
-            self.model2.get_train(graph, **kwargs)
+            self.model1.train_model(graph, **kwargs)
+            self.model2.train_model(graph, **kwargs)
             self.debug_info = "sum of loss: {!s}".format(self.model1.debug_info + self.model2.debug_info)
         else:
-            self.model.get_train(graph, **kwargs)
+            self.model.train_model(graph, **kwargs)
             self.debug_info = "sum of loss: {!s}".format(self.model.debug_info)
 
     def get_vectors(self, graph):

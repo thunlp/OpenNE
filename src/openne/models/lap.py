@@ -25,7 +25,7 @@ class LaplacianEigenmaps(ModelWithEmbeddings):
         check_range(kwargs, {'dim': 'positive'})
         return kwargs
 
-    def get_train(self, graph, **kwargs):
+    def train_model(self, graph, **kwargs):
         adj_mat = torch.from_numpy(graph.adjmat(directed=True, weighted=False))
         lap_mat = getLap(adj_mat)
         w, vec = torch.symeig(lap_mat, eigenvectors=True)

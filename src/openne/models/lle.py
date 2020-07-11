@@ -30,7 +30,7 @@ class LLE(ModelWithEmbeddings):
         check_range(kwargs, {'dim': 'positive', 'sparse': [1, 0, True, False]})
         return kwargs
 
-    def get_train(self, graph, *, sparse=False, **kwargs):
+    def train_model(self, graph, *, sparse=False, **kwargs):
         A = graph.adjmat(directed=False, weighted=True, sparse=sparse)  # todo: check when sparse matrix is better
         normalize(A, norm='l1', axis=1, copy=False)
         if sparse:

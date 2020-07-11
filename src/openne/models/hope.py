@@ -30,7 +30,7 @@ class HOPE(ModelWithEmbeddings):
             check_existance(kwargs, {'alpha': 0.5})
         return kwargs
 
-    def get_train(self, graph, *, measurement='katz', **kwargs):
+    def train_model(self, graph, *, measurement='katz', **kwargs):
         n = graph.nodesize
         A = graph.adjmat(directed=True, weighted=False)  # brute force...
         if measurement == 'katz':  # Katz: M_g^-1 * M_l = (I - beta * A)^-1 - I

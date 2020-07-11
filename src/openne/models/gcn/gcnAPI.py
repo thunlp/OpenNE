@@ -72,7 +72,7 @@ class GCN(ModelWithEmbeddings):
                                        num_features_nonzero=feature_shape, weight_decay=self.weight_decay, logging=False)
         self.cost_val = []
 
-    def get_train(self, graph, **kwargs):
+    def train_model(self, graph, **kwargs):
         # Train models
         output, train_loss, train_acc, __ = self.evaluate(kwargs['train_mask'])
         self.debug_info = "train_loss = {:.5f}, train_acc = {:.5f}".format(train_loss, train_acc)

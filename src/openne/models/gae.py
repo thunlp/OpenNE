@@ -70,7 +70,7 @@ class GAE(ModelWithEmbeddings):
                                 num_features_nonzero=feature_shape, weight_decay=self.weight_decay, logging=False)
         
 
-    def get_train(self, graph, **kwargs):
+    def train_model(self, graph, **kwargs):
         # Train models
         output, train_loss,  __ = self.evaluate(torch.ones(graph.nodesize))
         self.debug_info = "train_loss = {:.5f}".format(train_loss)
