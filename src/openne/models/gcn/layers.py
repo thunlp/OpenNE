@@ -20,14 +20,14 @@ def get_layer_uid(layer_name=''):
         return _LAYER_UIDS[layer_name]
 
 
-def sparse_dropout(x, keep_prob, noise_shape):
+def sparse_dropout(x, drop_prob, noise_shape):
     """Dropout for sparse tensors."""
-    random_tensor = keep_prob
+    random_tensor = drop_prob
     random_tensor += torch.rand(noise_shape)
     dropout_mask = torch.floor(random_tensor).type(torch.bool)
     i = x.indices()[:, dropout_mask]
     preout = torch.sparse_coo_tensor(i, values=x.values()[dropout_mask], size=x.shape, dtype=torch.float32)
-    return preout * (1./keep_prob)
+    return preout * (1./drop_prob)
 
 
 class Layer(torch.nn.Module):
@@ -104,9 +104,9 @@ class GraphConvolution(Layer):
         if not self.featureless and self.training:
             # dropout
             if self.sparse_inputs:
-                x = sparse_dropout(x, 1-self.dropout, self.num_features_nonzero)
+                x = sparse_dropout(x, self.dropout, self.num_features_nonzero)
             else:
-                x = torch.dropout(x, 1-self.dropout, True)
+                x = torch.dropout(x, self.dropout, True)
 
         # convolve
         output = torch.zeros([self.support[0].size()[0], self.output_dim])
