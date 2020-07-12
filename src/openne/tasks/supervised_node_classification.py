@@ -20,8 +20,9 @@ class SupervisedNodeClassification(BaseTask):
         """
             build train_mask test_mask val_mask
         """
-        train_precent = self.kwargs['clf_ratio']
-        training_size = int(train_precent * graph.G.number_of_nodes())
+        train_percent = self.kwargs['clf_ratio']
+        print("Creating test set using {}% nodes".format(train_percent * 100))
+        training_size = int(train_percent * graph.G.number_of_nodes())
         state = torch.random.get_rng_state()
         torch.random.manual_seed(0)
         shuffle_indices = torch.randperm(graph.G.number_of_nodes())
@@ -40,7 +41,7 @@ class SupervisedNodeClassification(BaseTask):
         self.kwargs['train_mask'] = self.train_mask
 
     def train_kwargs(self):
-        check_existance(self.kwargs, {"validate": True, 'clf_ratio': 0.1})
+        check_existance(self.kwargs, {"validate": True, 'clf_ratio': 0.5})
 
         def validation_hook(model, graph, **kwargs):
             _, cost, acc, duration = model.evaluate(self.val_mask)
