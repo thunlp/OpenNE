@@ -1,178 +1,213 @@
 from __future__ import print_function
-import numpy as np
-import random
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from sklearn.linear_model import LogisticRegression
-from .graph import *
-from . import node2vec
-from .classify import Classifier, read_node_label
-from . import line
-from . import tadw
-from .gcn import gcnAPI
-from . import lle
-from . import hope
-from . import lap
-from . import gf
-from . import sdne
-from .grarep import GraRep
+
 import time
 import ast
 
+import numpy as np
+import random
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+
+from . import tasks, dataloaders, models
+
+def ListInput(s: str):
+    l = list(ast.literal_eval(s))
+    if type(l) is not list:
+        raise TypeError
+    return l
+
+def xtype(val):
+    if type(val) is str:
+        return str.lower
+    if type(val) is list:
+        return ListInput
+    return type(val)
+
+def toargstr(s):
+    if s[:2] != '--':
+        s = '--' + s
+    s = s.replace('_', '-')
+    return s
+
+def legal_arg_name(arg):
+    if arg[0] == '_':
+        return False
+    return True
+
+def addarg(arg, group, used_names, val, default=False, hlp=None, choices=None):
+    kwargs = {}
+    if arg not in used_names and legal_arg_name(arg):
+        used_names.add(arg)
+        if xtype(val) is bool and default:
+            if val:
+                if 'dest' not in kwargs:
+                    kwargs['dest'] = arg
+                arg = 'no_' + arg
+                kwargs['action'] = 'store_false'
+                if hlp is not None:
+                    kwargs['help'] = hlp + " (action {}, dest={})".format(kwargs['action'], kwargs['dest'])
+                else:
+                    kwargs['help'] = "(action {}, dest={})".format(kwargs['action'], kwargs['dest'])
+            else:
+                kwargs['action'] = 'store_true'
+                if hlp is not None:
+                    kwargs['help'] = hlp + " (action {})".format(kwargs['action'])
+                else:
+                    kwargs['help'] = '(action {})'.format(kwargs['action'])
+
+        else:
+            if val is not None:
+                kwargs['type'] = xtype(val)
+            if default:
+                kwargs['default'] = val
+                if hlp is None:
+                    kwargs['help'] = ' '
+                    kwargs['help'] += '(default: {})'.format(val)
+                else:
+                    kwargs['help'] = '(default: {})'.format(val)
+            if hlp is not None:
+                kwargs['help'] = hlp
+        if choices and arg in choices:
+            kwargs['choices'] = choices[arg]
+        group.add_argument(toargstr(arg), **kwargs)
+        return True
+    elif legal_arg_name(arg):
+        return False
+    return True
+
 
 def parse_args():
-    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
+    parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
                             conflict_handler='resolve')
-    parser.add_argument('--input', required=True,
-                        help='Input graph file')
-    parser.add_argument('--output',
-                        help='Output representation file')
-    parser.add_argument('--number-walks', default=10, type=int,
-                        help='Number of random walks to start at each node')
-    parser.add_argument('--directed', action='store_true',
-                        help='Treat graph as directed.')
-    parser.add_argument('--walk-length', default=80, type=int,
-                        help='Length of the random walk started at each node')
-    parser.add_argument('--workers', default=8, type=int,
-                        help='Number of parallel processes.')
-    parser.add_argument('--representation-size', default=128, type=int,
-                        help='Number of latent dimensions to learn for each node.')
-    parser.add_argument('--window-size', default=10, type=int,
-                        help='Window size of skipgram model.')
-    parser.add_argument('--epochs', default=5, type=int,
-                        help='The training epochs of LINE and GCN')
-    parser.add_argument('--p', default=1.0, type=float)
-    parser.add_argument('--q', default=1.0, type=float)
-    parser.add_argument('--method', required=True, choices=[
-        'node2vec',
-        'deepWalk',
-        'line',
-        'gcn',
-        'grarep',
-        'tadw',
-        'lle',
-        'hope',
-        'lap',
-        'gf',
-        'sdne'
-    ], help='The learning method')
-    parser.add_argument('--label-file', default='',
-                        help='The file of node label')
-    parser.add_argument('--feature-file', default='',
-                        help='The file of node features')
-    parser.add_argument('--graph-format', default='adjlist', choices=['adjlist', 'edgelist'],
-                        help='Input graph format')
-    parser.add_argument('--negative-ratio', default=5, type=int,
-                        help='the negative ratio of LINE')
-    parser.add_argument('--weighted', action='store_true',
-                        help='Treat graph as weighted')
-    parser.add_argument('--clf-ratio', default=0.5, type=float,
-                        help='The ratio of training data in the classification')
-    parser.add_argument('--order', default=3, type=int,
-                        help='Choose the order of LINE, 1 means first order, 2 means second order, 3 means first order + second order')
-    parser.add_argument('--no-auto-save', action='store_true',
-                        help='no save the best embeddings when training LINE')
-    parser.add_argument('--dropout', default=0.5, type=float,
-                        help='Dropout rate (1 - keep probability)')
-    parser.add_argument('--weight-decay', type=float, default=5e-4,
-                        help='Weight for L2 loss on embedding matrix')
-    parser.add_argument('--hidden', default=16, type=int,
-                        help='Number of units in hidden layer 1')
-    parser.add_argument('--kstep', default=4, type=int,
-                        help='Use k-step transition probability matrix')
-    parser.add_argument('--lamb', default=0.2, type=float,
-                        help='lambda is a hyperparameter in TADW')
-    parser.add_argument('--lr', default=0.01, type=float,
-                        help='learning rate')
-    parser.add_argument('--alpha', default=1e-6, type=float,
-                        help='alhpa is a hyperparameter in SDNE')
-    parser.add_argument('--beta', default=5., type=float,
-                        help='beta is a hyperparameter in SDNE')
-    parser.add_argument('--nu1', default=1e-5, type=float,
-                        help='nu1 is a hyperparameter in SDNE')
-    parser.add_argument('--nu2', default=1e-4, type=float,
-                        help='nu2 is a hyperparameter in SDNE')
-    parser.add_argument('--bs', default=200, type=int,
-                        help='batch size of SDNE')
-    parser.add_argument('--encoder-list', default='[1000, 128]', type=str,
-                        help='a list of numbers of the neuron at each encoder layer, the last number is the '
-                             'dimension of the output node representation')
-    args = parser.parse_args()
 
-    if args.method != 'gcn' and not args.output:
-        print("No output filename. Exit.")
-        exit(1)
+    # tasks, models, dataloaders
+    parser.add_argument('--task', choices=tasks.taskdict.keys(), type=str.lower,
+                        help='Assign a task. If unassigned, OpenNE will '
+                             'automatically assign one according to the model.')
+    parser.add_argument('--model', choices=models.modeldict.keys(), type=str.lower,
+                        help='Assign a model.', required=True)
+    datasetgroup = parser.add_mutually_exclusive_group(required=True)
+    datasetgroup.add_argument('--dataset', choices=dataloaders.datasetdict.keys(), type=str.lower,
+                              help='Assign a dataset as provided by OpenNE. '
+                                   'Use --local-dataset if you want to load dataset from file.')
+
+    # self-defined dataset
+    local_inputs = parser.add_argument_group('LOCAL DATASET INPUTS')
+    datasetgroup.add_argument('--local-dataset', action='store_true',
+                              help='Load dataset from file. Check LOCAL DATASET INPUTS for more details.')
+    local_inputs.add_argument('--root-dir', help='Root directory of input files. If empty, you should provide '
+                                                 'absolute paths for graph files.',
+                              default=None)
+    local_input_format = local_inputs.add_mutually_exclusive_group()
+    local_input_format.add_argument('--edgefile', help='Graph description in edgelist format.')
+    local_input_format.add_argument('--adjfile', help='Graph description in adjlist format.')
+    local_inputs.add_argument('--labelfile', help='Node labels.')
+    local_inputs.add_argument('--features', help='Node features.')
+    local_inputs.add_argument('--status', help="Dataset status.")
+    local_inputs.add_argument('--name', help="Dataset name.", default='SelfDefined')
+    local_inputs.add_argument('--weighted', action='store_true', help='View graph as weighted. (action store_true)')
+    local_inputs.add_argument('--directed', action='store_true', help='View graph as directed. (action store_true)')
+
+    used_names = set()
+    choices = {'measurement': ('katz', 'cn', 'rpr', 'aa')}
+    # structure & training args
+    generalgroup = parser.add_argument_group("GENERAL MODEL ARGUMENTS")
+    no_default_args = ['epochs', 'output',]
+    addarg("clf_ratio", generalgroup, used_names, 0.5, True)
+    generalgroup.add_argument('--validate', type=bool)
+    model_args = models.ModelWithEmbeddings.args()
+    for arg in model_args:
+        addarg(arg, generalgroup, used_names, model_args[arg], arg not in no_default_args, choices=choices)
+
+    simpledict = models.modeldict.copy()
+    simpledict.__delitem__('node2vec')
+    simpledict.__delitem__('deepwalk')
+    simpledict.__delitem__('gf')
+    simpledict.__delitem__('lap')
+    simpledict['node2vec & deepwalk'] = models.Node2vec
+
+    # add duplicate args as general model args
+    general_names = used_names.copy()
+    tmp_used_names = {}
+    addarg('sparse', generalgroup, used_names, False, True, '(in lle, gcn)')
+    for modelname in simpledict:
+        model = simpledict[modelname]
+        model_args = model.args()
+        for arg in model_args:
+            if arg in tmp_used_names:
+                tmp_used_names[arg][0].append(modelname)
+            else:
+                tmp_used_names[arg] = ([modelname], model_args[arg])
+    for arg, (modelnames, argval) in tmp_used_names.items():
+        if len(modelnames) > 1:
+            addarg(arg, generalgroup, used_names, argval, False, '(in {})'.format(', '.join(modelnames)), choices)
+
+    for modelname in simpledict:
+        model = simpledict[modelname]
+        modelgroup = parser.add_argument_group(modelname.upper())
+        shared_params = []
+        model_args = model.args()
+        for arg in model_args:
+            if not addarg(arg, modelgroup, used_names, model_args[arg], True, None, choices=choices) \
+                    and arg not in general_names:
+                argval = model_args[arg]
+                paramdescript = ' ' + toargstr(arg)
+                if len(paramdescript) < 22:
+                    paramdescript += ' ' * (22 - len(paramdescript))
+                else:
+                    paramdescript += '\n' + ' ' * 22
+                paramdescript += '(default: {})'.format(argval)
+                shared_params.append(paramdescript)
+        if shared_params:
+            modelgroup.description = 'Shared params:\n{}'.format(' \n'.join(shared_params))
+
+    args = parser.parse_args()
 
     return args
 
 
-def main(args):
-    t1 = time.time()
-    g = Graph()
-    print("Reading...")
-
-    if args.graph_format == 'adjlist':
-        g.read_adjlist(filename=args.input)
-    elif args.graph_format == 'edgelist':
-        g.read_edgelist(filename=args.input, weighted=args.weighted,
-                        directed=args.directed)
-    if args.method == 'node2vec':
-        model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
-                                  num_paths=args.number_walks, dim=args.representation_size,
-                                  workers=args.workers, p=args.p, q=args.q, window=args.window_size)
-    elif args.method == 'line':
-        if args.label_file and not args.no_auto_save:
-            model = line.LINE(g, epoch=args.epochs, rep_size=args.representation_size, order=args.order,
-                              label_file=args.label_file, clf_ratio=args.clf_ratio)
+def parse(**kwargs):
+    if 'dataset' in kwargs:
+        Graph = dataloaders.datasetdict[kwargs['dataset']]
+    else:
+        name_dict = {k: v for k,v in kwargs.items() if k in ['edgefile', 'adjfile', 'labelfile', 'features', 'status']}
+        Graph = dataloaders.create_self_defined_dataset(kwargs['root_dir'], name_dict, kwargs['name'],
+                                                          kwargs['weighted'], kwargs['directed'], 'features' in kwargs)
+    Model = models.modeldict[kwargs['model']]
+    taskname = kwargs.get('task', None)
+    if taskname is None:
+        if Model in tasks.supervisedmodels:
+            Task = tasks.SupervisedNodeClassification
         else:
-            model = line.LINE(g, epoch=args.epochs,
-                              rep_size=args.representation_size, order=args.order)
-    elif args.method == 'deepWalk':
-        model = node2vec.Node2vec(graph=g, path_length=args.walk_length,
-                                  num_paths=args.number_walks, dim=args.representation_size,
-                                  workers=args.workers, window=args.window_size, dw=True)
-    elif args.method == 'tadw':
-        # assert args.label_file != ''
-        assert args.feature_file != ''
-        g.read_node_label(args.label_file)
-        g.read_node_features(args.feature_file)
-        model = tadw.TADW(
-            graph=g, dim=args.representation_size, lamb=args.lamb)
-    elif args.method == 'gcn':
-        assert args.label_file != ''
-        assert args.feature_file != ''
-        g.read_node_label(args.label_file)
-        g.read_node_features(args.feature_file)
-        model = gcnAPI.GCN(graph=g, dropout=args.dropout,
-                           weight_decay=args.weight_decay, hidden1=args.hidden,
-                           epochs=args.epochs, clf_ratio=args.clf_ratio)
-    elif args.method == 'grarep':
-        model = GraRep(graph=g, Kstep=args.kstep, dim=args.representation_size)
-    elif args.method == 'lle':
-        model = lle.LLE(graph=g, d=args.representation_size)
-    elif args.method == 'hope':
-        model = hope.HOPE(graph=g, d=args.representation_size)
-    elif args.method == 'sdne':
-        encoder_layer_list = ast.literal_eval(args.encoder_list)
-        model = sdne.SDNE(g, encoder_layer_list=encoder_layer_list,
-                          alpha=args.alpha, beta=args.beta, nu1=args.nu1, nu2=args.nu2,
-                          batch_size=args.bs, epoch=args.epochs, learning_rate=args.lr)
-    elif args.method == 'lap':
-        model = lap.LaplacianEigenmaps(g, rep_size=args.representation_size)
-    elif args.method == 'gf':
-        model = gf.GraphFactorization(g, rep_size=args.representation_size,
-                                      epoch=args.epochs, learning_rate=args.lr, weight_decay=args.weight_decay)
-    t2 = time.time()
-    print(t2-t1)
-    if args.method != 'gcn':
-        print("Saving embeddings...")
-        model.save_embeddings(args.output)
-    if args.label_file and args.method != 'gcn':
-        vectors = model.vectors
-        X, Y = read_node_label(args.label_file)
-        print("Training classifier using {:.2f}% nodes...".format(
-            args.clf_ratio*100))
-        clf = Classifier(vectors=vectors, clf=LogisticRegression())
-        clf.split_train_evaluate(X, Y, args.clf_ratio, seed=0)
+            Task = tasks.UnsupervisedNodeClassification
+    else:
+        Task = tasks.taskdict[taskname]
+    return Task, Graph, Model
+
+
+def main(args):
+
+    # parsing
+    args = {x: y for x, y in args.__dict__.items() if y is not None}
+
+    print("actual args:",args)
+
+    Task, Graph, Model = parse(**args)  # parse required Task, Dataset, Model (classes)
+    dellist = ['dataset', 'edgefile', 'adjfile', 'labelfile', 'features',
+               'status', 'weighted', 'directed', 'root_dir', 'task', 'model']
+    for item in dellist:
+        if item in args:
+            args.__delitem__(item)
+    # preparation
+    task = Task(**args)                 # prepare task
+    task.check(Model, Graph)          # check parameters
+    train_args = task.kwargs
+    model = Model(**train_args)               # prepare model
+    graph = Graph()                 # prepare dataset
+
+    res = task.train(model, graph)    # train
+
+    # evaluation
+    task.evaluate(model, res, graph)  # evaluate
 
 
 if __name__ == "__main__":
