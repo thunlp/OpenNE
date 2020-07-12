@@ -53,7 +53,6 @@ class VGAE(ModelWithEmbeddings):
                         early_stopping: Tolerance for early stopping (# of epochs)
                         max_degree: Maximum Chebyshev polynomial degree
         """
-        self.clf_ratio = clf_ratio
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.dropout = dropout

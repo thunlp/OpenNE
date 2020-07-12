@@ -8,7 +8,7 @@ class BaseTask:
         raise NotImplementedError
 
     def train_kwargs(self) -> dict:
-        check_existance(self.kwargs, {"validate": False, 'clf_ratio': 0.1})
+        check_existance(self.kwargs, {"validate": False, 'clf_ratio': 0.5})
         return self.kwargs
 
     def _process(self, res):
