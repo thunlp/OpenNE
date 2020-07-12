@@ -1,20 +1,192 @@
-# OpenNE: An open source toolkit for Network Embedding
+# OpenNE-PyTorch
 
-This repository provides a standard NE/NRL(Network Representation Learning）training and testing framework. In this framework, we unify the input and output interfaces of different NE models and provide scalable options for each model. Moreover, we implement typical NE models under this framework based on tensorflow, which enables these models to be trained with GPUs.
+This is an open-source framework for self-supervised/unsupervised graph embedding implemented by PyTorch, migrated from the earlier version implemented by Tensorflow. 
 
-We develop this toolkit according to the settings of DeepWalk. The implemented or modified models include [DeepWalk](https://github.com/phanein/deepwalk), [LINE](https://github.com/tangjianpku/LINE), [node2vec](https://github.com/aditya-grover/node2vec), [GraRep](https://github.com/ShelsonCao/GraRep), [TADW](https://github.com/thunlp/TADW), [GCN](https://github.com/tkipf/gcn), HOPE, GF, SDNE and LE. We will implement more representative NE models continuously according to our released [NRL paper list](https://github.com/thunlp/nrlpapers). Specifically, we welcome other researchers to contribute NE models into this toolkit based on our framework. We will announce the contribution in this project.
+
+## Overview
+#### New Features
+
+- **A unified framework**: We provide a unified framework for self-supervised/unsupervised node representation learning. Our models include unsupervised network embedding (NE) methods (DeepWalk, Node2vec, HOPE, GraRep, LLE, Lap, TADW, GF, LINE, SDNE) and recent self-supervised graph embedding methods (GAE, VGAE).
+
+- **Efficiency**: We provide faster and more efficient models and better default hyper-parameter settings than those in the previous version. The table below shows 
+performances of OpenNE-PyTorch models on Cora Dataset as compared with the previous version, where
+ "F1/Accuracy" refers to accuracy in GCN and micro F1-scores in other models, and "Time" refers to training time. 
+ Hyperparameters are set to default values unless specified in "Remarks". We also list results of our new models, GAE and VGAE.
+
+
+<table cellspacing='1' bgcolor='#fefefe'>
+<tr>
+    <th rowspan="2" bgcolor='#ffffff'>method</th>
+    <th colspan="2" bgcolor='#eeeeee'>Time</th>
+    <th colspan="2" bgcolor='#eeeeee'>F1/Accuracy</th>
+    <th rowspan="2">Remarks</th>
+</tr>
+<tr bgcolor='#ffffff'>
+    <th>OpenNE(old)</th>
+    <th>OpenNE-Pytorch</th>
+    <th>OpenNE(old)</th>
+    <th>OpenNE-Pytorch</th>
+</tr>
+<tr bgcolor='#eeeeee'>
+    <td>DeepWalk</td>
+    <td>85.85</td>
+    <td><strong>74.98</strong></td>
+    <td>.832</td>
+    <td>.832</td>
+    <td>-</td>
+</tr>
+<tr bgcolor='#ffffff'>
+    <td>Node2vec</td>
+    <td>143.67</td>
+    <td><strong>38.18</strong></td>
+    <td><strong>.814</strong></td>
+    <td>.807</td>
+    <td>-</td>
+</tr>
+<tr bgcolor='#eeeeee'>
+    <td>HOPE</td>
+    <td>2.66</td>
+    <td><strong>2.45</strong></td>
+    <td>.634</td>
+    <td><strong>.743</strong></td>
+    <td>-</td>
+</tr>
+<tr bgcolor='#ffffff'>
+    <td>GraRep</td>
+    <td>44.27</td>
+    <td><strong>4.04</strong></td>
+    <td>.770</td>
+    <td><strong>.776</strong></td>
+    <td>-</td>
+</tr>
+<tr bgcolor='#eeeeee'>
+    <td>TADW</td>
+    <td><strong>43.42</strong></td>
+    <td>59.12</td>
+    <td><strong>.852</strong></td>
+    <td>.843</td>
+    <td>-</td>
+</tr>
+<tr bgcolor='#ffffff'>
+    <td>GF</td>
+    <td><strong>15.01</strong></td>
+    <td>45.78</td>
+    <td>.546</td>
+    <td><strong>.765</strong></td>
+    <td>-</td>
+</tr>
+<tr bgcolor='#eeeeee'>
+    <td>LINE</td>
+    <td><strong>86.75</strong></td>
+    <td>102</td>
+    <td>.417</td>
+    <td><strong>.685</strong></td>
+    <td>-</td>
+</tr>
+<tr bgcolor='#ffffff'>
+    <td>SDNE</td>
+    <td>195.02</td>
+    <td><strong>76.80</strong></td>
+    <td>.532</td>
+    <td><strong>.750</strong></td>
+    <td>-</td>
+</tr>
+<tr bgcolor='#eeeeee'>
+    <td>GCN</td>
+    <td>17.4</td>
+    <td><strong>11.22</strong></td>
+    <td>.857</td>
+    <td><strong>.861</strong></td>
+    <td rowspan="3">  --sparse  </td>
+</tr>
+<tr bgcolor='#ffffff'>
+    <td>GAE</td>
+    <td>-</td>
+    <td><strong>105.24</strong></td>
+    <td>-</td>
+    <td><strong>.565</strong></td>
+</tr>
+<tr bgcolor='#eeeeee'>
+    <td>VGAE</td>
+    <td>-</td>
+    <td><strong>136.57</strong></td>
+    <td>-</td>
+    <td><strong>.51</strong></td>
+</tr>
+</table>
+
+See Experimental Results for performances on Wiki and BlogCatalog.
+
+- **Modularity**: We entangle the codes into three parts: Dataloader, Model and Task. Users can easily customize the datasets, methods and tasks. It is also easy to define their specific datasets and methods.
+
+#### Future Plan
+We plan to add more models and tasks in our framework. Our future plan includes:
+
+- More self-supervised models such as ARGA/ARVGA, GALA and AGE.
+
+- New tasks for link prediction, graph clustering and graph classification.
+
+You are welcomed to add your own datasets and methods by proposing new pull requests. 
 
 ## Usage
-
 #### Installation
 
 - Clone this repo.
-- enter the directory where you clone it, and run the following code
+- Enter the directory where you clone it, and run the following code:
     ```bash
     pip install -r requirements.txt
     cd src
+    ```
+- You can start using OpenNE by simply changing directory to OpenNE/src. 
+If instead you want to install OpenNE as a site-package, run the following command in OpenNE/src:
+    ```bash
     python setup.py install
     ```
+
+#### Input Instructions
+
+##### Use default values
+
+It is easy to get started with OpenNE. Here are some commands for basic usages with default values:
+
+    python -m openne --model gf --dataset blogcatalog
+    python -m openne --model gcn --dataset cora
+
+##### store_true and store_false parameters
+
+Parameters like --sparse have action "store_true", which means they are False by default, and should be specified if you want to assign True. Run GCN with sparsed matrices by the following command:
+    
+    python -m openne --model gcn --dataset cora --sparse
+
+You can use store_false parameters, eg. --no-save, in a similar way:
+
+    python -m openne --model gcn --dataset cora --sparse --no-save
+    
+OpenNE saves your models and training results to file by default, which may cost longer time. The above command is used when you wish not to save the results.
+    
+##### Use your own datasets
+
+Use --local-dataset (which is also a store_true parameter!) and specify --root-dir, --edgefile or --adjfile, --labelfile, --features and --status to import dataset from file. 
+
+Optionally, specify store_true parameters --weighted and --directed to view the graph as weighted and/or directed.
+
+If you wish to use your dataset in "~/mydataset", which includes edges.txt, an edgelist file, and labels.txt, a label file, input the following:
+    
+    python -m openne --model gf --local-dataset --root-dir ~/mydataset --edgefile edges.txt --labelfile labels.txt
+
+
+##### Input values
+
+While all parameter names must be provided in lower case, string input values are case insensitive:
+
+    python -m openne --model SDnE --dataset coRA
+
+The simplest way to provide a Python list (as of --encoder-layer-list in SDNE and --hiddens in GCN) is to directly input it without space. You can also wrap the list in double quotes (") to input spaces. The following commands are the same:
+
+    python -m openne --model sdne --dataset cora --encoder-layer-list [1000,128]
+    python -m openne --model sdne --dataset cora --encoder-layer-list "[1000,128]"
+    python -m openne --model sdne --dataset cora --encoder-layer-list "[1000, 128]"
+    
 
 #### General Options
 
@@ -22,182 +194,116 @@ You can check out the other options available to use with *OpenNE* using:
 
     python -m openne --help
 
+- --model {deepwalk, line, node2vec, grarep, tadw, gcn, lap, gf, hope and sdne} the specified NE model;
+- --dataset {ppi, wikipedia, flickr, blogcatalog, wiki, pubmed, cora, citeseer} standard dataset as provided by OpenNE;
 
-- --input, the input file of a network;
-- --graph-format, the format of input graph, adjlist or edgelist;
-- --output, the output file of representation (GCN doesn't need it);
-- --representation-size, the number of latent dimensions to learn for each node; the default is 128
-- --method, the NE model to learn, including deepwalk, line, node2vec, grarep, tadw, gcn, lap, gf, hope and sdne;
-- --directed, treat the graph as directed; this is an action;
-- --weighted, treat the graph as weighted; this is an action;
-- --label-file, the file of node label; ignore this option if not testing;
-- --clf-ratio, the ratio of training data for node classification; the default is 0.5;
-- --epochs, the training epochs of LINE and GCN; the default is 5;
+If instead you want to create a dataset from file, you can provide your own graph by using switch
+- --local-dataset (action store_true; mutually exclusive with --dataset)
 
-#### Example
+and the following arguments:
+- --root-dir, root directory of input files. If empty, you should provide absolute paths for graph files;
+- --edgefile, description of input graph in edgelist format;
+- --adjfile, description of input graph in adjlist format (mutually exclusive with --edgefile);
+- --label-file, node label file; 
+- --features, node feature file for certain models (optional);
+- --name, dataset name, "SelfDefined" by default;
+- --weighted, view graph as weighted (action store_true);
+- --directed, view graph as directed (action store_true);
 
-To run "node2vec" on BlogCatalog network and evaluate the learned representations on multi-label node classification task, run the following command in the home directory of this project:
+For general training options:
+- --dim, dimension of node representation, 128 by default;
+- --clf-ratio, the ratio of training data for node classification, 0.5 by default;
+- --no-save, choose not to save the result (action store_false, dest=save);
+- --output, output file for vectors, which will be saved to "results" by default;
+- --sparse, calculate by sparse matrices (action store_true) (only supports lle & gcn);
 
-    python -m openne --method node2vec --label-file data/blogCatalog/bc_labels.txt --input data/blogCatalog/bc_adjlist.txt --graph-format adjlist --output vec_all.txt --q 0.25 --p 0.25
+For models with multiple epochs:
+- --epochs, number of epochs;
+- --validate, True if validation is needed; by default it is False except with GCN;
+- --validation-interval, number of epochs between two validations, 5 by default;
+- --debug-output-interval, number of epochs between two debug outputs, 5 by default;
 
-To run "gcn" on Cora network and evaluate the learned representations on multi-label node classification task, run the following command in the home directory of this project:
-
-    python -m openne --method gcn --label-file data/cora/cora_labels.txt --input data/cora/cora_edgelist.txt --graph-format edgelist --feature-file data/cora/cora.features  --epochs 200 --output vec_all.txt --clf-ratio 0.1
 
 #### Specific Options
 
-DeepWalk and node2vec:
-
-- --number-walks, the number of random walks to start at each node; the default is 10;
-- --walk-length, the length of random walk started at each node; the default is 80;
-- --workers, the number of parallel processes; the default is 8;
-- --window-size, the window size of skip-gram model; the default is 10;
-- --q, only for node2vec; the default is 1.0;
-- --p, only for node2vec; the default is 1.0;
-
-LINE:
-
-- --negative-ratio, the default is 5;
-- --order, 1 for the 1st-order, 2 for the 2nd-order and 3 for 1st + 2nd; the default is 3;
-- --no-auto-save, no early save when training LINE; this is an action; when training LINE, we will calculate F1 scores every epoch. If current F1 is the best F1, the embeddings will be saved.
+GraphFactorization:
+- --weight-decay, weight for l2-loss of embedding matrix (1.0 by default);
+- --lr, learning rate (0.003 by default)
 
 GraRep:
 
-- --kstep, use k-step transition probability matrix（make sure representation-size%k-step == 0).
+- --kstep, use k-step transition probability matrix（requires dim % kstep == 0).
 
-TADW:
 
-- --lamb, lamb is a hyperparameter in TADW that controls the weight of regularization terms.
+HOPE:
+- --measurement {katz, cn, rpr, aa}  mesurement matrix, katz by default;
+- --beta, parameter with katz measurement, 0.02 by default;
+- --alpha, parameter with rpr measurement, 0.5 by default;
 
-GCN:
-
-- --feature-file, The file of node features;
-- --epochs, the training epochs of GCN; the default is 5;
-- --dropout, dropout rate;
-- --weight-decay, weight for l2-loss of embedding matrix;
-- --hidden, number of units in the first hidden layer.
-
-GraphFactorization:
-
-- --epochs, the training epochs of GraphFactorization; the default is 5;
-- --weight-decay, weight for l2-loss of embedding matrix;
-- --lr, learning rate, the default is 0.01
+LINE:
+- --lr, learning rate, 0.001 by default;
+- --batch-size, 1000 by default;
+- --negative-ratio, 5 by default;
+- --order, 1 for the 1st-order, 2 for the 2nd-order and 3 for 1st + 2nd, 3 by default;
 
 SDNE:
 
-- --encoder-list, a list of numbers of the neuron at each encoder layer, the last number is the dimension of the output node representation, the default is [1000, 128]
-- --alpha, alpha is a hyperparameter in SDNE that controls the first order proximity loss, the default is 1e-6
-- --beta, beta is used for construct matrix B, the default is 5
-- --nu1, parameter controls l1-loss of weights in autoencoder, the default is 1e-5
-- --nu2, parameter controls l2-loss of weights in autoencoder, the default is 1e-4
-- --bs, batch size, the default is 200
-- --lr, learning rate, the default is 0.01
+- --encoder-list, list of neuron numbers at each encoder layer. Instead of --dim, The last number is the dimension of the output node representation. [128] by default. See "Input Instructions";
+- --alpha, parameter that controls the first-order proximity loss, 1e-6 by default;
+- --beta, parameter used for construct matrix B, 5 by default;
+- --nu1, parameter that controls l1-loss of weights in autoencoder, 1e-8 by default;
+- --nu2, parameter that controls l2-loss of weights in autoencoder, 1e-5 by default;
+- --bs, batch size, 200 by default;
+- --lr, learning rate, 0.001 by default;
+- --decay, allow decay in learning rate (action store_true);
 
-#### Input
-The supported input format is an edgelist or an adjlist:
+TADW: (requires attributed graph, eg. cora, pubmed, citeseer)
+- --lamb, parameter that controls the weight of regularization terms, 0.2 by default;
 
-    edgelist: node1 node2 <weight_float, optional>
-    adjlist: node n1 n2 n3 ... nk
-The graph is assumed to be undirected and unweighted by default. These options can be changed by setting the appropriate flags.
-
-If the model needs additional features, the supported feature input format is as follow (**feature_i** should be a float number):
-
-    node feature_1 feature_2 ... feature_n
-
-
-#### Output
-The output file has *n+1* lines for a graph with *n* nodes. 
-The first line has the following format:
-
-    num_of_nodes dim_of_representation
-
-The next *n* lines are as follows:
-    
-    node_id dim1 dim2 ... dimd
-
-where dim1, ... , dimd is the *d*-dimensional representation learned by *OpenNE*.
-
-#### Evaluation
-
-If you want to evaluate the learned node representations, you can input the node labels. It will use a portion (default: 50%) of nodes to train a classifier and calculate F1-score on the rest dataset.
-
-The supported input label format is
-
-    node label1 label2 label3...
-
-#### Embedding visualization
-
-To show how to apply dimension reduction methods like t-SNE and PCA to embedding visualization, we choose the 20 newsgroups dataset. Using the text feature, we built the news network by `kneighbors_graph` in scikit-learn. We uploaded the results of different methods in **t-SNE-PCA.pptx** where the colors of nodes represent the labels of nodes. A simple script is shown as follows:
-
-    cd visualization_example
-    python 20newsgroup.py
-    tensorboard --logdir=log/
-
-After running the tensorboard, visit `localhost:6006` to view the result.
-
-## Comparisons with other implementations
-
-Running environment:  <br />
-BlogCatalog: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz. <br />
-Wiki, Cora: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz. <br />
-
-We show the node classification results of various methods in different datasets. We set representation dimension to 128, **kstep=4** in GraRep. 
-
-Note that, both GCN(a semi-supervised NE model) and TADW need additional text features as inputs. Thus, we evaluate these two models on Cora in which each node has text information. We use 10% labeled data to train GCN.
-
-[BlogCatalog](http://leitang.net/social_dimension.html): 10312 nodes, 333983 edges, 39 labels,  undirected:
-
-- data/blogCatalog/bc_adjlist.txt
-- data/blogCatalog/bc_edgelist.txt
-- data/blogCatalog/bc_labels.txt
-
-|Algorithm | Time| Micro-F1 | Macro-F1|
-|:------------|-------------:|------------:|-------:|
-|[DeepWalk](https://github.com/phanein/deepwalk) | 271s | 0.385 | 0.238|
-|[LINE 1st+2nd](https://github.com/tangjianpku/LINE) | 2008s | 0.398 | 0.235|
-|[Node2vec](https://github.com/aditya-grover/node2vec) | 2623s  | 0.404| 0.264|
-|[GraRep](https://github.com/ShelsonCao/GraRep) | - | - | - |
-|OpenNE(DeepWalk) | 986s  | 0.394 | 0.249|
-|OpenNE(LINE 1st+2nd) | 1555s | 0.390 | 0.253|
-|OpenNE(node2vec) | 3501s  | 0.405 | 0.275|
-|OpenNE(GraRep) | 4178s | 0.393 | 0.230 |
-
-[Wiki](https://github.com/thunlp/MMDW/tree/master/data) (Wiki dataset is provided by [LBC project](http://www.cs.umd.edu/~sen/lbc-proj/LBC.html). But the original link failed.): 2405 nodes, 17981 edges, 19 labels, directed:
-
-- data/wiki/Wiki_edgelist.txt
-- data/wiki/Wiki_category.txt
-
-|Algorithm | Time| Micro-F1 | Macro-F1|
-|:------------|-------------:|------------:|-------:|
-|[DeepWalk](https://github.com/phanein/deepwalk) | 52s | 0.669 | 0.560|
-|[LINE 2nd](https://github.com/tangjianpku/LINE) | 70s | 0.576 | 0.387|
-|[node2vec](https://github.com/aditya-grover/node2vec) | 32s  | 0.651 | 0.541|
-|[GraRep](https://github.com/ShelsonCao/GraRep) | 19.6s | 0.633 | 0.476|
-|OpenNE(DeepWalk) | 42s  | 0.658 | 0.570|
-|OpenNE(LINE 2nd) | 90s | 0.661 | 0.521|
-|OpenNE(Node2vec) | 33s  | 0.655 | 0.538|
-|OpenNE(GraRep) | 23.7s | 0.649 | 0.507 |
-|OpenNE(GraphFactorization) | 12.5s | 0.637 | 0.450 |
-|OpenNE(HOPE) | 3.2s | 0.601 | 0.438 |
-|OpenNE(LaplacianEigenmaps) | 4.9s | 0.277 | 0.073 |
-|OpenNE(SDNE) | 39.6s | 0.643 | 0.498 |
+GCN: (requires attributed graph)
+- --lr, learning rate, 0.01 by default;
+- --dropout, dropout rate, 0.5 by default;
+- --weight-decay, weight for l2-loss of embedding matrix, 0.0001 by default;
+- --hiddens, list of neuron numbers in each hidden layer, [16] by default;
+- --max-degree, maximum Chebyshev polynomial degree. 0 (disable Chebyshev polynomial) by default;
 
 
-[Cora](https://linqs.soe.ucsc.edu/data): 2708 nodes, 5429 edges, 7 labels, directed:
+DeepWalk and node2vec:
+- --num-paths, number of random walks that starts at each node, 10 by default;
+- --path-length, length of random walk started at each node, 80 by default;
+- --window, window size of skip-gram model; 10 by default;
+- --q (only node2vec), 1.0 by default;
+- --p (only node2vec), 1.0 by default.
 
-- data/cora/cora_edgelist.txt
-- data/cora/cora.features
-- data/cora/cora_labels.txt
+## Experimental Results
 
-|Algorithm | Dropout | Weight_decay | Hidden | Dimension | Time| Accuracy |
-|:------------|-------------:|-------:|-------:|-------:|-------:|-------:|
-| [TADW](https://github.com/thunlp/TADW) | - | - | - | 80*2 | 13.9s | 0.780 |
-| [GCN](https://github.com/tkipf/gcn) | 0.5 | 5e-4 | 16 | - | 4.0s | 0.790 |
-| OpenNE(TADW) | - | - | - | 80*2 | 20.8s | 0.791 |
-| OpenNE(GCN) | 0.5 | 5e-4 | 16 | - | 5.5s | 0.789 |
-| OpenNE(GCN) | 0 | 5e-4 | 16 | - | 6.1s | 0.779 |
-| OpenNE(GCN) | 0.5 | 1e-4 | 16 | - | 5.4s | 0.783 |
-| OpenNE(GCN) | 0.5 | 5e-4 | 64 | - | 6.5s | 0.779 |
+We provide experimental results of OpenNE models on Wiki and BlogCatalog datasets. 
+For performances on Cora, checkout section "Overview" - "New Features".
+
+Wiki 
+
+| Algorithm | F1-micro | F1-macro | Time | Remarks |
+|-----------|----------|----------|------|---------|
+| HOPE      | 0.613|	0.432|	1.89| - |
+| GF	|0.618	|0.432	|61.22|-|
+|GraRep	|0.608	|0.42	|4.33|	-|
+Node2vec	|0.656	|0.535|	49.18|	-|
+DeepWalk	|0.662	|0.522|	97.47|	-|
+SDNE	|0.655	|0.522	|81.19|	-|
+LINE	|0.631	|0.488	|234.12|	epochs=40|
+
+BlogCatalog
+
+| Algorithm | F1-micro | F1-macro | Time | Remarks |
+|-----------|----------|----------|------|---------|
+|HOPE|	0.336|	0.157	|96.63|-|
+GF|	0.235|	0.066|	800.02|-|
+GraRep|	0.399	|0.233|	103.27|-|
+Node2Vec|	0.396	|0.26|	1962.93|-|
+DeepWalk|	0.398|	0.261|	516.64|-|
+SDNE|	0.372	|0.232|	1323.93|-|
+LINE	|0.384	|0.235|	4739.79|-|
+
 
 
 ## Citing
@@ -294,13 +400,32 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       year                     = {2016},
       organization             = {ACM}
     }
+    
+    @inproceedings{kipf2016variational,
+      title                    = {Variational graph auto-encoders},
+      author                   = {Kipf, Thomas N and Welling, Max},
+      booktitle                = {NIPS Workshop on Bayesian Deep Learning},
+      numpages                 = {3},
+      year                     = {2016}
+    }
+    
+## Contributers
+
+The OpenNE-pytorch Project is contributed by [Yufeng Du](https://github.com/Bznkxs), [Ganqu Cui](https://github.com/cgq15) and [Jie Zhou](https://github.com/jayzzhou-thu).
+
+## Project Organizers
+
+- Zhiyuan Liu
+  - Tsinghua University
+  - [Homepage](http://lzy.thunlp.org/)
+ 
+- Cheng Yang
+  - Beijing University of Posts and Telecommunications
+  - [Homepage](http://nlp.csai.tsinghua.edu.cn/~yangcheng/)
 
 ## Sponsor
 
-This research is supported by Tencent, MSRA, NSFC and [BBDM-Lab](http://www.bioinfotech.cn).
+This research is supported by Tencent.
 
 <img src="http://logonoid.com/images/tencent-logo.png" width = "300" height = "30" alt="tencent" align=center />
 
-<img src="http://net.pku.edu.cn/~xjl/images/msra.png" width = "200" height = "100" alt="MSRA" align=center />
-
-<img src="http://www.dragon-star.eu/wp-content/uploads/2014/04/NSFC_logo.jpg" width = "100" height = "80" alt="NSFC" align=center />
