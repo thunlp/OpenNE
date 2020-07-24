@@ -13,7 +13,7 @@ class UnsupervisedNodeClassification(BaseTask):
         self.kwargs = modelclass.check(datasetclass, **self.train_kwargs())
 
     def train_kwargs(self):
-        check_existance(self.kwargs, {"validate": False, 'clf_ratio': 0.1})
+        check_existance(self.kwargs, {"validate": False, 'clf_ratio': 0.5})
 
         def f_v(model, graph, **kwargs):
             model.get_vectors(graph)
