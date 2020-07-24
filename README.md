@@ -8,6 +8,8 @@ This is an open-source framework for self-supervised/unsupervised graph embeddin
 
 - **A unified framework**: We provide a unified framework for self-supervised/unsupervised node representation learning. Our models include unsupervised network embedding (NE) methods (DeepWalk, Node2vec, HOPE, GraRep, LLE, Lap, TADW, GF, LINE, SDNE) and recent self-supervised graph embedding methods (GAE, VGAE).
 
+- **More datasets**: We provide both unattributed datasets (Wiki, BlogCatalog, Flickr, Wikipedia, PPI) and attributed datasets (Cora, CiteSeer, Pubmed) of all sizes.
+
 - **Efficiency**: We provide faster and more efficient models and better default hyper-parameter settings than those in the previous version. The table below shows 
 performances of OpenNE-PyTorch models on Cora Dataset as compared with the previous version, where
  "F1/Accuracy" refers to accuracy in GCN and micro F1-scores in other models, and "Time" refers to training time. 
