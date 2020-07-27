@@ -9,6 +9,23 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class GAEModel(nn.Module):
+    def __init__(self, dimensions, adj, dropout):
+        super(GAEModel, self).__init__()
+        self.dimensions = dimensions
+        self.adj = adj
+        self.layers = nn.ModuleList()
+        for i in range(1,len(self.dimensions)-1):
+            self.layers.append(GraphConvolution(self.dimensions[i-1], self.dimensions[i], dropout, act=F.relu))
+        self.layers.append(GraphConvolution(self.dimensions[-2], self.dimensions[-1], dropout, act=lambda x: x))
+        
+
+    def forward(self, x):
+        output = x
+        for layer in self.layers:
+            output = layer(output, self.adj)
+        return output
+
 class GAE(ModelWithEmbeddings):
 
     def __init__(self, output_dim=16, hiddens=None, max_degree=0, **kwargs):
@@ -20,12 +37,12 @@ class GAE(ModelWithEmbeddings):
     def check_train_parameters(cls, **kwargs):
         check_existance(kwargs, {"learning_rate": 0.01,
                                  "epochs": 200,
-                                 "dropout": 0.5,
+                                 "dropout": 0.,
                                  "weight_decay": 1e-4,
                                  "early_stopping": 100,
-                                 "clf_ratio": 0.8,
-                                 "hiddens": [16],
-                                 "max_degree": 1})
+                                 "clf_ratio": 0.5,
+                                 "hiddens": [32],
+                                 "max_degree": 0})
         check_range(kwargs, {"learning_rate": (0, np.inf),
                              "epochs": (0, np.inf),
                              "dropout": (0, 1),
@@ -41,8 +58,8 @@ class GAE(ModelWithEmbeddings):
             raise TypeError("GAE only accepts attributed graphs!")
 
     def build(self, graph, *, learning_rate=0.01, epochs=200,
-              dropout=0.5, weight_decay=1e-4, early_stopping=100,
-              clf_ratio=0.1, **kwargs):
+              dropout=0., weight_decay=1e-4, early_stopping=100,
+              clf_ratio=0.5, **kwargs):
         """
                         learning_rate: Initial learning rate
                         epochs: Number of epochs to train
@@ -59,21 +76,23 @@ class GAE(ModelWithEmbeddings):
         self.weight_decay = weight_decay
         self.early_stopping = early_stopping
         self.sparse = False
-
         self.preprocess_data(graph)
+        print(self.clf_ratio)
+        
         # Create models
         input_dim = self.features.shape[1] if not self.sparse else self.features[2][1]
         feature_shape = self.features.shape if not self.sparse else self.features[0].shape[0]
-
-        self.model = gcnModel.GCNModel(input_dim=input_dim, output_dim=self.output_dim, hidden_dims=self.hiddens,
-                                supports=self.support, dropout=self.dropout, sparse_inputs=self.sparse,
-                                num_features_nonzero=feature_shape, weight_decay=self.weight_decay, logging=False)
+        
+        self.dimensions = [input_dim]+self.hiddens+[self.output_dim]
+        
+        self.model = GAEModel(self.dimensions, self.support[0], self.dropout)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
         
 
     def train_model(self, graph, **kwargs):
         # Train models
-        output, train_loss,  __ = self.evaluate(torch.ones(graph.nodesize))
-        self.debug_info = "train_loss = {:.5f}".format(train_loss)
+        output, train_loss,  __ = self.evaluate()
+        self.debug_info =str({"train_loss": "{:.5f}".format(train_loss)})
         
     def build_label(self, graph):
         g = graph.G
@@ -98,22 +117,21 @@ class GAE(ModelWithEmbeddings):
     def loss(self, output, adj_label, pos_weight, norm):
         cost = 0.
 
-        cost += norm * F.binary_cross_entropy_with_logits(torch.sigmoid(torch.mm(output, output.t())), adj_label, pos_weight=adj_label * pos_weight)
+        cost += norm * F.binary_cross_entropy_with_logits(torch.mm(output, output.t()), adj_label, pos_weight=pos_weight)
         
         return cost 
 
     # Define models evaluation function
-    def evaluate(self, mask, train=True):
-        torch.autograd.set_detect_anomaly(True)
+    def evaluate(self, train=True):
         t_test = time.time()
-        self.model.zero_grad()
+        self.optimizer.zero_grad()
         self.model.train(train)
         output = self.model(self.features)
         loss = self.loss(output, self.adj_label, self.pos_weight, self.norm)
         if train:
             loss.backward()
             #print([(name, param.grad) for name,param in self.model.named_parameters()])
-            self.model.optimizer.step()
+            self.optimizer.step()
         return output, loss, (time.time() - t_test)
 
     def make_output(self, graph, **kwargs):
@@ -135,10 +153,39 @@ class GAE(ModelWithEmbeddings):
         
         self.adj_label = torch.FloatTensor((adj_label + sp.eye(n).toarray()))
         adj = nx.adjacency_matrix(g)  # the type of graph
-        self.pos_weight = float(n * n - adj.sum()) / adj.sum()
+        self.pos_weight = torch.Tensor([float(n * n - adj.sum()) / adj.sum()])
         self.norm = n * n / float((n * n - adj.sum()) * 2)
         if self.max_degree == 0:
-            self.support = [preprocess_adj(adj)]
+            self.support = [preprocess_graph(adj)]
         else:
             self.support = chebyshev_polynomials(adj, self.max_degree)
         # print(self.support)
+
+class GraphConvolution(nn.Module):
+    """
+    Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
+    """
+
+    def __init__(self, in_features, out_features, dropout=0., act=F.relu):
+        super(GraphConvolution, self).__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.dropout = dropout
+        self.act = act
+        self.weight = nn.Parameter(torch.FloatTensor(in_features, out_features))
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        torch.nn.init.xavier_uniform_(self.weight)
+
+    def forward(self, input, adj):
+        input = F.dropout(input, self.dropout, self.training)
+        support = torch.mm(input, self.weight)
+        output = torch.spmm(adj, support)
+        output = self.act(output)
+        return output
+
+    def __repr__(self):
+        return self.__class__.__name__ + ' (' \
+               + str(self.in_features) + ' -> ' \
+               + str(self.out_features) + ')'
