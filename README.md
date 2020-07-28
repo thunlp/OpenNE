@@ -104,16 +104,16 @@ performances of OpenNE-PyTorch models on Cora Dataset as compared with the previ
 <tr bgcolor='#ffffff'>
     <td>GAE</td>
     <td>-</td>
-    <td><strong>53.89</strong></td>
+    <td><strong>55.97</strong></td>
     <td>-</td>
-    <td><strong>.702</strong></td>
+    <td><strong>.788</strong></td>
 </tr>
 <tr bgcolor='#eeeeee'>
     <td>VGAE</td>
     <td>-</td>
-    <td><strong>66.57</strong></td>
+    <td><strong>124.03</strong></td>
     <td>-</td>
-    <td><strong>.665</strong></td>
+    <td><strong>.809</strong></td>
 </tr>
 </table>
 
