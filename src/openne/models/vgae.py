@@ -1,6 +1,6 @@
 import numpy as np
 from .gcn.utils import *
-from .gcn import gcnModel
+from .gcn.layers import GraphConvolution
 from .gcn.layers import *
 from .models import *
 import time
@@ -13,13 +13,18 @@ class VGAEModel(nn.Module):
     def __init__(self, dimensions, adj, dropout):
         super(VGAEModel, self).__init__()
         self.adj = adj
-        self.gc1 = GraphConvolution(dimensions[0], dimensions[1], dropout, act=F.relu)
-        self.gc2 = GraphConvolution(dimensions[1], dimensions[2], dropout, act=lambda x: x)
-        self.gc3 = GraphConvolution(dimensions[1], dimensions[2], dropout, act=lambda x: x)
+        self.layers = nn.ModuleList()
+        for i in range(1,len(dimensions)-1):
+            self.layers.append(GraphConvolution(dimensions[i-1], dimensions[i], [self.adj], dropout, act=F.relu))
+        
+        self.gcm = GraphConvolution(dimensions[1], dimensions[2], [self.adj], dropout, act=lambda x: x)
+        self.gcv = GraphConvolution(dimensions[1], dimensions[2], [self.adj], dropout, act=lambda x: x)
 
     def encode(self, x):
-        hidden1 = self.gc1(x, self.adj)
-        return self.gc2(hidden1, self.adj), self.gc3(hidden1, self.adj)
+        hidden1 = x
+        for layer in self.layers:
+            hidden1 = layer(hidden1)
+        return self.gcm(hidden1), self.gcv(hidden1)
 
     def reparameterize(self, mu, logvar):
         if self.training:
@@ -170,34 +175,3 @@ class VGAE(ModelWithEmbeddings):
             self.support = [preprocess_graph(adj)]
         else:
             self.support = chebyshev_polynomials(adj, self.max_degree)
-        # print(self.support)
-
-
-class GraphConvolution(nn.Module):
-    """
-    Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
-    """
-
-    def __init__(self, in_features, out_features, dropout=0., act=F.relu):
-        super(GraphConvolution, self).__init__()
-        self.in_features = in_features
-        self.out_features = out_features
-        self.dropout = dropout
-        self.act = act
-        self.weight = nn.Parameter(torch.FloatTensor(in_features, out_features))
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        torch.nn.init.xavier_uniform_(self.weight)
-
-    def forward(self, input, adj):
-        input = F.dropout(input, self.dropout, self.training)
-        support = torch.mm(input, self.weight)
-        output = torch.spmm(adj, support)
-        output = self.act(output)
-        return output
-
-    def __repr__(self):
-        return self.__class__.__name__ + ' (' \
-               + str(self.in_features) + ' -> ' \
-               + str(self.out_features) + ')'
