@@ -6,14 +6,13 @@ import ast
 import numpy as np
 import random
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-
+import torch
 from . import tasks, dataloaders, models
 
-def ListInput(s: str):
-    l = list(ast.literal_eval(s))
-    if type(l) is not list:
-        raise TypeError
-    return l
+
+class ListInput:
+    pass
+
 
 def xtype(val):
     if type(val) is str:
@@ -22,16 +21,19 @@ def xtype(val):
         return ListInput
     return type(val)
 
+
 def toargstr(s):
     if s[:2] != '--':
         s = '--' + s
     s = s.replace('_', '-')
     return s
 
+
 def legal_arg_name(arg):
     if arg[0] == '_':
         return False
     return True
+
 
 def addarg(arg, group, used_names, val, default=False, hlp=None, choices=None):
     kwargs = {}
@@ -56,7 +58,11 @@ def addarg(arg, group, used_names, val, default=False, hlp=None, choices=None):
 
         else:
             if val is not None:
-                kwargs['type'] = xtype(val)
+                if xtype(val) == ListInput:
+                    kwargs['type'] = xtype(val[0])
+                    kwargs['nargs'] = '+'
+                else:
+                    kwargs['type'] = xtype(val)
             if default:
                 kwargs['default'] = val
                 if hlp is None:
@@ -78,7 +84,15 @@ def addarg(arg, group, used_names, val, default=False, hlp=None, choices=None):
 def parse_args():
     parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
                             conflict_handler='resolve')
-
+    devicegroup = parser.add_mutually_exclusive_group()
+    devicegroup.add_argument('--cpu', action='store_true',
+                             help='Force OpenNE to run on CPU. '
+                                  'If torch.cuda.is_available() == False on your device, '
+                                  'this will be ignored.')
+    devicegroup.add_argument('--devices', type=int, default=[0], nargs='+',
+                             help='Specify CUDA devices for OpenNE to run on. '
+                                  'If torch.cuda.is_available() == False on your device, '
+                                  'this will be ignored.')
     # tasks, models, dataloaders
     parser.add_argument('--task', choices=tasks.taskdict.keys(), type=str.lower,
                         help='Assign a task. If unassigned, OpenNE will '
@@ -111,7 +125,7 @@ def parse_args():
     choices = {'measurement': ('katz', 'cn', 'rpr', 'aa')}
     # structure & training args
     generalgroup = parser.add_argument_group("GENERAL MODEL ARGUMENTS")
-    no_default_args = ['epochs', 'output',]
+    no_default_args = ['epochs', 'output', ]
     addarg("clf_ratio", generalgroup, used_names, 0.5, True)
     generalgroup.add_argument('--validate', type=bool)
     model_args = models.ModelWithEmbeddings.args()
@@ -166,12 +180,14 @@ def parse_args():
 
 
 def parse(**kwargs):
+    if torch.cuda.is_available() and not kwargs['cpu']:
+        torch.cuda.set_device(kwargs['devices'])
     if 'dataset' in kwargs:
         Graph = dataloaders.datasetdict[kwargs['dataset']]
     else:
-        name_dict = {k: v for k,v in kwargs.items() if k in ['edgefile', 'adjfile', 'labelfile', 'features', 'status']}
+        name_dict = {k: v for k, v in kwargs.items() if k in ['edgefile', 'adjfile', 'labelfile', 'features', 'status']}
         Graph = dataloaders.create_self_defined_dataset(kwargs['root_dir'], name_dict, kwargs['name'],
-                                                          kwargs['weighted'], kwargs['directed'], 'features' in kwargs)
+                                                        kwargs['weighted'], kwargs['directed'], 'features' in kwargs)
     Model = models.modeldict[kwargs['model']]
     taskname = kwargs.get('task', None)
     if taskname is None:
@@ -185,11 +201,10 @@ def parse(**kwargs):
 
 
 def main(args):
-
     # parsing
     args = {x: y for x, y in args.__dict__.items() if y is not None}
 
-    print("actual args:",args)
+    print("actual args:", args)
 
     Task, Graph, Model = parse(**args)  # parse required Task, Dataset, Model (classes)
     dellist = ['dataset', 'edgefile', 'adjfile', 'labelfile', 'features',
@@ -198,13 +213,13 @@ def main(args):
         if item in args:
             args.__delitem__(item)
     # preparation
-    task = Task(**args)                 # prepare task
-    task.check(Model, Graph)          # check parameters
+    task = Task(**args)  # prepare task
+    task.check(Model, Graph)  # check parameters
     train_args = task.kwargs
-    model = Model(**train_args)               # prepare model
-    graph = Graph()                 # prepare dataset
+    model = Model(**train_args)  # prepare model
+    graph = Graph()  # prepare dataset
 
-    res = task.train(model, graph)    # train
+    res = task.train(model, graph)  # train
 
     # evaluation
     task.evaluate(model, res, graph)  # evaluate
