@@ -183,11 +183,10 @@ While all parameter names must be provided in lower case, string input values ar
 
     python -m openne --model SDnE --dataset coRA
 
-The simplest way to provide a Python list (as of --encoder-layer-list in SDNE and --hiddens in GCN) is to directly input it without space. You can also wrap the list in double quotes (") to input spaces. The following commands are the same:
+The way to provide a Python list (as of --encoder-layer-list in SDNE and --hiddens in GCN) is input each elements 
+separated by spaces:
 
-    python -m openne --model sdne --dataset cora --encoder-layer-list [1000,128]
-    python -m openne --model sdne --dataset cora --encoder-layer-list "[1000,128]"
-    python -m openne --model sdne --dataset cora --encoder-layer-list "[1000, 128]"
+    python -m openne --model sdne --dataset cora --encoder-layer-list 1000 128
     
 
 #### General Options
