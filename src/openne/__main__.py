@@ -181,7 +181,7 @@ def parse_args():
 
 def parse(**kwargs):
     if torch.cuda.is_available() and not kwargs['cpu']:
-        torch.cuda.set_device(kwargs['devices'])
+        torch.cuda.set_device(kwargs['devices'][0])
     if 'dataset' in kwargs:
         Graph = dataloaders.datasetdict[kwargs['dataset']]
     else:
