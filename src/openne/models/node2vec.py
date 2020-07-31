@@ -4,9 +4,13 @@ from gensim.models import Word2Vec
 from . import walker
 import torch
 from .models import *
-
 class Node2vec(ModelWithEmbeddings):
-
+    """
+        Make sure graph.G is a networkx.DiGraph. If not, turn it into DiGraph using
+        .. sourcecode:: pycon
+            >>>import networkx as nx
+            >>>graph.G = nx.DiGraph(graph.G)
+    """
     def __init__(self, dim=128, dw=False, **kwargs):
         super(Node2vec, self).__init__(dim=dim, dw=dw, **kwargs)
         self.args = {}
@@ -24,7 +28,6 @@ class Node2vec(ModelWithEmbeddings):
         return kwargs
 
     def build(self, graph, *, path_length=80, num_paths=10, p=1.0, q=1.0, **kwargs):
-
         if self.dw:
             self.args['hs'] = 1
             p = 1.0
@@ -50,7 +53,7 @@ class Node2vec(ModelWithEmbeddings):
         self.vectors = {}
         print("Obtaining vectors...")
         for word in graph.G.nodes():
-            self.vectors[word] = torch.Tensor(word2vec.wv[word])
+            self.vectors[word] = torch.tensor(word2vec.wv[str(word)])
         del word2vec
 
 class DeepWalk(Node2vec):

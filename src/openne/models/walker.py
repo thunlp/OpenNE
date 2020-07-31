@@ -4,7 +4,7 @@ import random
 import torch
 import math
 import multiprocessing
-
+import networkx as nx
 
 def deepwalk_walk_wrapper(class_instance, walk_length, start_node):
     class_instance.deepwalk_walk(walk_length, start_node)
@@ -12,7 +12,7 @@ def deepwalk_walk_wrapper(class_instance, walk_length, start_node):
 
 class BasicWalker:
     def __init__(self, G, workers):
-        self.G = G.G
+        self.G = G.G   # nx.DiGraph(G.G)
         self.node_size = G.nodesize
         self.look_up_dict = G.look_up_dict
 
@@ -33,6 +33,7 @@ class BasicWalker:
                 walk.append(random.choice(cur_nbrs))
             else:
                 break
+        walk = [str(i) for i in walk]
         return walk
 
     def simulate_walks(self, num_walks, walk_length):
@@ -59,7 +60,7 @@ class BasicWalker:
 
 class Walker:
     def __init__(self, G, p, q, workers):
-        self.G = G.G
+        self.G = G.G   # nx.DiGraph(G.G)
         self.p = p
         self.q = q
         self.node_size = G.nodesize
@@ -91,7 +92,7 @@ class Walker:
                     walk.append(nxt)
             else:
                 break
-
+        walk = [str(i) for i in walk]
         return walk
 
     def simulate_walks(self, num_walks, walk_length):

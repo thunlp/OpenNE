@@ -72,7 +72,7 @@ class Planetoid(NetResources, ABC):
             for j in self.G.neighbors(i):
                 self.G[i][j]['weight'] = 1.0
 
-        self.G = nx.relabel_nodes(self.G, {i: str(i) for i in range(self.nodesize)})
+        # self.G = nx.relabel_nodes(self.G, {i: str(i) for i in range(self.nodesize)})
         self.encode_node()
 
     @classmethod
