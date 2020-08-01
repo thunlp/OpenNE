@@ -5,18 +5,22 @@ import torch
 import math
 import multiprocessing
 import networkx as nx
+from time import time
+import os
 
-def deepwalk_walk_wrapper(class_instance, walk_length, start_node):
-    class_instance.deepwalk_walk(walk_length, start_node)
 
+def wrapper(class_instance, epoch, walk_length):
+    print("walk_wrapper")
+    return class_instance.simulate_walks_one_epoch(epoch, walk_length)
 
 class BasicWalker:
     def __init__(self, G, workers):
         self.G = G.G   # nx.DiGraph(G.G)
         self.node_size = G.nodesize
         self.look_up_dict = G.look_up_dict
+        self.workers = workers
 
-    def deepwalk_walk(self, walk_length, start_node):
+    def rwalk(self, walk_length, start_node):
         """
         Simulate a random walk starting from start node.
         """
@@ -25,7 +29,6 @@ class BasicWalker:
         # node_size = self.node_size
 
         walk = [start_node]
-
         while len(walk) < walk_length:
             cur = walk[-1]
             cur_nbrs = list(G.neighbors(cur))
@@ -36,37 +39,52 @@ class BasicWalker:
         walk = [str(i) for i in walk]
         return walk
 
+    def simulate_walks_one_epoch(self, epoch, walk_length):
+        stime = time()
+        print("Run epoch {} (PID {})".format(epoch, os.getpid()))
+        G = self.G
+        nodes = list(G.nodes())
+        walks = []
+        random.shuffle(nodes)
+        for node in nodes:
+            walks.append(self.rwalk(
+                    walk_length=walk_length, start_node=node))
+        etime = time()
+        print("Epoch {} (PID {}) ends in {} seconds.".format(epoch, os.getpid(), etime - stime))
+        return walks
+
     def simulate_walks(self, num_walks, walk_length):
         """
         Repeatedly simulate random walks from each node.
         """
-        G = self.G
+
         walks = []
-        nodes = list(G.nodes())
+
         print('Walk iteration:')
+
+        pool = multiprocessing.Pool(self.workers)
+
+        walks_res = []
         for walk_iter in range(num_walks):
-            # pool = multiprocessing.Pool(processes = 4)
-            print(str(walk_iter+1), '/', str(num_walks))
-            random.shuffle(nodes)
-            for node in nodes:
-                # walks.append(pool.apply_async(deepwalk_walk_wrapper, (self, walk_length, node, )))
-                walks.append(self.deepwalk_walk(
-                    walk_length=walk_length, start_node=node))
-            # pool.close()
-            # pool.join()
-        # print(len(walks))
+            walks_res.append(pool.apply_async(wrapper, args=(self, walk_iter, walk_length, )))
+
+        pool.close()
+        pool.join()
+
+        for w in walks_res:
+            walks.extend(w.get())
+
+        print(len(walks))
         return walks
 
 
-class Walker:
+class Walker(BasicWalker):
     def __init__(self, G, p, q, workers):
-        self.G = G.G   # nx.DiGraph(G.G)
+        super(Walker, self).__init__(G, workers)
         self.p = p
         self.q = q
-        self.node_size = G.nodesize
-        self.look_up_dict = G.look_up_dict
 
-    def node2vec_walk(self, walk_length, start_node):
+    def rwalk(self, walk_length, start_node):
         """
         Simulate a random walk starting from start node.
         """
@@ -95,23 +113,6 @@ class Walker:
         walk = [str(i) for i in walk]
         return walk
 
-    def simulate_walks(self, num_walks, walk_length):
-        """
-        Repeatedly simulate random walks from each node.
-        """
-        G = self.G
-        walks = []
-        nodes = list(G.nodes())
-        print('Walk iteration:')
-        for walk_iter in range(num_walks):
-            print(str(walk_iter+1), '/', str(num_walks))
-            random.shuffle(nodes)
-            for node in nodes:
-                walks.append(self.node2vec_walk(
-                    walk_length=walk_length, start_node=node))
-
-        return walks
-
     def get_alias_edge(self, src, dst):
         """
         Get the alias edge setup lists for a given edge.
@@ -135,9 +136,9 @@ class Walker:
         return alias_setup(normalized_probs)
 
     def preprocess_transition_probs(self):
-        '''
+        """
         Preprocessing of transition probabilities for guiding the random walks.
-        '''
+        """
         G = self.G
 
         alias_nodes = {}
@@ -164,11 +165,11 @@ class Walker:
 
 
 def alias_setup(probs):
-    '''
+    """
     Compute utility lists for non-uniform sampling from discrete distributions.
     Refer to https://hips.seas.harvard.edu/blog/2013/03/03/the-alias-method-efficient-sampling-with-many-discrete-outcomes/
     for details
-    '''
+    """
     K = len(probs)
     q = [0 for i in range(K)] # torch.zeros(K, dtype=torch.float32) # np.zeros(K, dtype=np.float32)
     J = [0.0 for i in range(K)] # np.zeros(K, dtype=np.int32)

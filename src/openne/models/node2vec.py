@@ -24,6 +24,7 @@ class Node2vec(ModelWithEmbeddings):
                                  'q': 1.0,
                                  'window': 10,
                                  'workers': 8,
+                                 'max_vocab_size': None,  #1 << 32,  # 4 GB
                                  })
         return kwargs
 
@@ -46,6 +47,7 @@ class Node2vec(ModelWithEmbeddings):
         self.args['min_count'] = 0
         self.args['window'] = kwargs['window']
         self.args['sg'] = 1
+        self.args['max_vocab_size'] = kwargs['max_vocab_size']
 
     def train_model(self, graph, **kwargs):
         print("training Word2Vec model...")
