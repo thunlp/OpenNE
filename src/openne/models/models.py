@@ -27,8 +27,8 @@ class ModelWithEmbeddings(torch.nn.Module):
             kwargs['outputmodelfile'] = self.outputmodelfile
             kwargs['outputembeddingfile'] = self.outputembeddingfile
             kwargs['save'] = save
-            print(self.outputpath)
-            print(osp.abspath(self.outputpath))
+            self.outputpath = osp.abspath(self.outputpath)
+            print("output path = ", self.outputpath)
             if not os.path.isdir(self.outputpath):
                 makedirs(self.outputpath)
             try:
