@@ -11,7 +11,7 @@ from .models import *
 class TADW(ModelWithEmbeddings):
 
     def __init__(self, dim, lamb=0.2, **kwargs):
-        super(TADW, self).__init__(dim=dim//2, lamb=lamb, **kwargs)
+        super(TADW, self).__init__(dim=dim // 2, lamb=lamb, **kwargs)
 
     @staticmethod
     def getT(graph):
@@ -28,7 +28,7 @@ class TADW(ModelWithEmbeddings):
     @classmethod
     def check_train_parameters(cls, **kwargs):
         check_existance(kwargs, {'dim': 128,
-                                 'lamb': 0.2,
+                                 'lamb': 0.4,
                                  'epochs': 20})
         assert kwargs['dim'] % 2 == 0
         return kwargs
@@ -75,8 +75,8 @@ class TADW(ModelWithEmbeddings):
         self.W = torch.reshape(vecW, (self.dim, self.node_size))  # np
 
         # Update H
-        drv = torch.mm((torch.mm(torch.mm(torch.mm(self.W, self.W.t()), self.H), self.T)
-                        - torch.mm(self.W, self.M.t())), self.T.t()) + self.lamb * self.H
+        drv = 2 * torch.mm((torch.mm(torch.mm(torch.mm(self.W, self.W.t()), self.H), self.T)
+                            - torch.mm(self.W, self.M.t())), self.T.t()) + self.lamb * self.H
         drv = torch.reshape(drv, (self.dim * self.feature_size, 1))
         rt = -drv
         dt = rt

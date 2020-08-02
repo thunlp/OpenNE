@@ -259,7 +259,7 @@ SDNE:
 - --decay, allow decay in learning rate (action store_true);
 
 TADW: (requires attributed graph, eg. cora, pubmed, citeseer)
-- --lamb, parameter that controls the weight of regularization terms, 0.2 by default;
+- --lamb, parameter that controls the weight of regularization terms, 0.4 by default;
 
 GCN: (requires attributed graph)
 - --lr, learning rate, 0.01 by default;

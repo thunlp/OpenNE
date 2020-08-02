@@ -18,7 +18,7 @@ class BasicWalker:
         self.G = G.G   # nx.DiGraph(G.G)
         self.node_size = G.nodesize
         self.look_up_dict = G.look_up_dict
-        self.workers = workers
+        self.workers = None # workers
 
     def rwalk(self, walk_length, start_node):
         """
@@ -62,19 +62,24 @@ class BasicWalker:
 
         print('Walk iteration:')
 
-        pool = multiprocessing.Pool(self.workers)
+        if self.workers:
+            pool = multiprocessing.Pool(self.workers)
 
-        walks_res = []
-        for walk_iter in range(num_walks):
-            walks_res.append(pool.apply_async(wrapper, args=(self, walk_iter, walk_length, )))
+            walks_res = []
+            for walk_iter in range(num_walks):
+                walks_res.append(pool.apply_async(wrapper, args=(self, walk_iter, walk_length, )))
 
-        pool.close()
-        pool.join()
+            pool.close()
+            pool.join()
 
-        for w in walks_res:
-            walks.extend(w.get())
+            for w in walks_res:
+                walks.extend(w.get())
 
-        print(len(walks))
+        else:
+            for walk_iter in range(num_walks):
+                walks.extend(self.simulate_walks_one_epoch(walk_iter, walk_length))
+
+        # print(len(walks))
         return walks
 
 

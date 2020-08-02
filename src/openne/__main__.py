@@ -142,7 +142,7 @@ def parse_args():
     # add duplicate args as general model args
     general_names = used_names.copy()
     tmp_used_names = {}
-    addarg('sparse', generalgroup, used_names, False, True, '(in lle, gcn)')
+    addarg('sparse', generalgroup, used_names, False, True, '(in lle, gcn, gae, vgae)')
     for modelname in simpledict:
         model = simpledict[modelname]
         model_args = model.args()
