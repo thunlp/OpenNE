@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import readme_renderer
 setup(
     name="openne",
-    url="https://github.com/thunlp/OpenNE",
+    url="https://github.com/thunlp/OpenNE/tree/pytorch",
     license="MIT",
     author="THUNLP",
     version="1.0.1",
