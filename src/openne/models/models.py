@@ -78,7 +78,7 @@ class ModelWithEmbeddings(torch.nn.Module):
     def get_vectors(self, graph):
         self.vectors = {}
         for i, embedding in enumerate(self.embeddings):
-            self.vectors[graph.look_back_list[i]] = embedding
+            self.vectors[graph.look_back_list[i]] = embedding.to('cpu')
         return self.vectors
 
     @classmethod
@@ -100,8 +100,11 @@ class ModelWithEmbeddings(torch.nn.Module):
                                      '_multiple_epochs': _multiple_epochs,
                                      'output': None,
                                      'save': True})
-        if not torch.cuda.is_available():
+        if not torch.cuda.is_available() or new_kwargs['cpu']:
             new_kwargs['data_parallel'] = False
+            new_kwargs['_gpu'] = False
+        else:
+            new_kwargs['_gpu'] = True
         return new_kwargs
 
     def build(self, graph, **kwargs):
@@ -115,6 +118,13 @@ class ModelWithEmbeddings(torch.nn.Module):
 
     def make_output(self, graph, **kwargs):
         pass
+
+    def adjmat_device(self, graph, weighted, directed):
+        adj_mat = torch.from_numpy(graph.adjmat(weighted, directed)).type(torch.float32)
+        if self._gpu:
+            adj_mat = adj_mat.to(torch.device('cuda', self.devices[0]))
+        return adj_mat
+
 
     def forward(self, graph, **kwargs):
         kwargs = self.check(type(graph), **kwargs)
@@ -152,8 +162,12 @@ class ModelWithEmbeddings(torch.nn.Module):
                 print("Early stopping condition satisfied. Abort training.")
                 break
         self.make_output(graph, **kwargs)
+
         if not self.vectors:
             self.get_vectors(graph)
+        else:
+            self.vectors = {k: v.to('cpu') for k, v in self.vectors.items()}
+
         t2 = time()
         print("Finished training. Time used = {}.".format(t2 - t1))
         if self.save:

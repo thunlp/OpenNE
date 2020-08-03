@@ -147,11 +147,6 @@ class SDNENet(torch.nn.Module):
         return x1
 
     def loss(self, a_b, a, b, embeddings, final):
-        print(a_b.get_device())
-        print(a.get_device())
-        print(embeddings.get_device())
-        print(final.get_device())
-        print("...")
         embeddings_norm = (embeddings ** 2).sum(1, keepdims=True)
         l1 = self._L_1st(a, embeddings_norm, embeddings)
         l2 = self._L_2nd(a_b, final, b)
@@ -211,10 +206,7 @@ class SDNE(ModelWithEmbeddings):
             self.lr = lambda x: lr / (1 + 0.9999 * x)
         else:
             self.lr = lambda x: lr
-        self.adj_mat = torch.from_numpy(graph.adjmat(weighted=True, directed=True)).type(torch.float32)
-        if self.data_parallel:
-            self.adj_mat = self.adj_mat.to(torch.device('cuda', kwargs['devices'][0]))
-            print(self.adj_mat.get_device())
+        self.adj_mat = self.adjmat_device(graph, weighted=True, directed=True)
         self.model = SDNENet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2,
                              data_parallel=data_parallel, devices=kwargs['devices'])
         if self.pretrain:
