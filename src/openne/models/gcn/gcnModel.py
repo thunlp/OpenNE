@@ -2,11 +2,6 @@ from .layers import *
 from .metrics import *
 import torch.nn.functional as F
 
-class MyDataParallel(torch.nn.DataParallel):
-    pass
-    #def __getattr__(self, name):
-    #    print(name)
-    #    return getattr(self.module, name)
 
 class Model(torch.nn.Module):
     def __init__(self, **kwargs):
@@ -45,11 +40,13 @@ class Model(torch.nn.Module):
         # Build sequential layer models
         self.sequential = torch.nn.Sequential(*self.layers)
         if self.data_parallel:
-            self.sequential = MyDataParallel(self.sequential)
+            self.sequential = torch.nn.DataParallel(self.sequential)
+            self.sequential.to(torch.cuda.current_device())
         self._optim()
 
     def forward(self, inputs):
         self.input = inputs
+        self.input = self.input.to(torch.cuda.current_device())
         self.output = self.sequential(inputs)
         return self.output
 
