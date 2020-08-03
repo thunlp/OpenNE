@@ -206,12 +206,14 @@ class SDNE(ModelWithEmbeddings):
         self.real_epochs = epochs
         self.decay = decay
         self.pretrain = pretrain
+        self.data_parallel = data_parallel
         if self.decay:
             self.lr = lambda x: lr / (1 + 0.9999 * x)
         else:
             self.lr = lambda x: lr
         self.adj_mat = torch.from_numpy(graph.adjmat(weighted=True, directed=True)).type(torch.float32)
-        self.adj_mat.to(kwargs['devices'][0])
+        if self.data_parallel:
+            self.adj_mat.to(kwargs['devices'][0])
         self.model = SDNENet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2,
                              data_parallel=data_parallel, devices=kwargs['devices'])
         if self.pretrain:
@@ -221,6 +223,8 @@ class SDNE(ModelWithEmbeddings):
     def train_model(self, graph, *, step=0, **kwargs):
         index = torch.randint(high=self.node_size,
                               size=[self.bs])
+        if self.data_parallel:
+            index.to(kwargs['devices'][0])
         adj_batch_train = self.adj_mat[index, :]
         adj_mat_train = adj_batch_train[:, index]
         b_mat_train = torch.ones_like(adj_batch_train)
