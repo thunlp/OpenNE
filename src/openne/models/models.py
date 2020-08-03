@@ -99,14 +99,13 @@ class ModelWithEmbeddings(torch.nn.Module):
                                      'debug_output_interval': 5,
                                      '_multiple_epochs': _multiple_epochs,
                                      'output': None,
-                                     'save': True,
-                                     'cpu': False,
-                                     'devices': [0, 1]})
-        if not torch.cuda.is_available() or new_kwargs['cpu']:
-            new_kwargs['data_parallel'] = False
-            new_kwargs['_device'] = torch.device('cpu')
-        else:
-            new_kwargs['_device'] = torch.device('cuda', new_kwargs['devices'][0])
+                                     'save': True,})
+        if graphtype:
+            if not torch.cuda.is_available() or new_kwargs['cpu']:
+                new_kwargs['data_parallel'] = False
+                new_kwargs['_device'] = torch.device('cpu')
+            else:
+                new_kwargs['_device'] = torch.device('cuda', new_kwargs['devices'][0])
         return new_kwargs
 
     def build(self, graph, **kwargs):
@@ -136,7 +135,7 @@ class ModelWithEmbeddings(torch.nn.Module):
         self.build(graph, **kwargs)
         self.to(self._device)
 
-        print([i for i in self.named_modules()])
+        # print([i for i in self.named_modules()])
 
         if kwargs['_multiple_epochs']:
             epochs = kwargs['epochs']
