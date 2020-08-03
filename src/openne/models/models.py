@@ -100,7 +100,8 @@ class ModelWithEmbeddings(torch.nn.Module):
                                      '_multiple_epochs': _multiple_epochs,
                                      'output': None,
                                      'save': True,
-                                     'cpu': False})
+                                     'cpu': False,
+                                     'devices': [0, 1]})
         if not torch.cuda.is_available() or new_kwargs['cpu']:
             new_kwargs['data_parallel'] = False
             new_kwargs['_device'] = torch.device('cpu')
