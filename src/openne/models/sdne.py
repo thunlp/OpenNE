@@ -92,7 +92,7 @@ class RBM(torch.nn.Module):
 
 
 class SDNENet(torch.nn.Module):
-    def __init__(self, encoder_layer_list, alpha, nu1, nu2, pretrain_lr=1e-5, pretrain_epoch=1):
+    def __init__(self, encoder_layer_list, alpha, nu1, nu2, pretrain_lr=1e-5, pretrain_epoch=1, data_parallel=False):
         super(SDNENet, self).__init__()
         self.alpha = alpha
         self.nu1 = nu1
@@ -117,6 +117,10 @@ class SDNENet(torch.nn.Module):
         self.encoder.apply(init_weights)
         self.decoder.apply(init_weights)
 
+        if data_parallel:
+            self.encoder = torch.nn.DataParallel(self.encoder)
+            self.decoder = torch.nn.DataParallel(self.decoder)
+
     def pretrain(self, data):  # deep-belief-network-based pretraining
         for layer in self.layer_collector:
             if type(layer) == torch.nn.Linear:
@@ -124,8 +128,8 @@ class SDNENet(torch.nn.Module):
                           lr=self.pretrain_lr * len(data),
                           decay=False)
                 rbm.train_model(data, epochs=self.pretrain_epoch)
-                layer.weight = torch.nn.Parameter(rbm.weights.t())
-                layer.bias = torch.nn.Parameter(rbm.h_bias)
+                layer.weight = torch.nn.Parameter(rbm.weights.t(), True)
+                layer.bias = torch.nn.Parameter(rbm.h_bias, True)
                 data = rbm.sample(rbm.forward(data))
 
     def forward(self, a_b):
@@ -176,7 +180,8 @@ class SDNE(ModelWithEmbeddings):
                                  'epochs': 100,
                                  'lr': 0.001,
                                  'decay': False,
-                                 'pretrain': False})
+                                 'pretrain': False,
+                                 'data_parallel': False})
         check_range(kwargs, {'batch_size': (0, np.inf),
                              'epochs': (0, np.inf),
                              'lr': (0, np.inf),
@@ -184,7 +189,8 @@ class SDNE(ModelWithEmbeddings):
                              'pretrain': [True, False, 0, 1]})
         return kwargs
 
-    def build(self, graph, *, batch_size=200, epochs=100, lr=0.001, decay=False, pretrain=False, **kwargs):
+    def build(self, graph, *, batch_size=200, epochs=100, lr=0.001, decay=False,
+              pretrain=False, data_parallel=False, **kwargs):
         self.node_size = graph.nodesize
         self.dim = self.encoder_layer_list[-1]
         self.encoder_layer_list = [self.node_size]
@@ -201,7 +207,7 @@ class SDNE(ModelWithEmbeddings):
             self.lr = lambda x: lr
         self.adj_mat = torch.from_numpy(graph.adjmat(weighted=True, directed=True)).type(torch.float32)
 
-        self.model = SDNENet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2)
+        self.model = SDNENet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2, data_parallel)
         if self.pretrain:
             self.model.pretrain(self.adj_mat)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr(0))
