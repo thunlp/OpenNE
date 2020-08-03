@@ -214,6 +214,7 @@ class SDNE(ModelWithEmbeddings):
         self.adj_mat = torch.from_numpy(graph.adjmat(weighted=True, directed=True)).type(torch.float32)
         if self.data_parallel:
             self.adj_mat.to(kwargs['devices'][0])
+            print(self.adj_mat.get_device())
         self.model = SDNENet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2,
                              data_parallel=data_parallel, devices=kwargs['devices'])
         if self.pretrain:
@@ -225,8 +226,10 @@ class SDNE(ModelWithEmbeddings):
                               size=[self.bs])
         if self.data_parallel:
             index.to(kwargs['devices'][0])
+        print(self.adj_mat.get_device())
         adj_batch_train = self.adj_mat[index, :]
         adj_mat_train = adj_batch_train[:, index]
+        print(adj_mat_train.get_device())
         b_mat_train = torch.ones_like(adj_batch_train)
         b_mat_train[adj_batch_train != 0] = self.beta
 
