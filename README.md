@@ -249,7 +249,7 @@ LINE:
 
 SDNE:
 
-- --encoder-list, list of neuron numbers at each encoder layer. Instead of --dim, The last number is the dimension of the output node representation. [128] by default. See "Input Instructions";
+- --encoder-layer-list, list of neuron numbers at each encoder layer. Instead of --dim, The last number is the dimension of the output node representation. [128] by default. See "Input Instructions";
 - --alpha, parameter that controls the first-order proximity loss, 1e-6 by default;
 - --beta, parameter used for construct matrix B, 5 by default;
 - --nu1, parameter that controls l1-loss of weights in autoencoder, 1e-8 by default;
