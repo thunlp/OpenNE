@@ -76,7 +76,7 @@ class GraphConvolution(Layer):
 
     def __init__(self, input_dim, output_dim, support, dropout=0., num_features_nonzero=0.,
                  sparse_inputs=False, act=torch.relu, bias=False,
-                 featureless=False,  **kwargs):
+                 featureless=False, **kwargs):
         super(GraphConvolution, self).__init__(**kwargs)
 
         self.dropout = dropout  # note we modified the API

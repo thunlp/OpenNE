@@ -6,7 +6,7 @@ import torch.nn.functional as F
 class Model(torch.nn.Module):
     def __init__(self, **kwargs):
         super(Model, self).__init__()
-        allowed_kwargs = {'name', 'logging'} #
+        allowed_kwargs = {'name', 'logging', 'data_parallel'} #
         for kwarg in kwargs.keys():
             assert kwarg in allowed_kwargs, 'Invalid keyword argument: ' + kwarg
         name = kwargs.get('name')
@@ -27,7 +27,7 @@ class Model(torch.nn.Module):
         self._accuracy = 0
         self.optimizer = None
 
-        self.data_parallel = True
+        self.data_parallel = kwargs.get("data_parallel", False)
 
     def _build(self):
         raise NotImplementedError
@@ -46,7 +46,8 @@ class Model(torch.nn.Module):
 
     def forward(self, inputs):
         self.input = inputs
-        self.input = self.input.to(torch.cuda.current_device())
+        if self.data_parallel:
+            self.input = self.input.to(torch.cuda.current_device())
         self.output = self.sequential(inputs)
         return self.output
 
@@ -72,13 +73,16 @@ class Model(torch.nn.Module):
 
 
 class GCNModel(Model):
-    def __init__(self, input_dim, output_dim, hidden_dims, supports, dropout=0., weight_decay=0.,num_features_nonzero=0, logging=False, sparse_inputs=False, **kwargs):
+    def __init__(self, input_dim, output_dim, hidden_dims, supports, dropout=0., weight_decay=0.,
+                 num_features_nonzero=0, logging=False, sparse_inputs=False, **kwargs):
         super(GCNModel, self).__init__(**kwargs)
         self.dimensions = [input_dim]+hidden_dims+[output_dim]
         self.weight_decay = weight_decay
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.supports = supports
+        if self.data_parallel:
+            self.supports = [i.to(torch.cuda.current_device()) for i in self.supports]
         self.dropout = dropout
         self.logging = logging
         self.sparse_inputs = sparse_inputs
