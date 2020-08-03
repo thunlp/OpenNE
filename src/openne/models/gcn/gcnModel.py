@@ -2,6 +2,12 @@ from .layers import *
 from .metrics import *
 import torch.nn.functional as F
 
+class MyDataParallel(torch.nn.DataParallel):
+    pass
+    #def __getattr__(self, name):
+    #    print(name)
+    #    return getattr(self.module, name)
+
 class Model(torch.nn.Module):
     def __init__(self, **kwargs):
         super(Model, self).__init__()
@@ -26,14 +32,20 @@ class Model(torch.nn.Module):
         self._accuracy = 0
         self.optimizer = None
 
+        self.data_parallel = True
+
     def _build(self):
         raise NotImplementedError
 
     def build(self):
         self._build()
 
+        #if self.data_parallel:
+        #    self.layers = [MyDataParallel(i) for i in self.layers]
         # Build sequential layer models
         self.sequential = torch.nn.Sequential(*self.layers)
+        if self.data_parallel:
+            self.sequential = MyDataParallel(self.sequential)
         self._optim()
 
     def forward(self, inputs):
