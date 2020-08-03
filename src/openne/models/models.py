@@ -103,9 +103,9 @@ class ModelWithEmbeddings(torch.nn.Module):
                                      'cpu': False})
         if not torch.cuda.is_available() or new_kwargs['cpu']:
             new_kwargs['data_parallel'] = False
-            new_kwargs['_gpu'] = False
+            new_kwargs['_device'] = torch.device('cpu')
         else:
-            new_kwargs['_gpu'] = True
+            new_kwargs['_device'] = torch.device('cuda', new_kwargs['devices'])
         return new_kwargs
 
     def build(self, graph, **kwargs):
@@ -122,8 +122,7 @@ class ModelWithEmbeddings(torch.nn.Module):
 
     def adjmat_device(self, graph, weighted, directed):
         adj_mat = torch.from_numpy(graph.adjmat(weighted, directed)).type(torch.float32)
-        if self._gpu:
-            adj_mat = adj_mat.to(torch.device('cuda', self.devices[0]))
+        adj_mat = adj_mat.to(self._device)
         return adj_mat
 
 
@@ -134,6 +133,10 @@ class ModelWithEmbeddings(torch.nn.Module):
         t1 = time()
         print("Start training...")
         self.build(graph, **kwargs)
+        self.to(self._device)
+
+        print([i for i in self.named_modules()])
+
         if kwargs['_multiple_epochs']:
             epochs = kwargs['epochs']
             print("total iter: %i" % epochs)
