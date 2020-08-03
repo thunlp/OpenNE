@@ -39,13 +39,13 @@ class Model(torch.nn.Module):
         self.sequential = torch.nn.Sequential(*self.layers)
         if self.data_parallel:
             self.sequential = torch.nn.DataParallel(self.sequential)
-            self.sequential.to(torch.cuda.current_device())
+            self.sequential.to(torch.device('cuda', torch.cuda.current_device()))
         self._optim()
 
     def forward(self, inputs):
         self.input = inputs
         if self.data_parallel:
-            self.input = self.input.to(torch.cuda.current_device())
+            self.input = self.input.to(torch.device('cuda', torch.cuda.current_device()))
         self.output = self.sequential(inputs)
         return self.output
 
@@ -78,12 +78,12 @@ class GCNModel(Model):
         self.weight_decay = weight_decay
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.supports = supports
+        self.supports = [torch.nn.Parameter(i, False) for i in supports]
         for i in self.supports:
             print(i.shape, sep=',')
         print()
         if self.data_parallel:
-            self.supports = [i.to(torch.cuda.current_device()) for i in self.supports]
+            self.supports = [i.to(torch.device('cuda', torch.cuda.current_device())) for i in self.supports]
             for i in self.supports:
                 print(i.shape, sep=',')
         self.dropout = dropout
