@@ -106,7 +106,7 @@ class ModelWithEmbeddings(torch.nn.Module):
             new_kwargs['data_parallel'] = False
             new_kwargs['_device'] = torch.device('cpu')
         else:
-            new_kwargs['_device'] = torch.device('cuda', new_kwargs['devices'])
+            new_kwargs['_device'] = torch.device('cuda', new_kwargs['devices'][0])
         return new_kwargs
 
     def build(self, graph, **kwargs):
