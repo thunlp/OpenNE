@@ -147,6 +147,11 @@ class SDNENet(torch.nn.Module):
         return x1
 
     def loss(self, a_b, a, b, embeddings, final):
+        print(a_b.get_device())
+        print(a.get_device())
+        print(embeddings.get_device())
+        print(final.get_device())
+        print("...")
         embeddings_norm = (embeddings ** 2).sum(1, keepdims=True)
         l1 = self._L_1st(a, embeddings_norm, embeddings)
         l2 = self._L_2nd(a_b, final, b)
