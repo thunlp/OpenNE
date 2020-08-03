@@ -92,7 +92,7 @@ class RBM(torch.nn.Module):
 
 
 class SDNENet(torch.nn.Module):
-    def __init__(self, encoder_layer_list, alpha, nu1, nu2, pretrain_lr=1e-5, pretrain_epoch=1, data_parallel=False):
+    def __init__(self, encoder_layer_list, alpha, nu1, nu2, pretrain_lr=1e-5, pretrain_epoch=1, **kwargs):
         super(SDNENet, self).__init__()
         self.alpha = alpha
         self.nu1 = nu1
@@ -117,9 +117,9 @@ class SDNENet(torch.nn.Module):
         self.encoder.apply(init_weights)
         self.decoder.apply(init_weights)
 
-        if data_parallel:
-            self.encoder = torch.nn.DataParallel(self.encoder)
-            self.decoder = torch.nn.DataParallel(self.decoder)
+        if kwargs['data_parallel']:
+            self.encoder = torch.nn.DataParallel(self.encoder, kwargs['devices'])
+            self.decoder = torch.nn.DataParallel(self.decoder, kwargs['devices'])
 
     def pretrain(self, data):  # deep-belief-network-based pretraining
         for layer in self.layer_collector:
@@ -207,7 +207,7 @@ class SDNE(ModelWithEmbeddings):
             self.lr = lambda x: lr
         self.adj_mat = torch.from_numpy(graph.adjmat(weighted=True, directed=True)).type(torch.float32)
 
-        self.model = SDNENet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2, data_parallel)
+        self.model = SDNENet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2, data_parallel, **kwargs)
         if self.pretrain:
             self.model.pretrain(self.adj_mat)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr(0))

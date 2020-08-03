@@ -89,7 +89,7 @@ def parse_args():
                              help='Force OpenNE to run on CPU. '
                                   'If torch.cuda.is_available() == False on your device, '
                                   'this will be ignored.')
-    devicegroup.add_argument('--devices', type=int, default=0,
+    devicegroup.add_argument('--devices', type=int, nargs='+', default=[0, 1],
                              help='Specify CUDA devices for OpenNE to run on. '
                                   'If torch.cuda.is_available() == False on your device, '
                                   'this will be ignored.')
@@ -181,7 +181,7 @@ def parse_args():
 
 def parse(**kwargs):
     if torch.cuda.is_available() and not kwargs['cpu']:
-        torch.cuda.set_device(kwargs['devices'])
+        torch.cuda.set_device(kwargs['devices'][0])
     if 'dataset' in kwargs:
         Graph = dataloaders.datasetdict[kwargs['dataset']]
     else:
