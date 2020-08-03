@@ -35,8 +35,6 @@ class Model(torch.nn.Module):
     def build(self):
         self._build()
 
-        #if self.data_parallel:
-        #    self.layers = [MyDataParallel(i) for i in self.layers]
         # Build sequential layer models
         self.sequential = torch.nn.Sequential(*self.layers)
         if self.data_parallel:
@@ -81,12 +79,17 @@ class GCNModel(Model):
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.supports = supports
+        for i in self.supports:
+            print(i.shape, sep=',')
+        print()
         if self.data_parallel:
             self.supports = [i.to(torch.cuda.current_device()) for i in self.supports]
+            for i in self.supports:
+                print(i.shape, sep=',')
         self.dropout = dropout
         self.logging = logging
         self.sparse_inputs = sparse_inputs
-        self.num_features_nonzero=num_features_nonzero
+        self.num_features_nonzero = num_features_nonzero
         self.build()
 
     def loss(self, labels, labels_mask):
@@ -104,7 +107,7 @@ class GCNModel(Model):
 
     def accuracy(self, labels, labels_mask):
         self._accuracy = masked_accuracy(self.output, labels,
-                                        labels_mask)
+                                         labels_mask)
         return self._accuracy
 
     def _build(self):
@@ -128,7 +131,6 @@ class GCNModel(Model):
                                             sparse_inputs=sparse_inputs[-1],
                                             num_features_nonzero=self.num_features_nonzero,
                                             logging=self.logging))
-        ##self.layers.append(torch.nn.Softmax())
 
     def _optim(self):
         self.optimizer = torch.optim.Adam(self.parameters(), lr=1e-2)
