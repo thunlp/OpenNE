@@ -24,8 +24,7 @@ class GCN(ModelWithEmbeddings):
                                  "clf_ratio": 0.1,
                                  "hiddens": [16],
                                  "max_degree": 0,
-                                 "sparse": False,
-                                 "data_parallel": False})
+                                 "sparse": False})
         check_range(kwargs, {"lr": (0, np.inf),
                              "epochs": (0, np.inf),
                              "dropout": (0, 1),
@@ -42,7 +41,7 @@ class GCN(ModelWithEmbeddings):
 
     def build(self, graph, *, lr=0.01, epochs=200,
               dropout=0.5, weight_decay=1e-4, early_stopping=100,
-              clf_ratio=0.1, sparse=False, data_parallel=False, **kwargs):
+              clf_ratio=0.1, sparse=False, **kwargs):
         """
                         lr: Initial learning rate
                         epochs: Number of epochs to train
@@ -71,7 +70,7 @@ class GCN(ModelWithEmbeddings):
         self.model = gcnModel.GCNModel(input_dim=input_dim, output_dim=output_dim, hidden_dims=self.hiddens,
                                        supports=self.support, dropout=self.dropout, sparse_inputs=self.sparse,
                                        num_features_nonzero=feature_shape, weight_decay=self.weight_decay,
-                                       data_parallel=self.data_parallel, logging=False)
+                                       logging=False)
         self.cost_val = []
 
     def train_model(self, graph, **kwargs):
