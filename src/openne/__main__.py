@@ -85,14 +85,14 @@ def parse_args():
     parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
                             conflict_handler='resolve')
     devicegroup = parser.add_mutually_exclusive_group()
-    # devicegroup.add_argument('--cpu', action='store_true',
-    #                          help='Force OpenNE to run on CPU. '
-    #                               'If torch.cuda.is_available() == False on your device, '
-    #                               'this will be ignored.')
-    # devicegroup.add_argument('--devices', type=int, nargs='+', default=[0, 1],
-    #                          help='Specify CUDA devices for OpenNE to run on. '
-    #                               'If torch.cuda.is_available() == False on your device, '
-    #                               'this will be ignored.')
+    devicegroup.add_argument('--cpu', action='store_true',
+                             help='Force OpenNE to run on CPU. '
+                                  'If torch.cuda.is_available() == False on your device, '
+                                  'this will be ignored.')
+    devicegroup.add_argument('--devices', type=int, nargs='+', default=[0],
+                             help='Specify CUDA devices for OpenNE to run on. '
+                                  'If torch.cuda.is_available() == False on your device, '
+                                  'this will be ignored.')
     # tasks, models, dataloaders
     parser.add_argument('--task', choices=tasks.taskdict.keys(), type=str.lower,
                         help='Assign a task. If unassigned, OpenNE will '
