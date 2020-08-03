@@ -100,6 +100,8 @@ class ModelWithEmbeddings(torch.nn.Module):
                                      '_multiple_epochs': _multiple_epochs,
                                      'output': None,
                                      'save': True})
+        if not torch.cuda.is_available():
+            new_kwargs['data_parallel'] = False
         return new_kwargs
 
     def build(self, graph, **kwargs):
