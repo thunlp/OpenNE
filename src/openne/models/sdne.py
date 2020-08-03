@@ -206,7 +206,7 @@ class SDNE(ModelWithEmbeddings):
         else:
             self.lr = lambda x: lr
         self.adj_mat = torch.from_numpy(graph.adjmat(weighted=True, directed=True)).type(torch.float32)
-
+        self.adj_mat.to(kwargs['devices'][0])
         self.model = SDNENet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2,
                              data_parallel=data_parallel, devices=kwargs['devices'])
         if self.pretrain:
