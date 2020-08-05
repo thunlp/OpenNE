@@ -35,7 +35,7 @@ class GAE(ModelWithEmbeddings):
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
-        check_existance(kwargs, {"learning_rate": 0.01,
+        check_existance(kwargs, {"lr": 0.01,
                                  "epochs": 200,
                                  "dropout": 0.,
                                  "weight_decay": 1e-4,
@@ -43,7 +43,7 @@ class GAE(ModelWithEmbeddings):
                                  "clf_ratio": 0.5,
                                  "hiddens": [32],
                                  "max_degree": 0})
-        check_range(kwargs, {"learning_rate": (0, np.inf),
+        check_range(kwargs, {"lr": (0, np.inf),
                              "epochs": (0, np.inf),
                              "dropout": (0, 1),
                              "weight_decay": (0, 1),
@@ -57,11 +57,11 @@ class GAE(ModelWithEmbeddings):
         if not graphtype.attributed():
             raise TypeError("GAE only accepts attributed graphs!")
 
-    def build(self, graph, *, learning_rate=0.01, epochs=200,
+    def build(self, graph, *, lr=0.01, epochs=200,
               dropout=0., weight_decay=1e-4, early_stopping=100,
               clf_ratio=0.5, **kwargs):
         """
-                        learning_rate: Initial learning rate
+                        lr: Initial learning rate
                         epochs: Number of epochs to train
                         hidden1: Number of units in hidden layer 1
                         dropout: Dropout rate (1 - keep probability)
@@ -70,7 +70,7 @@ class GAE(ModelWithEmbeddings):
                         max_degree: Maximum Chebyshev polynomial degree
         """
         self.clf_ratio = clf_ratio
-        self.learning_rate = learning_rate
+        self.lr = lr
         self.epochs = epochs
         self.dropout = dropout
         self.weight_decay = weight_decay
@@ -86,7 +86,7 @@ class GAE(ModelWithEmbeddings):
         self.dimensions = [input_dim]+self.hiddens+[self.output_dim]
         
         self.model = GAEModel(self.dimensions, self.support[0], self.dropout)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
         
 
     def train_model(self, graph, **kwargs):
