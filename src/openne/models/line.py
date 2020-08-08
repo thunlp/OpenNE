@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 import torch
 from ..utils import *
+import torch.nn as nn
 import torch.nn.functional as F
 from .models import *
 
@@ -21,7 +22,8 @@ class _LINE(ModelWithEmbeddings):
                                  'table_size': 1e8,
                                  'lr': 0.001,
                                  'batch_size': 1000,
-                                 'negative_ratio': 5})
+                                 'negative_ratio': 5,
+                                 'data_parallel': False})
         check_range(kwargs, {'dim': 'positive',
                              'order': 'positive',
                              'table_size': 'positive',
@@ -33,8 +35,10 @@ class _LINE(ModelWithEmbeddings):
         cur_seed = random.getrandbits(32)
         torch.manual_seed(cur_seed)
         self.node_size = graph.nodesize
-        self.embeddings = torch.nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim).requires_grad_(True))
-        self.context_embeddings = torch.nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim).requires_grad_(True))
+        self.embeddings = nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim))
+        self.embeddings = nn.Parameter(self.embeddings, requires_grad=True)
+        self.context_embeddings = nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim))
+        self.content_embeddings = nn.Parameter(self.content_embeddings, requires_grad=True)
         self.second_loss = lambda s, h, t: -(F.logsigmoid(
             s*(self.embeddings[h]*self.context_embeddings[t]).sum(dim=1))).mean()
         self.first_loss = lambda s, h, t: -(F.logsigmoid(
