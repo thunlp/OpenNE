@@ -38,7 +38,7 @@ class _LINE(ModelWithEmbeddings):
         self.embeddings = nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim))
         self.embeddings = nn.Parameter(self.embeddings, requires_grad=True)
         self.context_embeddings = nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim))
-        self.content_embeddings = nn.Parameter(self.content_embeddings, requires_grad=True)
+        self.context_embeddings = nn.Parameter(self.context_embeddings, requires_grad=True)
         self.second_loss = lambda s, h, t: -(F.logsigmoid(
             s*(self.embeddings[h]*self.context_embeddings[t]).sum(dim=1))).mean()
         self.first_loss = lambda s, h, t: -(F.logsigmoid(
