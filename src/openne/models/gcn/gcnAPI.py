@@ -114,7 +114,7 @@ class GCN(ModelWithEmbeddings):
                     label_dict[l] = label_id
                     label_id += 1
         self.labels = torch.zeros((len(labels), label_id))
-        self.labels.to(self._device)
+        # self.labels = self.labels.to(self._device)
         self.label_dict = label_dict
         for node, l in labels:
             node_id = look_up[node]
@@ -132,7 +132,7 @@ class GCN(ModelWithEmbeddings):
         self.features = torch.from_numpy(graph.features()).type(torch.float32)
         self.features = preprocess_features(self.features, sparse=self.sparse)
         print("self.features: ", self.features.device, " vs ", self._device)
-        self.features.to(self._device)
+        self.features = self.features.to(self._device)
         print("self.features: ", self.features.device)
         self.build_label(graph)
         adj = graph.adjmat(weighted=True, directed=True)
