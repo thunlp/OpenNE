@@ -12,7 +12,8 @@ from .models import *
 # todo: add validation hook (see openne/line.py)
 class _LINE(ModelWithEmbeddings):
     def __init__(self, dim=128, order=2, table_size=1e8, **kwargs):
-        super(_LINE, self).__init__(dim=dim, order=order, table_size=table_size, save=False, **kwargs)
+        kwargs['save'] = False
+        super(_LINE, self).__init__(dim=dim, order=order, table_size=table_size, **kwargs)
         self.cur_epoch = 0
 
     @classmethod
