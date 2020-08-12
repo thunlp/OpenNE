@@ -101,7 +101,7 @@ class _LINE(ModelWithEmbeddings):
                         self.sampling_table[random.randint(0, table_size-1)])
             h = torch.tensor(h, device=self._device)
             t = torch.tensor(t, device=self._device)
-            sign = torch.tensor([sign], device=self.device)
+            sign = torch.tensor([sign], device=self._device)
             yield h, t, sign
             mod += 1
             mod %= mod_size
