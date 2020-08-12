@@ -3,7 +3,7 @@ import os
 from time import time
 from ..utils import *
 import inspect
-
+import numpy
 
 class ModelWithEmbeddings(torch.nn.Module):
     def __init__(self, *, output=None, save=True, **kwargs):
@@ -50,8 +50,18 @@ class ModelWithEmbeddings(torch.nn.Module):
         for i in kwargs:
             self.__setattr__(i, kwargs[i])
 
+    def register_buffer(self, name: str, buffer) -> None:
+        if type(buffer) is not torch.Tensor:
+            if type(buffer) is numpy.ndarray:
+                name = "__numpy_ndarray__" + name
+                buffer = torch.from_numpy(buffer)
+            else:
+                name = "__" + str(type(buffer)) + "__" + name
+                buffer = torch.tensor(buffer)
+        super(ModelWithEmbeddings, self).register_buffer(name, buffer)
+
     def save_model(self, filename):
-        torch.save(self.state_dict(), filename)
+        torch.save(self, filename)
 
     def save_embeddings(self, filename):
         with open(filename, 'w') as fout:
@@ -65,7 +75,9 @@ class ModelWithEmbeddings(torch.nn.Module):
             path = os.path.join(self.outputpath, self.outputmodelfile)
         if not os.path.isfile(path):
             raise FileNotFoundError("Model file not found.")
-        self.load_state_dict(torch.load(path))
+        tmp = torch.load(path)
+        for i in tmp.__dict__:
+            self.__setattr__(i, tmp.__dict__[i])
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
@@ -77,7 +89,10 @@ class ModelWithEmbeddings(torch.nn.Module):
 
     def get_vectors(self, graph):
         self.vectors = {}
-        for i, embedding in enumerate(self.embeddings):
+        embs = self.embeddings
+        if getattr(embs, 'requires_grad', False):
+            embs = embs.detach()
+        for i, embedding in enumerate(embs):
             self.vectors[graph.look_back_list[i]] = embedding.to('cpu')
         return self.vectors
 
@@ -124,7 +139,6 @@ class ModelWithEmbeddings(torch.nn.Module):
         adj_mat = torch.from_numpy(graph.adjmat(weighted, directed)).type(torch.float32)
         adj_mat = adj_mat.to(self._device)
         return adj_mat
-
 
     def forward(self, graph, **kwargs):
         kwargs = self.check(type(graph), **kwargs)

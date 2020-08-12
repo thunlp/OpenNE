@@ -1,6 +1,7 @@
 from __future__ import print_function
 import random
 import math
+import copy
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 import torch
@@ -15,6 +16,10 @@ class _LINE(ModelWithEmbeddings):
         kwargs['save'] = False
         super(_LINE, self).__init__(dim=dim, order=order, table_size=table_size, **kwargs)
         self.cur_epoch = 0
+        if order == 1:
+            self.loss = self.first_loss
+        else:
+            self.loss = self.second_loss
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
@@ -32,22 +37,22 @@ class _LINE(ModelWithEmbeddings):
                              'batch_size': 'positive',
                              'negative_ratio': 'positive'})
 
+    def first_loss(self, s, h, t):
+        return -(F.logsigmoid(s * (self.embeddings[h] * self.embeddings[t]).sum(dim=1))).mean()
+
+    def second_loss(self, s, h, t):
+        return -(F.logsigmoid(s*(self.embeddings[h]*self.context_embeddings[t]).sum(dim=1))).mean()
+
+    def copy(self, exceptions):
+        ret = copy.deepcopy(self)
+        for i in exceptions:
+            ret.__dict__.__setitem__(i, exceptions[i])
+        return ret
+
     def build(self, graph, *, lr=0.001, batch_size=1000, negative_ratio=5, **kwargs):
-        cur_seed = random.getrandbits(32)
-        torch.manual_seed(cur_seed)
         self.node_size = graph.nodesize
-        self.embeddings = nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim))
-        self.embeddings = nn.Parameter(self.embeddings, requires_grad=True)
-        self.context_embeddings = nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim))
-        self.context_embeddings = nn.Parameter(self.context_embeddings, requires_grad=True)
-        self.second_loss = lambda s, h, t: -(F.logsigmoid(
-            s*(self.embeddings[h]*self.context_embeddings[t]).sum(dim=1))).mean()
-        self.first_loss = lambda s, h, t: -(F.logsigmoid(
-            s*(self.embeddings[h]*self.embeddings[t]).sum(dim=1))).mean()
-        if self.order == 1:
-            self.loss = self.first_loss
-        else:
-            self.loss = self.second_loss
+        self.embeddings = nn.Parameter(nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim)), requires_grad=True)
+        self.context_embeddings = nn.Parameter(nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim)), requires_grad=True)
         self.optimizer = torch.optim.Adam([self.embeddings, self.context_embeddings], lr=lr)
         look_up = graph.look_up_dict
         self.edges = [(look_up[x[0]], look_up[x[1]]) for x in graph.G.edges()]
@@ -97,10 +102,7 @@ class _LINE(ModelWithEmbeddings):
                 sign = -1.
                 t = []
                 for i in range(len(h)):
-                    t.append(
-                        self.sampling_table[random.randint(0, table_size-1)])
-            h = torch.tensor(h, device=self._device)
-            t = torch.tensor(t, device=self._device)
+                    t.append(self.sampling_table[random.randint(0, table_size-1)])
             sign = torch.tensor([sign], device=self._device)
             yield h, t, sign
             mod += 1
@@ -118,12 +120,12 @@ class _LINE(ModelWithEmbeddings):
         node_degree = torch.zeros(numNodes)  # out degree
         look_up = graph.look_up_dict
         for edge in graph.G.edges():
-            node_degree[look_up[edge[0]]
-                        ] += graph.G[edge[0]][edge[1]]["weight"]
+            node_degree[look_up[edge[0]]] += graph.G[edge[0]][edge[1]]["weight"]
 
         norm = float((node_degree**power).sum())  # float is faster than tensor when visited
-        node_degree=node_degree.tolist() # list has fastest visit speed
-        self.sampling_table = np.zeros(table_size, dtype=np.int32) # torch is much slower when referring to frequent visits
+        node_degree = node_degree.tolist()        # list has fastest visit speed
+        # torch is much slower when referring to frequent visits
+        self.sampling_table = np.zeros(table_size, dtype=np.int32)
         p = 0
         i = 0
         for j in range(numNodes):
@@ -131,7 +133,7 @@ class _LINE(ModelWithEmbeddings):
             while i < table_size and i / table_size < p:
                 self.sampling_table[i] = j
                 i += 1
-        # self.sampling_table=torch.from_numpy(self.sampling_table)
+
         data_size = graph.G.number_of_edges()
         self.edge_alias = [0 for i in range(data_size)]
         self.edge_prob = [0 for i in range(data_size)]
@@ -174,7 +176,6 @@ class _LINE(ModelWithEmbeddings):
             num_small_block -= 1
             self.edge_prob[small_block[num_small_block]] = 1
 
-
 class LINE(ModelWithEmbeddings):
     def __init__(self, dim=128, order=3, **kwargs):
         super(LINE, self).__init__(dim=dim, order=order, **kwargs)
@@ -192,9 +193,11 @@ class LINE(ModelWithEmbeddings):
         return kwargs
 
     def build(self, graph, **kwargs):
+        cur_seed = random.getrandbits(32)
+        torch.manual_seed(cur_seed)
         if self.order == 3:
             self.model1.build(graph, **kwargs)
-            self.model2.build(graph, **kwargs)
+            self.model2 = self.model1.copy({'order': 2})
         else:
             self.model.build(graph, **kwargs)
 
@@ -211,8 +214,6 @@ class LINE(ModelWithEmbeddings):
         self.last_vectors = self.vectors
         self.vectors = {}
         if self.order == 3:
-            self.model1.embeddings = self.model1.embeddings.detach()
-            self.model2.embeddings = self.model2.embeddings.detach()
             vectors1 = self.model1.get_vectors(graph)
             vectors2 = self.model2.get_vectors(graph)
             for node in vectors1.keys():
