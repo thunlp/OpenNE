@@ -61,7 +61,7 @@ class _LINE(ModelWithEmbeddings):
         for batch in batches:
             h, t, sign = batch
             self.optimizer.zero_grad()
-            cur_loss = self.loss(torch.tensor(sign),h,t)
+            cur_loss = self.loss(sign, h, t)
             sum_loss += cur_loss
             cur_loss.backward()
             self.optimizer.step()
@@ -98,8 +98,10 @@ class _LINE(ModelWithEmbeddings):
                 for i in range(len(h)):
                     t.append(
                         self.sampling_table[random.randint(0, table_size-1)])
-
-            yield h, t, [sign]
+            h = torch.tensor(h, device=self._device)
+            t = torch.tensor(t, device=self._device)
+            sign = torch.tensor([sign], device=self.device)
+            yield h, t, sign
             mod += 1
             mod %= mod_size
             if mod == 0:
