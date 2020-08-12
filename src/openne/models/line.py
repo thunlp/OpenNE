@@ -27,7 +27,7 @@ class _LINE(ModelWithEmbeddings):
                                  'order': 2,
                                  'table_size': 1e8,
                                  'lr': 0.001,
-                                 'batch_size': 1000,
+                                 'batch_size': 1024,
                                  'negative_ratio': 5,
                                  'data_parallel': False})
         check_range(kwargs, {'dim': 'positive',
@@ -49,7 +49,9 @@ class _LINE(ModelWithEmbeddings):
             ret.__dict__.__setitem__(i, exceptions[i])
         return ret
 
-    def build(self, graph, *, lr=0.001, batch_size=1000, negative_ratio=5, **kwargs):
+    def build(self, graph, *, lr=0.001, batch_size=1024, negative_ratio=5, **kwargs):
+        cur_seed = random.getrandbits(32)
+        torch.manual_seed(cur_seed)
         self.node_size = graph.nodesize
         self.embeddings = nn.Parameter(nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim)), requires_grad=True)
         self.context_embeddings = nn.Parameter(nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim)), requires_grad=True)
@@ -188,16 +190,15 @@ class LINE(ModelWithEmbeddings):
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
-        check_existance(kwargs, {'lr': 0.001, 'batch_size': 1000, 'negative_ratio': 5, 'epochs': 20})
+        check_existance(kwargs, {'lr': 0.001, 'batch_size': 1024, 'negative_ratio': 5, 'epochs': 40})
         check_range(kwargs, {'lr': 'positive', 'batch_size': 'positive', 'negative_ratio': 'positive', 'epochs': 'positive'})
         return kwargs
 
     def build(self, graph, **kwargs):
-        cur_seed = random.getrandbits(32)
-        torch.manual_seed(cur_seed)
         if self.order == 3:
             self.model1.build(graph, **kwargs)
-            self.model2 = self.model1.copy({'order': 2})
+            self.model2.build(graph, **kwargs)
+            # self.model2 = self.model1.copy({'order': 2})
         else:
             self.model.build(graph, **kwargs)
 
