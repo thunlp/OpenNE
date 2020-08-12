@@ -101,6 +101,7 @@ class GraphConvolution(Layer):
 
     def forward(self, inputs=None):
         x = inputs
+        print("inputs: ", x.device)
         if not self.featureless and self.training:
             # dropout
             if self.sparse_inputs:
