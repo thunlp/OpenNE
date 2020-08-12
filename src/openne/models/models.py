@@ -50,18 +50,8 @@ class ModelWithEmbeddings(torch.nn.Module):
         for i in kwargs:
             self.__setattr__(i, kwargs[i])
 
-    def register_buffer(self, name: str, buffer) -> None:
-        if type(buffer) is not torch.Tensor:
-            if type(buffer) is numpy.ndarray:
-                name = "__numpy_ndarray__" + name
-                buffer = torch.from_numpy(buffer)
-            else:
-                name = "__" + str(type(buffer)) + "__" + name
-                buffer = torch.tensor(buffer)
-        super(ModelWithEmbeddings, self).register_buffer(name, buffer)
-
     def save_model(self, filename):
-        torch.save(self, filename)
+        torch.save(self.state_dict(), filename)
 
     def save_embeddings(self, filename):
         with open(filename, 'w') as fout:
@@ -75,9 +65,7 @@ class ModelWithEmbeddings(torch.nn.Module):
             path = os.path.join(self.outputpath, self.outputmodelfile)
         if not os.path.isfile(path):
             raise FileNotFoundError("Model file not found.")
-        tmp = torch.load(path)
-        for i in tmp.__dict__:
-            self.__setattr__(i, tmp.__dict__[i])
+        self.load_state_dict(torch.load(path))
 
     @classmethod
     def check_train_parameters(cls, **kwargs):

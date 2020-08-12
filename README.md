@@ -80,10 +80,10 @@ performances of OpenNE-PyTorch models on Cora Dataset as compared with the previ
 <tr bgcolor='#eeeeee'>
     <td>LINE</td>
     <td><strong>86.75</strong></td>
-    <td>102</td>
+    <td>108.5</td>
     <td>.417</td>
-    <td><strong>.685</strong></td>
-    <td>-</td>
+    <td><strong>.722</strong></td>
+    <td>default # epochs changed</td>
 </tr>
 <tr bgcolor='#ffffff'>
     <td>SDNE</td>
@@ -261,7 +261,7 @@ HOPE:
 
 LINE:
 - `--lr`, learning rate, 0.001 by default;
-- `--batch-size`, 1000 by default;
+- `--batch-size`, 1024 by default;
 - `--negative-ratio`, 5 by default;
 - `--order`, 1 for the 1st-order, 2 for the 2nd-order and 3 for 1st + 2nd, 3 by default;
 
