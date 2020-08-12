@@ -140,7 +140,7 @@ class GCN(ModelWithEmbeddings):
             self.support = [preprocess_adj(adj)]
         else:
             self.support = chebyshev_polynomials(adj, self.max_degree)
-
+        self.support = [i.to(self._device) for i in self.support]
         for n, i in enumerate(self.support):
             self.register_buffer("support_{0}".format(n), i)
         # print(self.support)
