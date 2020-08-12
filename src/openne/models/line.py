@@ -179,10 +179,10 @@ class LINE(ModelWithEmbeddings):
         super(LINE, self).__init__(dim=dim, order=order, **kwargs)
         self.best_result = 0
         if order == 3:
-            self.model1 = _LINE(dim=dim // 2, order=1)
-            self.model2 = _LINE(dim=dim // 2, order=2)
+            self.model1 = _LINE(dim=dim // 2, order=1, **kwargs)
+            self.model2 = _LINE(dim=dim // 2, order=2, **kwargs)
         else:
-            self.model = _LINE(dim=dim, order=order)
+            self.model = _LINE(dim=dim, order=order, **kwargs)
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
