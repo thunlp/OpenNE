@@ -111,7 +111,7 @@ class GraphConvolution(Layer):
         elif self.sparse_inputs:
             x = tuple_to_sparse(x)
         # convolve
-        output = torch.zeros([self.support[0].size()[0], self.output_dim])
+        output = torch.zeros([self.support[0].size()[0], self.output_dim], device=x.device)
         for i in range(len(self.support)):
             if not self.featureless:
                 pre_sup = torch.mm(x, getattr(self, 'weights_' + str(i)))
