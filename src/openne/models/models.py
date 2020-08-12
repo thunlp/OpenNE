@@ -136,7 +136,7 @@ class ModelWithEmbeddings(torch.nn.Module):
         print("Start training...")
         self.build(graph, **kwargs)
         self.to(self._device)
-
+        # print([(i, v.shape) for i, v in self.named_parameters(recurse=True)])
         # print([i for i in self.named_modules()])
 
         if kwargs['_multiple_epochs']:
