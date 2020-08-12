@@ -114,7 +114,7 @@ class GCN(ModelWithEmbeddings):
                     label_dict[l] = label_id
                     label_id += 1
         self.labels = torch.zeros((len(labels), label_id))
-        # self.labels = self.labels.to(self._device)
+        self.labels = self.labels.to(self._device)
         self.label_dict = label_dict
         for node, l in labels:
             node_id = look_up[node]
