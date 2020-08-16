@@ -96,7 +96,7 @@ class VGAE(ModelWithEmbeddings):
     def train_model(self, graph, **kwargs):
         # Train models
         if 'train_mask' not in self.__dict__:
-            self.train_mask = torch.ones(graph.nodesize, self._device)
+            self.train_mask = torch.ones(graph.nodesize, device=self._device)
             print("Train_mask")
         output, train_loss, __ = self.evaluate(self.train_mask)
         self.debug_info = "train_loss = {:.5f}".format(train_loss)
