@@ -133,7 +133,7 @@ class GCN(ModelWithEmbeddings):
         self.features = preprocess_features(self.features, sparse=self.sparse)
         self.features = self.features.to(self._device)
         self.build_label(graph)
-        adj = self.adjmat_device(graph, weighted=True, directed=True)
+        adj = graph.adjmat(weighted=True, directed=True)
         if self.max_degree == 0:
             self.support = [preprocess_adj(adj)]
         else:
