@@ -160,8 +160,9 @@ class GAE(ModelWithEmbeddings):
             self.support = [preprocess_graph(adj)]
         else:
             self.support = chebyshev_polynomials(adj, self.max_degree)
-        # print(self.support)
-
+        self.support = [i.to(self._device) for i in self.support]
+        # for n, i in enumerate(self.support):
+        #    self.register_buffer("support_{0}".format(n), i)
 
 class GraphConvolution(nn.Module):
     """
