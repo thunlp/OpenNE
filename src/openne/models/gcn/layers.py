@@ -109,7 +109,7 @@ class GraphConvolution(Layer):
                 x = torch.dropout(x, self.dropout,True)
 
         elif self.sparse_inputs:
-            x = tuple_to_sparse(x)
+            x = x.to_sparse()
         # convolve
         output = torch.zeros([self.support[0].size()[0], self.output_dim], device=x.device)
         for i in range(len(self.support)):
