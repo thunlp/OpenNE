@@ -101,7 +101,6 @@ class GraphConvolution(Layer):
 
     def forward(self, inputs=None):
         x = inputs
-        print("inputs: ", x.device)
         if not self.featureless and self.training:
             # dropout
             if self.sparse_inputs:
@@ -115,7 +114,6 @@ class GraphConvolution(Layer):
         for i in range(len(self.support)):
             if not self.featureless:
                 pre_sup = torch.mm(x, getattr(self, 'weights_' + str(i)))
-                print("presup: ", pre_sup.device)
             else:
                 pre_sup = getattr(self, 'weights_' + str(i))
             support = torch.mm(self.support[i], pre_sup)
