@@ -90,7 +90,6 @@ class GCN(ModelWithEmbeddings):
         t_test = time.time()
         self.model.zero_grad()
         self.model.train(train)
-        print("features: ", self.features.device)
 
         output = self.model(self.features)
         loss = self.model.loss(self.labels, mask)
