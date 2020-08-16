@@ -114,7 +114,7 @@ class VGAE(ModelWithEmbeddings):
                 if l not in label_dict:
                     label_dict[l] = label_id
                     label_id += 1
-        self.labels = torch.zeros((len(labels), label_id))
+        self.labels = torch.zeros((len(labels), label_id), device=self._device)
         self.label_dict = label_dict
         for node, l in labels:
             node_id = look_up[node]
@@ -190,7 +190,7 @@ class GraphConvolution(nn.Module):
         self.out_features = out_features
         self.dropout = dropout
         self.act = act
-        self.weight = nn.Parameter(torch.FloatTensor(in_features, out_features))
+        self.weight = nn.Parameter(torch.zeros(in_features, out_features, device=self._device), requires_grad=True)
         self.reset_parameters()
 
     def reset_parameters(self):
