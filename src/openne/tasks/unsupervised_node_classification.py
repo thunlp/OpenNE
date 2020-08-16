@@ -22,6 +22,7 @@ class UnsupervisedNodeClassification(BaseTask):
                 if kwargs['auto_save']:
                     model.setvalue('best_vectors', model.vectors, lambda x, y: True)
         check_existance(self.kwargs, {'auto_save': True, '_validation_hooks': [f_v] if self.kwargs['validate'] else []})
+        super(UnsupervisedNodeClassification, self).train_kwargs()
         return self.kwargs
 
     def evaluate(self, model, res, graph):

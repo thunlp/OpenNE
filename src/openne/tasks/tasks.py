@@ -9,6 +9,11 @@ class BaseTask:
 
     def train_kwargs(self) -> dict:
         check_existance(self.kwargs, {"validate": False, 'clf_ratio': 0.5})
+        if not torch.cuda.is_available() or self.kwargs['cpu']:
+            self.kwargs['data_parallel'] = False
+            self.kwargs['_device'] = torch.device('cpu')
+        else:
+            self.kwargs['_device'] = torch.device('cuda', self.kwargs['devices'][0])
         return self.kwargs
 
     def _process(self, res):

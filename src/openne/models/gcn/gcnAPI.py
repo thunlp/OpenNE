@@ -85,6 +85,7 @@ class GCN(ModelWithEmbeddings):
 
     # Define models evaluation function
     def evaluate(self, mask, train=True):
+        mask = mask.to(self._device)
         torch.autograd.set_detect_anomaly(True)
         t_test = time.time()
         self.model.zero_grad()
