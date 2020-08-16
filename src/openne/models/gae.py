@@ -77,14 +77,11 @@ class GAE(ModelWithEmbeddings):
         self.early_stopping = early_stopping
         self.sparse = False
         self.preprocess_data(graph)
-        print(self.clf_ratio)
-
         # Create models
         input_dim = self.features.shape[1] if not self.sparse else self.features[2][1]
         feature_shape = self.features.shape if not self.sparse else self.features[0].shape[0]
 
         self.dimensions = [input_dim] + self.hiddens + [self.output_dim]
-
         self.model = GAEModel(self.dimensions, self.support[0], self.dropout)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
 
@@ -156,6 +153,7 @@ class GAE(ModelWithEmbeddings):
         adj = nx.adjacency_matrix(g)  # the type of graph
         self.pos_weight = torch.tensor([float(n * n - adj.sum()) / adj.sum()], dtype=torch.float32, device=self._device)
         self.norm = n * n / float((n * n - adj.sum()) * 2)
+
         if self.max_degree == 0:
             self.support = [preprocess_graph(adj)]
         else:
@@ -163,6 +161,7 @@ class GAE(ModelWithEmbeddings):
         self.support = [i.to(self._device) for i in self.support]
         # for n, i in enumerate(self.support):
         #    self.register_buffer("support_{0}".format(n), i)
+        # print(self.support)
 
 class GraphConvolution(nn.Module):
     """

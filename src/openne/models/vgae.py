@@ -34,6 +34,7 @@ class VGAEModel(nn.Module):
         z = self.reparameterize(mu, logvar)
         return z, mu, logvar
 
+
 class VGAE(ModelWithEmbeddings):
 
     def __init__(self, output_dim=16, hiddens=None, max_degree=0, **kwargs):
@@ -59,7 +60,7 @@ class VGAE(ModelWithEmbeddings):
                              "clf_ratio": (0, 1),
                              "max_degree": (0, np.inf)})
         return kwargs
-    
+
     @classmethod
     def check_graphtype(cls, graphtype, **kwargs):
         if not graphtype.attributed():
@@ -83,19 +84,21 @@ class VGAE(ModelWithEmbeddings):
         self.weight_decay = weight_decay
         self.early_stopping = early_stopping
         self.sparse = False
-
         self.preprocess_data(graph)
         # Create models
         input_dim = self.features.shape[1] if not self.sparse else self.features[2][1]
         feature_shape = self.features.shape if not self.sparse else self.features[0].shape[0]
-        self.dimensions = [input_dim]+self.hiddens+[self.output_dim]
+
+        self.dimensions = [input_dim] + self.hiddens + [self.output_dim]
         self.model = VGAEModel(self.dimensions, self.support[0], self.dropout)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
-        
 
     def train_model(self, graph, **kwargs):
         # Train models
-        output, train_loss,  __ = self.evaluate(torch.ones(graph.nodesize))
+        if 'train_mask' not in self.__dict__:
+            self.train_mask = torch.ones(graph.nodesize, self._device)
+            print("Train_mask")
+        output, train_loss, __ = self.evaluate(self.train_mask)
         self.debug_info = "train_loss = {:.5f}".format(train_loss)
         return output
         
@@ -155,21 +158,24 @@ class VGAE(ModelWithEmbeddings):
         look_back = graph.look_back_list
         self.features = torch.from_numpy(graph.features()).type(torch.float32)
         self.features = preprocess_features(self.features, sparse=self.sparse)
-
+        self.features = self.features.to(self._device)
         n = graph.nodesize
         self.n_nodes = n
         self.build_label(graph)
         adj_label = graph.adjmat(weighted=False, directed=False, sparse=True)
-        
-        self.adj_label = torch.FloatTensor((adj_label + sp.eye(n).toarray()))
+
+        self.adj_label = torch.tensor((adj_label + sp.eye(n).toarray()), dtype=torch.float32, device=self._device)
         adj = nx.adjacency_matrix(g)  # the type of graph
-        self.pos_weight = torch.Tensor([float(n * n - adj.sum()) / adj.sum()])
+        self.pos_weight = torch.tensor([float(n * n - adj.sum()) / adj.sum()], dtype=torch.float32, device=self._device)
         self.norm = n * n / float((n * n - adj.sum()) * 2)
 
         if self.max_degree == 0:
             self.support = [preprocess_graph(adj)]
         else:
             self.support = chebyshev_polynomials(adj, self.max_degree)
+        self.support = [i.to(self._device) for i in self.support]
+        # for n, i in enumerate(self.support):
+        #    self.register_buffer("support_{0}".format(n), i)
         # print(self.support)
 
 
