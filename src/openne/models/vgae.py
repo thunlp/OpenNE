@@ -190,7 +190,7 @@ class GraphConvolution(nn.Module):
         self.out_features = out_features
         self.dropout = dropout
         self.act = act
-        self.weight = nn.Parameter(torch.zeros(in_features, out_features, device=self._device), requires_grad=True)
+        self.weight = nn.Parameter(torch.zeros(in_features, out_features), requires_grad=True)
         self.reset_parameters()
 
     def reset_parameters(self):
