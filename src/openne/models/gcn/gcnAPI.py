@@ -132,9 +132,9 @@ class GCN(ModelWithEmbeddings):
         look_back = graph.look_back_list
         self.features = torch.from_numpy(graph.features()).type(torch.float32)
         self.features = preprocess_features(self.features, sparse=self.sparse)
-        print("self.features: ", self.features.device, " vs ", self._device)
+        # print("self.features: ", self.features.device, " vs ", self._device)
         self.features = self.features.to(self._device)
-        print("self.features: ", self.features.device)
+        # print("self.features: ", self.features.device)
         self.build_label(graph)
         adj = graph.adjmat(weighted=True, directed=True)
         if self.max_degree == 0:
@@ -142,6 +142,6 @@ class GCN(ModelWithEmbeddings):
         else:
             self.support = chebyshev_polynomials(adj, self.max_degree)
         self.support = [i.to(self._device) for i in self.support]
-        for n, i in enumerate(self.support):
-            self.register_buffer("support_{0}".format(n), i)
+        # for n, i in enumerate(self.support):
+        #    self.register_buffer("support_{0}".format(n), i)
         # print(self.support)
