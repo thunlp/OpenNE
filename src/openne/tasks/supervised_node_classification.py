@@ -30,7 +30,7 @@ class SupervisedNodeClassification(BaseTask):
         g = graph.G
 
         def sample_mask(begin, end):
-            mask = torch.zeros(g.number_of_nodes())
+            mask = torch.zeros(g.number_of_nodes(), device=self.kwargs['_device'])
             for i in range(begin, end):
                 mask[shuffle_indices[i]] = 1
             return mask
@@ -42,12 +42,12 @@ class SupervisedNodeClassification(BaseTask):
 
     def train_kwargs(self):
         check_existance(self.kwargs, {"validate": True, 'clf_ratio': 0.5})
-
         def validation_hook(model, graph, **kwargs):
             _, cost, acc, duration = model.evaluate(self.val_mask)
             model.cost_val.append(cost)
             model.debug_info += '; val_loss = {:.5f}, val_acc = {:.5f}'.format(cost, acc)
         check_existance(self.kwargs, {'_validation_hooks': [validation_hook] if self.kwargs['validate'] else []})
+        super(SupervisedNodeClassification, self).train_kwargs()
         return self.kwargs
 
     def evaluate(self, model, res, dataset):
