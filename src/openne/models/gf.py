@@ -22,7 +22,7 @@ class GraphFactorization(ModelWithEmbeddings):
         return kwargs
 
     def build(self, graph, *, lr=0.003, **kwargs):
-        self.register_buffer('adj_mat', torch.from_numpy(graph.adjmat(directed=True, weighted=True)))
+        self.register_buffer('adj_mat', torch.from_numpy(graph.adjmat(directed=True, weighted=True)).to(torch.float32))
         self.register_buffer('mat_mask', torch.as_tensor(self.adj_mat > 0, dtype=torch.float32))
 
         self.register_parameter('_embeddings', torch.nn.init.xavier_uniform_(torch.nn.Parameter(
