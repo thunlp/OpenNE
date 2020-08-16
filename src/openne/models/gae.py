@@ -152,9 +152,9 @@ class GAE(ModelWithEmbeddings):
         self.build_label(graph)
         adj_label = graph.adjmat(weighted=False, directed=False, sparse=True)
 
-        self.adj_label = torch.FloatTensor((adj_label + sp.eye(n).toarray()))
+        self.adj_label = torch.tensor((adj_label + sp.eye(n).toarray()), dtype=torch.float32, device=self._device)
         adj = nx.adjacency_matrix(g)  # the type of graph
-        self.pos_weight = torch.Tensor([float(n * n - adj.sum()) / adj.sum()])
+        self.pos_weight = torch.tensor([float(n * n - adj.sum()) / adj.sum()], dtype=torch.float32, device=self._device)
         self.norm = n * n / float((n * n - adj.sum()) * 2)
         if self.max_degree == 0:
             self.support = [preprocess_graph(adj)]
