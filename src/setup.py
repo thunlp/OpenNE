@@ -17,7 +17,7 @@ setup(
         'Operating System :: OS Independent'
     ],
     python_requires='>=3.7',
-    setup_requires=['torch>=1.2.0', 'six', 'numpy>=1.14',
+    setup_requires=['torch>=1.5.0', 'six', 'numpy>=1.14',
                     'scipy>=0.19.1', 'gensim', 'scikit-learn>=0.19.0',
                     'networkx>=2.0', 'overloading']
 )

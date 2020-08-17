@@ -66,6 +66,15 @@ class ModelWithEmbeddings(torch.nn.Module):
         if not os.path.isfile(path):
             raise FileNotFoundError("Model file not found.")
         self.load_state_dict(torch.load(path))
+        # specials
+        for name, buffers in self.named_buffers(prefix='__from_array_'):
+            self.__setattr__(name.strip('__from_array_'), buffers.numpy())
+        for name, buffers in self.named_buffers(prefix='__from_sparse_'):
+            self.__setattr__(name.strip('__from_sparse_'), buffers.to_sparse())
+
+
+
+
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
@@ -123,10 +132,25 @@ class ModelWithEmbeddings(torch.nn.Module):
     def make_output(self, graph, **kwargs):
         pass
 
+    #  TODO: a set of rules of special buffers.
+
+    def register_numpy(self, name, array):
+        self.register_buffer("__from_array_" + name, torch.from_numpy(array))
+
+    def register_buffer(self, name, tensor, persistent=True):
+        if torch.__version__ < '1.5.0' and tensor.is_sparse:  # will save a dense version
+            self.__setattr__(name, tensor)
+            super(ModelWithEmbeddings, self).register_buffer("__from_sparse_" + name, tensor.to_dense(), persistent)
+        else:
+            super(ModelWithEmbeddings, self).register_buffer(name, tensor, persistent)
+
+    def register_float_buffer(self, name, *tensor_info):
+        self.register_buffer(name, torch.tensor(*tensor_info, dtype=torch.float32))
+
     def adjmat_device(self, graph, weighted, directed):
-        adj_mat = torch.from_numpy(graph.adjmat(weighted, directed)).type(torch.float32)
-        adj_mat = adj_mat.to(self._device)
-        return adj_mat
+        self.adj_mat = torch.from_numpy(graph.adjmat(weighted, directed)).type(torch.float32)
+        self.register_buffer('adj_mat', self.adj_mat)
+        return self.adj_mat
 
     def forward(self, graph, **kwargs):
         kwargs = self.check(type(graph), **kwargs)
