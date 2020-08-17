@@ -10,7 +10,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .models import *
 
-# todo: add validation hook (see openne/line.py)
 class _LINE(ModelWithEmbeddings):
     def __init__(self, dim=128, order=2, table_size=1e8, **kwargs):
         kwargs['save'] = False

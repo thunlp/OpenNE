@@ -148,10 +148,10 @@ class GAE(ModelWithEmbeddings):
         n = graph.nodesize
         self.build_label(graph)
         adj_label = graph.adjmat(weighted=False, directed=False, sparse=True)
+        self.register_float_buffer("adj_label", adj_label + sp.eye(n).toarray())
 
-        self.adj_label = torch.tensor((adj_label + sp.eye(n).toarray()), dtype=torch.float32, device=self._device)
         adj = nx.adjacency_matrix(g)  # the type of graph
-        self.pos_weight = torch.tensor([float(n * n - adj.sum()) / adj.sum()], dtype=torch.float32, device=self._device)
+        self.register_float_buffer("pos_weight", [float(n * n - adj.sum()) / adj.sum()])
         self.norm = n * n / float((n * n - adj.sum()) * 2)
 
         if self.max_degree == 0:
@@ -159,8 +159,8 @@ class GAE(ModelWithEmbeddings):
         else:
             self.support = chebyshev_polynomials(adj, self.max_degree)
         self.support = [i.to(self._device) for i in self.support]
-        # for n, i in enumerate(self.support):
-        #    self.register_buffer("support_{0}".format(n), i)
+        for n, i in enumerate(self.support):
+            self.register_buffer("support_{0}".format(n), i)
         # print(self.support)
 
 class GraphConvolution(nn.Module):
