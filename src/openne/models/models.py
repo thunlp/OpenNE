@@ -156,7 +156,7 @@ class ModelWithEmbeddings(torch.nn.Module):
 
             N.B. it is recommended that self.embeddings is acquired only after a training step,
             i.e. not appearing as rhs oprand in training calculations. If possible, try not
-            involve self.embeddings in the body of self.train_model().
+            involve self.embeddings in the body of self.train_model() nor assign a nn.Parameter.
 
         """
         if self.embeddings is None and kwargs.get('_multiple_epochs', True):
