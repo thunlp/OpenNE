@@ -137,14 +137,14 @@ class ModelWithEmbeddings(torch.nn.Module):
     def register_numpy(self, name, array):
         self.register_buffer("__from_array_" + name, torch.from_numpy(array))
 
-    def register_buffer(self, name, tensor, persistent=True):
+    def register_buffer(self, name, tensor, *args):
         if torch.__version__ < '1.5.0' and tensor.is_sparse:  # will save a dense version
             self.__setattr__(name, tensor)
-            super(ModelWithEmbeddings, self).register_buffer("__from_sparse_" + name, tensor.to_dense(), persistent)
+            super(ModelWithEmbeddings, self).register_buffer("__from_sparse_" + name, tensor.to_dense(), *args)
         else:
-            print(name, "##", tensor.shape, "##", persistent)
+            print(name, "##", tensor.shape, "##", *args)
             print("You tell me this is four?")
-            super(ModelWithEmbeddings, self).register_buffer(name, tensor, persistent)
+            super(ModelWithEmbeddings, self).register_buffer(name, tensor, *args)
 
     def register_float_buffer(self, name, *tensor_info):
         self.register_buffer(name, torch.tensor(*tensor_info, dtype=torch.float32))
