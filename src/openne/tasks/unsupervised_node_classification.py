@@ -21,11 +21,8 @@ class UnsupervisedNodeClassification(BaseTask):
         check_existance(self.kwargs, {"validate": self.kwargs["_validate"], 'clf_ratio': 0.5})
 
         def f_v(model, graph, **kwargs):
+            model.make_output(graph, **kwargs)
             model.get_vectors(graph)
-
-            if len(model.vectors) == 0:
-                model.make_output(graph, **kwargs)
-                model.get_vectors(graph)
 
             res = self._classify(graph, model.vectors, simple=True, silent=True)
             if model.setvalue('best_result', res['macro']):
