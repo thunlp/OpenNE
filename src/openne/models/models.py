@@ -193,8 +193,8 @@ class ModelWithEmbeddings(torch.nn.Module):
         self.register_buffer(name, torch.tensor(*tensor_info, dtype=torch.float32))
 
     def adjmat_device(self, graph, weighted, directed):
-        self.adj_mat = torch.from_numpy(graph.adjmat(weighted, directed)).type(torch.float32)
-        self.register_buffer('adj_mat', self.adj_mat)
+        adj_mat = torch.from_numpy(graph.adjmat(weighted, directed)).type(torch.float32)
+        self.register_buffer('adj_mat', adj_mat)
         return self.adj_mat
 
     def forward(self, graph, **kwargs):

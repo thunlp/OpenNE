@@ -206,7 +206,7 @@ class SDNE(ModelWithEmbeddings):
             self.lr = lambda x: lr / (1 + 0.9999 * x)
         else:
             self.lr = lambda x: lr
-        self.adj_mat = self.adjmat_device(graph, weighted=True, directed=True)
+        self.adjmat_device(graph, weighted=True, directed=True)
         self.model = SDNENet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2,
                              data_parallel=data_parallel, devices=kwargs['devices'])
 
