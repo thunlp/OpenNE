@@ -196,7 +196,7 @@ class ModelWithEmbeddings(torch.nn.Module):
                 break
         self.make_output(graph, **kwargs)
 
-        if self.embeddings:
+        if self.embeddings is not None:
             self.get_vectors(graph)
         else:
             self.vectors = {k: v.to('cpu') for k, v in self.vectors.items()}
