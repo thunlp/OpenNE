@@ -76,7 +76,9 @@ class _LINE(ModelWithEmbeddings):
             self.optimizer.step()
             batch_id += 1
         self.debug_info = sum_loss
-        return self._embeddings
+
+    def _get_embeddings(self, graph, **kwargs):
+        return self._embeddings.detach()
 
     def batch_iter(self, data_size):
         table_size = self.table_size
