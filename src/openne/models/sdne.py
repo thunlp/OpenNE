@@ -159,7 +159,7 @@ class SDNENet(torch.nn.Module):
 
 
 class SDNE(ModelWithEmbeddings):
-    def __init__(self, encoder_layer_list, alpha=1e-6, beta=5., nu1=1e-8, nu2=1e-4, **kwargs):
+    def __init__(self, encoder_layer_list, alpha=20., beta=5., nu1=1e-8, nu2=1e-4, **kwargs):
         """
         encoder_layer_list: a list of numbers of the neuron at each encoder layer, the last number is the
         dimension of the output node representation
@@ -173,7 +173,7 @@ class SDNE(ModelWithEmbeddings):
     @classmethod
     def check_train_parameters(cls, **kwargs):
         check_existance(kwargs, {'encoder_layer_list': [128],
-                                 'alpha': 1e-6,
+                                 'alpha': 20,
                                  'beta': 5.,
                                  'nu1': 1e-8,
                                  'nu2': 1e-4,
@@ -235,4 +235,3 @@ class SDNE(ModelWithEmbeddings):
     def _get_embeddings(self, graph, **kwargs):
         embeddings, _ = self.model(self.adj_mat)
         self.embeddings = embeddings.detach()
-        print(self.embeddings.shape)
