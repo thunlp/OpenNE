@@ -52,9 +52,11 @@ class _LINE(ModelWithEmbeddings):
         cur_seed = random.getrandbits(32)
         torch.manual_seed(cur_seed)
         self.node_size = graph.nodesize
-        self.embeddings = nn.Parameter(nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim)), requires_grad=True)
-        self.context_embeddings = nn.Parameter(nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim)), requires_grad=True)
-        self.optimizer = torch.optim.Adam([self.embeddings, self.context_embeddings], lr=lr)
+        self._embeddings = nn.Parameter(nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim)),
+                                        requires_grad=True)
+        self.context_embeddings = nn.Parameter(nn.init.xavier_normal_(torch.zeros(self.node_size, self.dim)),
+                                               requires_grad=True)
+        self.optimizer = torch.optim.Adam([self._embeddings, self.context_embeddings], lr=lr)
         look_up = graph.look_up_dict
         self.edges = [(look_up[x[0]], look_up[x[1]]) for x in graph.G.edges()]
         self.batch_size = batch_size
@@ -74,7 +76,7 @@ class _LINE(ModelWithEmbeddings):
             self.optimizer.step()
             batch_id += 1
         self.debug_info = sum_loss
-        return self.embeddings
+        return self._embeddings
 
     def batch_iter(self, data_size):
         table_size = self.table_size
@@ -189,15 +191,21 @@ class LINE(ModelWithEmbeddings):
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
-        check_existance(kwargs, {'lr': 0.001, 'batch_size': 1024, 'negative_ratio': 5, 'epochs': 40})
-        check_range(kwargs, {'lr': 'positive', 'batch_size': 'positive', 'negative_ratio': 'positive', 'epochs': 'positive'})
+        check_existance(kwargs, {'lr': 0.001,
+                                 'batch_size': 1024,
+                                 'negative_ratio': 5,
+                                 'epochs': 40})
+        check_range(kwargs, {'lr': 'positive',
+                             'batch_size': 'positive',
+                             'negative_ratio': 'positive',
+                             'epochs': 'positive'})
         return kwargs
 
     def build(self, graph, **kwargs):
         if self.order == 3:
             self.model1.build(graph, **kwargs)
             self.model2.build(graph, **kwargs)
-            # self.model2 = self.model1.copy({'order': 2})
+            # self.model2 = self.model1.copy({'order': 2})  # works but reduces accuracy
         else:
             self.model.build(graph, **kwargs)
 
@@ -210,13 +218,16 @@ class LINE(ModelWithEmbeddings):
             self.model.train_model(graph, **kwargs)
             self.debug_info = "sum of loss: {!s}".format(self.model.debug_info)
 
-    def get_vectors(self, graph):
-        self.last_vectors = self.vectors
-        self.vectors = {}
+    def _get_embeddings(self, graph, **kwargs):
         if self.order == 3:
-            vectors1 = self.model1.get_vectors(graph)
-            vectors2 = self.model2.get_vectors(graph)
-            for node in vectors1.keys():
-                self.vectors[node] = torch.from_numpy(np.append(vectors1[node], vectors2[node]))
+            self.embeddings = torch.cat((self.model1.embeddings, self.model2.embeddings), dim=1)
         else:
-            self.vectors = self.model.get_vectors(graph).detach()
+            self.embeddings = self.model.embeddings
+            
+    def make_output(self, graph, **kwargs):
+        if self.order == 3:
+            self.model1.make_output(graph, **kwargs)
+            self.model2.make_output(graph, **kwargs)
+        else:
+            self.model.make_output(graph, **kwargs)
+        super(LINE, self).make_output(graph, **kwargs)

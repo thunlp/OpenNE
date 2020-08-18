@@ -133,7 +133,7 @@ class GAE(ModelWithEmbeddings):
             self.optimizer.step()
         return output, loss, (time.time() - t_test)
 
-    def make_output(self, graph, **kwargs):
+    def _get_embeddings(self, graph, **kwargs):
         self.embeddings = self.model(self.features).detach()
 
     def preprocess_data(self, graph):
