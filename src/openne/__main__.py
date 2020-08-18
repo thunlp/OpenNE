@@ -127,7 +127,9 @@ def parse_args():
     generalgroup = parser.add_argument_group("GENERAL MODEL ARGUMENTS")
     no_default_args = ['epochs', 'output', ]
     addarg("clf_ratio", generalgroup, used_names, 0.5, True)
-    generalgroup.add_argument('--validate', type=bool)
+    validate_args = generalgroup.add_mutually_exclusive_group()
+    validate_args.add_argument('--validate', action='store_true', dest='_validate')
+    validate_args.add_argument('--no-validate', action='store_true', dest='_no_validate')
     model_args = models.ModelWithEmbeddings.args()
     for arg in model_args:
         addarg(arg, generalgroup, used_names, model_args[arg], arg not in no_default_args, choices=choices)

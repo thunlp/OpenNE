@@ -41,7 +41,11 @@ class SupervisedNodeClassification(BaseTask):
         self.kwargs['train_mask'] = self.train_mask
 
     def train_kwargs(self):
-        check_existance(self.kwargs, {"validate": True, 'clf_ratio': 0.5})
+        #  by default validate == True
+        #  iff --no-validate set: False
+        check_existance(self.kwargs, {"_validate": False, "_no_validate": False})
+        check_existance(self.kwargs, {"validate": not self.kwargs["_no_validate"], 'clf_ratio': 0.5})
+
         def validation_hook(model, graph, **kwargs):
             _, cost, acc, duration = model.evaluate(self.val_mask)
             model.cost_val.append(cost)

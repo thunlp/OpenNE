@@ -84,7 +84,7 @@ class GCN(ModelWithEmbeddings):
 
 
     def early_stopping_judge(self, graph, *, step=0, **kwargs):
-        return step > self.early_stopping and self.cost_val[-1] > torch.mean(
+        return kwargs['validate'] and step > self.early_stopping and self.cost_val[-1] > torch.mean(
                     torch.stack(self.cost_val[-(self.early_stopping + 1):-1]))
 
     # Define models evaluation function

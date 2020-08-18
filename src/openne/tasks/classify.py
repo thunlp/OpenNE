@@ -1,6 +1,9 @@
 # we do not need change this
 
 from __future__ import print_function
+
+import warnings
+
 import numpy
 import torch
 from sklearn.multiclass import OneVsRestClassifier # data training. TODO: write a PyTorch version of OVRClassifier
@@ -24,10 +27,15 @@ class TopKRanker(OneVsRestClassifier):
 
 class Classifier(object):
 
-    def __init__(self, vectors, clf):
+    def __init__(self, vectors, clf, simple=False, silent=False):
         self.embeddings = vectors
         self.clf = TopKRanker(clf)
         self.binarizer = MultiLabelBinarizer(sparse_output=True)
+        if simple:
+            self.f1cat = 2
+        else:
+            self.f1cat = 4
+        self.silent = silent
 
     def train(self, X, Y, Y_all):
         self.binarizer.fit(Y_all)
@@ -39,11 +47,18 @@ class Classifier(object):
         top_k_list = [len(l) for l in Y]
         Y_ = self.predict(X, top_k_list)  # Y_ Tensor
         Y = self.binarizer.transform(Y)  # Y  np array
-        averages = ["micro", "macro", "samples", "weighted"]
+        averages = ["micro", "macro", "samples", "weighted"][:self.f1cat]
         results = {}
+
         for average in averages:
-            results[average] = f1_score(Y, numpy.asarray(Y_), average=average)
-        print(results)
+            if self.silent:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    results[average] = f1_score(Y, numpy.asarray(Y_), average=average)
+            else:
+                results[average] = f1_score(Y, numpy.asarray(Y_), average=average)
+        if not self.silent:
+            print(results)
         return results
 
     def predict(self, X, top_k_list):
