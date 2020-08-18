@@ -89,6 +89,7 @@ class GAE(ModelWithEmbeddings):
         # Train models
         output, train_loss, __ = self.evaluate()
         self.debug_info = "train_loss = {:.5f}".format(train_loss)
+        return output
 
     def build_label(self, graph):
         g = graph.G

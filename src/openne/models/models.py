@@ -72,10 +72,6 @@ class ModelWithEmbeddings(torch.nn.Module):
         for name, buffers in self.named_buffers(prefix='__from_sparse_'):
             self.__setattr__(name.strip('__from_sparse_'), buffers.to_sparse())
 
-
-
-
-
     @classmethod
     def check_train_parameters(cls, **kwargs):
         return kwargs
@@ -126,12 +122,25 @@ class ModelWithEmbeddings(torch.nn.Module):
         pass
 
     def train_model(self, graph, **kwargs):
+        """
+            returns: embeddings or None
+            In case of None, you NEED to rewrite make_output() and assign self.embeddings in it
+        """
         raise NotImplementedError
 
     def early_stopping_judge(self, graph, **kwargs):
         return False
 
     def make_output(self, graph, **kwargs):
+        """
+            called on two occasions:
+              1. after training. Rewrite in case you need to do anything.
+              2. EVERY TIME before you need self.embeddings, e.g. on validation of unsupervised_node_classification
+            rewrite:
+              1. if you want to do anything after training
+              2. if self.train_model returns None
+
+        """
         if self.embeddings is None and len(self.vectors) == 0:
             self.embeddings = self.train_model(graph, **kwargs)
 
