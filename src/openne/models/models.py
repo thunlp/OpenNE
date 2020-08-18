@@ -85,8 +85,10 @@ class ModelWithEmbeddings(torch.nn.Module):
         pass
 
     def get_vectors(self, graph):
-        self.vectors = {}
         embs = self.embeddings
+        if embs is None:
+            return self.vectors
+        self.vectors = {}
         if getattr(embs, 'requires_grad', False):
             embs = embs.detach()
         for i, embedding in enumerate(embs):
@@ -130,7 +132,8 @@ class ModelWithEmbeddings(torch.nn.Module):
         return False
 
     def make_output(self, graph, **kwargs):
-        pass
+        if self.embeddings is None and len(self.vectors) == 0:
+            self.embeddings = self.train_model(graph, **kwargs)
 
     #  TODO: a set of rules of special buffers.
 
@@ -193,7 +196,7 @@ class ModelWithEmbeddings(torch.nn.Module):
                 break
         self.make_output(graph, **kwargs)
 
-        if not self.vectors:
+        if self.embeddings:
             self.get_vectors(graph)
         else:
             self.vectors = {k: v.to('cpu') for k, v in self.vectors.items()}
