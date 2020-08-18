@@ -88,9 +88,9 @@ performances of OpenNE-PyTorch models on Cora Dataset as compared with the previ
 <tr bgcolor='#ffffff'>
     <td>SDNE</td>
     <td>195.02</td>
-    <td><strong>12.89</strong></td>
+    <td><strong>10.22</strong></td>
     <td>.532</td>
-    <td><strong>.721</strong></td>
+    <td><strong>.757</strong></td>
     <td>-</td>
 </tr>
 <tr bgcolor='#eeeeee'>
