@@ -142,6 +142,8 @@ class ModelWithEmbeddings(torch.nn.Module):
             self.__setattr__(name, tensor)
             super(ModelWithEmbeddings, self).register_buffer("__from_sparse_" + name, tensor.to_dense(), persistent)
         else:
+            print(name, "##", tensor.shape, "##", persistent)
+            print("You tell me this is four?")
             super(ModelWithEmbeddings, self).register_buffer(name, tensor, persistent)
 
     def register_float_buffer(self, name, *tensor_info):
