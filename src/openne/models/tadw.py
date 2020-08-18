@@ -46,7 +46,6 @@ class TADW(ModelWithEmbeddings):
         self.T = self.getT(graph)
         self.node_size = graph.nodesize
         self.feature_size = self.T.shape[0]
-        print(self.T.shape, self.node_size)
         self.W = torch.randn(self.dim, self.node_size)
         self.H = torch.randn(self.dim, self.feature_size)
 
