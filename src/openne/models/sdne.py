@@ -121,6 +121,7 @@ class SDNENet(torch.nn.Module):
             self.encoder = torch.nn.DataParallel(self.encoder, kwargs['devices'])
             self.decoder = torch.nn.DataParallel(self.decoder, kwargs['devices'])
 
+
     def pretrain(self, data):  # deep-belief-network-based pretraining
         for layer in self.layer_collector:
             if type(layer) == torch.nn.Linear:
@@ -177,7 +178,7 @@ class SDNE(ModelWithEmbeddings):
                                  'nu1': 1e-8,
                                  'nu2': 1e-4,
                                  'batch_size': 200,
-                                 'epochs': 100,
+                                 'epochs': 200,
                                  'lr': 0.001,
                                  'decay': False,
                                  'pretrain': False,
@@ -193,9 +194,9 @@ class SDNE(ModelWithEmbeddings):
               pretrain=False, data_parallel=False, **kwargs):
         self.node_size = graph.nodesize
         self.dim = self.encoder_layer_list[-1]
-        self.encoder_layer_list = [self.node_size]
-        self.encoder_layer_list.extend(self.encoder_layer_list)
-        self.encoder_layer_num = len(self.encoder_layer_list) + 1
+        encoder_layer_list = [self.node_size]
+        encoder_layer_list.extend(self.encoder_layer_list)
+        self.encoder_layer_num = len(encoder_layer_list) + 1
         self.bs = batch_size
         self.epochs = (epochs * self.node_size) // batch_size
         self.real_epochs = epochs
@@ -207,7 +208,7 @@ class SDNE(ModelWithEmbeddings):
         else:
             self.lr = lambda x: lr
         self.adjmat_device(graph, weighted=True, directed=True)
-        self.model = SDNENet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2,
+        self.model = SDNENet(encoder_layer_list, self.alpha, self.nu1, self.nu2,
                              data_parallel=data_parallel, devices=kwargs['devices'])
 
         if self.pretrain:
@@ -229,8 +230,9 @@ class SDNE(ModelWithEmbeddings):
         self.optimizer.step()
         if self.decay:
             adjust_lr(self.optimizer, step, decay_strategy=self.lr)
-        self.debug_info = "total loss: {}, l1 loss: {}, l2 loss: {}".format(loss, l1, l2)
+        self.debug_info = "total loss: {:.5f}, l1 loss: {:.5f}, l2 loss: {:.5f}".format(loss, float(l1), float(l2))
 
     def _get_embeddings(self, graph, **kwargs):
         embeddings, _ = self.model(self.adj_mat)
         self.embeddings = embeddings.detach()
+        print(self.embeddings.shape)
