@@ -93,7 +93,7 @@ class TADW(ModelWithEmbeddings):
             dt = rt + bt * dt
         self.H = torch.reshape(vecH, (self.dim, self.feature_size))
 
-    def make_output(self, graph, **kwargs):
+    def _get_embeddings(self, graph, **kwargs):
         self.embeddings = torch.cat((
             torch.from_numpy(normalize(self.W.t())),
             torch.from_numpy(normalize(torch.mm(self.T.t(), self.H.t())))), dim=1)

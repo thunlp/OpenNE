@@ -58,6 +58,7 @@ class Node2vec(ModelWithEmbeddings):
             self.vectors[word] = torch.tensor(word2vec.wv[str(word)])
         del word2vec
 
+
 class DeepWalk(Node2vec):
     def __init__(self, dim=128, **kwargs):
         super(DeepWalk, self).__init__(dim, True, **kwargs)

@@ -1,3 +1,5 @@
+from typing import Any
+
 import torch
 import os
 from time import time
@@ -80,17 +82,6 @@ class ModelWithEmbeddings(torch.nn.Module):
     def check_graphtype(cls, graphtype, **kwargs):
         pass
 
-    def get_vectors(self, graph):
-        embs = self.embeddings
-        if embs is None:
-            return self.vectors
-        self.vectors = {}
-        if getattr(embs, 'requires_grad', False):
-            embs = embs.detach()
-        for i, embedding in enumerate(embs):
-            self.vectors[graph.look_back_list[i]] = embedding.to('cpu')
-        return self.vectors
-
     @classmethod
     def check(cls, graphtype=None, **kwargs):
         new_kwargs = kwargs.copy()
@@ -131,18 +122,60 @@ class ModelWithEmbeddings(torch.nn.Module):
     def early_stopping_judge(self, graph, **kwargs):
         return False
 
-    def make_output(self, graph, **kwargs):
+    def _get_vectors(self, graph):
         """
-            called on two occasions:
-              1. after training. Rewrite in case you need to do anything.
-              2. EVERY TIME before you need self.embeddings, e.g. on validation of unsupervised_node_classification
-            rewrite:
-              1. if you want to do anything after training
-              2. if self.train_model returns None
+            Get self.vectors (which is a dict in format {node: embedding}) from self.embeddings.
+            This should only be called in self.make_output().
+
+            Rewrite when self.embeddings is not used and self.vectors is not acquired in self.train_model.
+        """
+        embs = self.embeddings
+        if embs is None:
+            return self.vectors
+        self.vectors = {}
+        for i, embedding in enumerate(embs):
+            self.vectors[graph.look_back_list[i]] = embedding
+        return self.vectors
+
+    def _get_embeddings(self, graph, **kwargs):
+        """
+            Generates self.embeddings. This should only be called in self.make_output().
+
+            The default process applies to most situation except:
+              1. self.train_model() does not return a thing
+              2. the model does not use self.embeddings and requires multiple training epochs
+            In these cases rewrite _get_embeddings.
+            For case 1, you need to update self.embeddings each time in _get_embeddings().
+            See examples from LINE and SDNE.
+            For case 2, do nothing in _get_embeddings() (write a simple `return`).
+            For models with single epoch, you do not need to rewrite if you are not
+            calling this function outside self.make_output() (e.g. Node2Vec).
+
+            You can also rewrite for models with multiple epochs when you need to
+            get embeddings without training. See examples from GCN and GAE.
+
+            N.B. it is recommended that self.embeddings is acquired only after a training step,
+            i.e. not appearing as rhs oprand in training calculations. If possible, try not
+            involve self.embeddings in the body of self.train_model().
 
         """
-        if self.embeddings is None and len(self.vectors) == 0:
+        if self.embeddings is None and kwargs.get('_multiple_epochs', True):
             self.embeddings = self.train_model(graph, **kwargs)
+
+
+    def make_output(self, graph, **kwargs):
+        """
+            Generates self.embeddings and self.vectors.
+            called on two occasions:
+              1. after training. Rewrite in case you need to do anything.
+              2. EVERY TIME before you need self.embeddings or self.vectors,
+                e.g. on validation of unsupervised_node_classification
+
+        """
+        self._get_embeddings(graph, **kwargs)
+        if self.embeddings is not None:
+            self.embeddings = self.embeddings.detach().to("cpu")
+        self._get_vectors(graph)
 
     #  TODO: a set of rules of special buffers.
 
@@ -204,11 +237,6 @@ class ModelWithEmbeddings(torch.nn.Module):
                 print("Early stopping condition satisfied. Abort training.")
                 break
         self.make_output(graph, **kwargs)
-
-        if self.embeddings is not None:
-            self.get_vectors(graph)
-        else:
-            self.vectors = {k: v.to('cpu') for k, v in self.vectors.items()}
 
         t2 = time()
         print("Finished training. Time used = {}.".format(t2 - t1))

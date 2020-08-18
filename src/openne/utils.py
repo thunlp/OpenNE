@@ -25,8 +25,7 @@ def check_existance(src_dict, req_items, defaults=None):
     """
     if isinstance(req_items, dict):
         for k, v in req_items.items():
-            if k not in src_dict:
-                src_dict[k] = v
+            src_dict.setdefault(k, v)
     else:
         for i in range(len(req_items)):
             if req_items[i] not in src_dict:

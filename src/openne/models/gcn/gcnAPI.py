@@ -79,9 +79,8 @@ class GCN(ModelWithEmbeddings):
         self.debug_info = "train_loss = {:.5f}, train_acc = {:.5f}".format(train_loss, train_acc)
         return output
 
-    def make_output(self, graph, **kwargs):
+    def _get_embeddings(self, graph, **kwargs):
         self.embeddings = self.model(self.features).detach()
-
 
     def early_stopping_judge(self, graph, *, step=0, **kwargs):
         return kwargs['validate'] and step > self.early_stopping and self.cost_val[-1] > torch.mean(

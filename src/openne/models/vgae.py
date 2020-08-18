@@ -145,8 +145,8 @@ class VGAE(ModelWithEmbeddings):
             self.optimizer.step()
         return output, loss, (time.time() - t_test)
 
-    def make_output(self, graph, **kwargs):
-        output, mu, var= self.model(self.features)
+    def _get_embeddings(self, graph, **kwargs):
+        output, mu, var = self.model(self.features)
         self.embeddings = mu.detach()
 
     def preprocess_data(self, graph):

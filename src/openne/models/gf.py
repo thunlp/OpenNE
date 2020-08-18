@@ -37,4 +37,6 @@ class GraphFactorization(ModelWithEmbeddings):
         cost.backward()
         self.optimizer.step()
         self.debug_info = "cost: {}".format(float(cost))
-        return self._embeddings.detach()
+
+    def _get_embeddings(self, graph, **kwargs):
+        self.embeddings = self._embeddings.detach()

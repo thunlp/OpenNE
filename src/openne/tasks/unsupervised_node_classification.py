@@ -22,7 +22,7 @@ class UnsupervisedNodeClassification(BaseTask):
 
         def f_v(model, graph, **kwargs):
             model.make_output(graph, **kwargs)
-            model.get_vectors(graph)
+            model._get_vectors(graph)
 
             res = self._classify(graph, model.vectors, simple=True, silent=True)
             if model.setvalue('best_result', res['macro']):
