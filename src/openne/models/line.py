@@ -37,10 +37,10 @@ class _LINE(ModelWithEmbeddings):
                              'negative_ratio': 'positive'})
 
     def first_loss(self, s, h, t):
-        return -(F.logsigmoid(s * (self.embeddings[h] * self.embeddings[t]).sum(dim=1))).mean()
+        return -(F.logsigmoid(s * (self._embeddings[h] * self._embeddings[t]).sum(dim=1))).mean()
 
     def second_loss(self, s, h, t):
-        return -(F.logsigmoid(s*(self.embeddings[h]*self.context_embeddings[t]).sum(dim=1))).mean()
+        return -(F.logsigmoid(s*(self._embeddings[h]*self.context_embeddings[t]).sum(dim=1))).mean()
 
     def copy(self, exceptions):
         ret = copy.deepcopy(self)
