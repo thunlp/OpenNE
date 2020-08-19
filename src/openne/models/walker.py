@@ -18,7 +18,7 @@ class BasicWalker:
         self.G = G.G   # nx.DiGraph(G.G)
         self.node_size = G.nodesize
         self.look_up_dict = G.look_up_dict
-        self.workers = None # workers
+        self.workers = None  # workers
 
     def rwalk(self, walk_length, start_node):
         """
@@ -41,7 +41,8 @@ class BasicWalker:
 
     def simulate_walks_one_epoch(self, epoch, walk_length):
         stime = time()
-        print("Run epoch {} (PID {})".format(epoch, os.getpid()))
+        print("Run epoch {}".format(epoch))
+        # print("Run epoch {} (PID {})".format(epoch, os.getpid()))
         G = self.G
         nodes = list(G.nodes())
         walks = []
@@ -50,7 +51,8 @@ class BasicWalker:
             walks.append(self.rwalk(
                     walk_length=walk_length, start_node=node))
         etime = time()
-        print("Epoch {} (PID {}) ends in {} seconds.".format(epoch, os.getpid(), etime - stime))
+        print("Epoch {} ends in {} seconds.".format(epoch, etime - stime))
+        # print("Epoch {} (PID {}) ends in {} seconds.".format(epoch, os.getpid(), etime - stime))
         return walks
 
     def simulate_walks(self, num_walks, walk_length):
