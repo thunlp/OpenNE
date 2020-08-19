@@ -90,7 +90,7 @@ performances of OpenNE-PyTorch models on Cora Dataset as compared with the previ
     <td>195.02</td>
     <td><strong>10.22</strong></td>
     <td>.532</td>
-    <td><strong>.757</strong></td>
+    <td><strong>.742</strong></td>
     <td>-</td>
 </tr>
 <tr bgcolor='#eeeeee'>
