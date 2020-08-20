@@ -130,7 +130,6 @@ class GCN(ModelWithEmbeddings):
             y_train, y_val, y_test can merge to y
         """
         g = graph.G
-        look_back = graph.look_back_list
         features = torch.from_numpy(graph.features()).type(torch.float32)
         features = preprocess_features(features, sparse=self.sparse)
         self.register_buffer("features", features)
