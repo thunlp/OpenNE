@@ -66,7 +66,7 @@ class VGAE(ModelWithEmbeddings):
         if not graphtype.attributed():
             raise TypeError("GAE only accepts attributed graphs!")
 
-    def build(self, graph, *, lr=0.01, epochs=200,
+    def build(self, graph, *, lr=0.01, epochs=300,
               dropout=0.5, weight_decay=1e-4, early_stopping=100,
               clf_ratio=0.1, **kwargs):
         """
@@ -83,11 +83,9 @@ class VGAE(ModelWithEmbeddings):
         self.dropout = dropout
         self.weight_decay = weight_decay
         self.early_stopping = early_stopping
-        self.sparse = False
         self.preprocess_data(graph)
         # Create models
-        input_dim = self.features.shape[1] if not self.sparse else self.features[2][1]
-        feature_shape = self.features.shape if not self.sparse else self.features[0].shape[0]
+        input_dim = self.features.shape[1]
 
         self.dimensions = [input_dim] + self.hiddens + [self.output_dim]
         self.model = VGAEModel(self.dimensions, self.support[0], self.dropout)
@@ -95,10 +93,7 @@ class VGAE(ModelWithEmbeddings):
 
     def train_model(self, graph, **kwargs):
         # Train models
-        if 'train_mask' not in self.__dict__:
-            self.train_mask = torch.ones(graph.nodesize, device=self._device)
-            print("Train_mask")
-        output, train_loss, __ = self.evaluate(self.train_mask)
+        output, train_loss, __ = self.evaluate()
         self.debug_info = "train_loss = {:.5f}".format(train_loss)
         return output
         
@@ -131,7 +126,7 @@ class VGAE(ModelWithEmbeddings):
 
 
     # Define models evaluation function
-    def evaluate(self, mask, train=True):
+    def evaluate(self, train=True):
         #torch.autograd.set_detect_anomaly(True)
         t_test = time.time()
         self.optimizer.zero_grad()
@@ -156,17 +151,16 @@ class VGAE(ModelWithEmbeddings):
         """
         g = graph.G
         look_back = graph.look_back_list
-        self.features = torch.from_numpy(graph.features()).type(torch.float32)
-        self.features = preprocess_features(self.features, sparse=self.sparse)
-        self.features = self.features.to(self._device)
+        features = torch.from_numpy(graph.features()).type(torch.float32)
+        features = preprocess_features(features, sparse=self.sparse)
+        self.register_buffer("features", features)
         n = graph.nodesize
         self.n_nodes = n
         self.build_label(graph)
         adj_label = graph.adjmat(weighted=False, directed=False, sparse=True)
-
-        self.adj_label = torch.tensor((adj_label + sp.eye(n).toarray()), dtype=torch.float32, device=self._device)
+        self.register_float_buffer("adj_label", adj_label + sp.eye(n).toarray())
         adj = nx.adjacency_matrix(g)  # the type of graph
-        self.pos_weight = torch.tensor([float(n * n - adj.sum()) / adj.sum()], dtype=torch.float32, device=self._device)
+        self.register_float_buffer("pos_weight", [float(n * n - adj.sum()) / adj.sum()])
         self.norm = n * n / float((n * n - adj.sum()) * 2)
 
         if self.max_degree == 0:
@@ -174,8 +168,8 @@ class VGAE(ModelWithEmbeddings):
         else:
             self.support = chebyshev_polynomials(adj, self.max_degree)
         self.support = [i.to(self._device) for i in self.support]
-        # for n, i in enumerate(self.support):
-        #    self.register_buffer("support_{0}".format(n), i)
+        for n, i in enumerate(self.support):
+            self.register_buffer("support_{0}".format(n), i)
         # print(self.support)
 
 

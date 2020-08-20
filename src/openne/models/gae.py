@@ -75,11 +75,9 @@ class GAE(ModelWithEmbeddings):
         self.dropout = dropout
         self.weight_decay = weight_decay
         self.early_stopping = early_stopping
-        self.sparse = False
         self.preprocess_data(graph)
         # Create models
-        input_dim = self.features.shape[1] if not self.sparse else self.features[2][1]
-        feature_shape = self.features.shape if not self.sparse else self.features[0].shape[0]
+        input_dim = self.features.shape[1]
 
         self.dimensions = [input_dim] + self.hiddens + [self.output_dim]
         self.model = GAEModel(self.dimensions, self.support[0], self.dropout)
@@ -103,13 +101,13 @@ class GAE(ModelWithEmbeddings):
                 if l not in label_dict:
                     label_dict[l] = label_id
                     label_id += 1
-        self.labels = torch.zeros((len(labels), label_id))
+        self.register_float_buffer("labels", torch.zeros((len(labels), label_id)))
         self.label_dict = label_dict
         for node, l in labels:
             node_id = look_up[node]
             for ll in l:
                 l_id = label_dict[ll]
-                self.labels[node_id][l_id] = 1
+                self.labels[node_id, l_id] = 1
 
     def loss(self, output, adj_label, pos_weight, norm):
         cost = 0.
@@ -142,15 +140,13 @@ class GAE(ModelWithEmbeddings):
             y_train, y_val, y_test can merge to y
         """
         g = graph.G
-        look_back = graph.look_back_list
-        self.features = torch.from_numpy(graph.features()).type(torch.float32)
-        self.features = preprocess_features(self.features, sparse=self.sparse)
-        self.features = self.features.to(self._device)
+        features = torch.from_numpy(graph.features()).type(torch.float32)
+        features = preprocess_features(features, sparse=self.sparse)
+        self.register_buffer("features", features)
         n = graph.nodesize
         self.build_label(graph)
         adj_label = graph.adjmat(weighted=False, directed=False, sparse=True)
         self.register_float_buffer("adj_label", adj_label + sp.eye(n).toarray())
-
         adj = nx.adjacency_matrix(g)  # the type of graph
         self.register_float_buffer("pos_weight", [float(n * n - adj.sum()) / adj.sum()])
         self.norm = n * n / float((n * n - adj.sum()) * 2)
@@ -175,7 +171,7 @@ class GraphConvolution(nn.Module):
         self.out_features = out_features
         self.dropout = dropout
         self.act = act
-        self.weight = nn.Parameter(torch.FloatTensor(in_features, out_features))
+        self.weight = nn.Parameter(torch.zeros(in_features, out_features), requires_grad=True)
         self.reset_parameters()
 
     def reset_parameters(self):

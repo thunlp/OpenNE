@@ -190,7 +190,10 @@ class ModelWithEmbeddings(torch.nn.Module):
             super(ModelWithEmbeddings, self).register_buffer(name, tensor, *args)
 
     def register_float_buffer(self, name, *tensor_info):
-        self.register_buffer(name, torch.tensor(*tensor_info, dtype=torch.float32))
+        if type(tensor_info[0]) == torch.Tensor:
+            self.register_buffer(name, tensor_info[0].to(torch.float32))
+        else:
+            self.register_buffer(name, torch.tensor(*tensor_info, dtype=torch.float32))
 
     def adjmat_device(self, graph, weighted, directed):
         adj_mat = torch.from_numpy(graph.adjmat(weighted, directed)).type(torch.float32)
