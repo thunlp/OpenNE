@@ -193,11 +193,17 @@ class LINE(ModelWithEmbeddings):
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
-        check_existance(kwargs, {'lr': 0.001,
+        check_existance(kwargs, {'dim': 128,
+                                 'table_size': 1e8,
+                                 'lr': 0.001,
                                  'batch_size': 1024,
                                  'negative_ratio': 5,
-                                 'epochs': 40})
-        check_range(kwargs, {'lr': 'positive',
+                                 'epochs': 40,
+                                 'data_parallel': False})
+        check_range(kwargs, {'dim': 'positive',
+                             'order': 'positive',
+                             'table_size': 'positive',
+                             'lr': 'positive',
                              'batch_size': 'positive',
                              'negative_ratio': 'positive',
                              'epochs': 'positive'})
@@ -210,6 +216,10 @@ class LINE(ModelWithEmbeddings):
             # self.model2 = self.model1.copy({'order': 2})  # works but reduces accuracy
         else:
             self.model.build(graph, **kwargs)
+
+    def after_build(self, graph, **kwargs):
+        if self.order == 3 and kwargs.get('data_parallel', False) and len(kwargs.get('_device', [])) >= 2:
+            self.model2.to(kwargs['_device'][1])
 
     def train_model(self, graph, **kwargs):
         if self.order == 3:

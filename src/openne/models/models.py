@@ -200,6 +200,9 @@ class ModelWithEmbeddings(torch.nn.Module):
         self.register_buffer('adj_mat', adj_mat)
         return self.adj_mat
 
+    def after_build(self, graph, **kwargs):
+        pass
+
     def forward(self, graph, **kwargs):
         kwargs = self.check(type(graph), **kwargs)
         self.vectors = {}
@@ -210,6 +213,7 @@ class ModelWithEmbeddings(torch.nn.Module):
         self.to(self._device)
         # print([(i, v.shape) for i, v in self.named_parameters(recurse=True)])
         # print([i for i in self.named_modules()])
+        self.after_build(graph, **kwargs)
 
         if kwargs['_multiple_epochs']:
             epochs = kwargs['epochs']
