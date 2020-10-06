@@ -16,9 +16,10 @@ class UnsupervisedNodeClassification(BaseTask):
 
     def train_kwargs(self):
         #  by default validate == False
-        #  iff --validate set: True
+        #  validate is always false
         check_existance(self.kwargs, {"_validate": False, "_no_validate": False})
-        check_existance(self.kwargs, {"validate": self.kwargs["_validate"], 'clf_ratio': 0.5})
+        check_existance(self.kwargs, {"validate": False, 'clf_ratio': 0.5})
+
 
         def f_v(model, graph, **kwargs):
             model.make_output(graph, **kwargs)
@@ -38,9 +39,8 @@ class UnsupervisedNodeClassification(BaseTask):
         self._classify(graph, res, 0)
 
     def _classify(self, graph, vectors, seed=None, simple=False, silent=False):
-        X, Y = graph.labels()
         if not silent:
             print("Training classifier using {:.2f}% nodes...".format(
                 self.kwargs['clf_ratio']*100))
         clf = Classifier(vectors=vectors, clf=LogisticRegression(solver='lbfgs'), simple=simple, silent=silent)
-        return clf.split_train_evaluate(X, Y, self.train_kwargs()['clf_ratio'], seed=seed)
+        return clf.train_and_evaluate(graph, self.train_kwargs()['clf_ratio'], seed=seed)

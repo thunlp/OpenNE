@@ -59,6 +59,7 @@ class GCN(ModelWithEmbeddings):
         self.early_stopping = early_stopping
         self.sparse = sparse
 
+
         self.preprocess_data(graph)
         # Create models
         input_dim = self.features.shape[1]  # row
@@ -75,7 +76,7 @@ class GCN(ModelWithEmbeddings):
 
     def train_model(self, graph, **kwargs):
         # Train models
-        output, train_loss, train_acc, __ = self.evaluate(kwargs['train_mask'])
+        output, train_loss, train_acc, __ = self.evaluate(graph.train_mask)
         self.debug_info = "train_loss = {:.5f}, train_acc = {:.5f}".format(train_loss, train_acc)
         return output
 

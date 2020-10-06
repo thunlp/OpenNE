@@ -121,7 +121,6 @@ class SDNENet(torch.nn.Module):
             self.encoder = torch.nn.DataParallel(self.encoder, kwargs['devices'])
             self.decoder = torch.nn.DataParallel(self.decoder, kwargs['devices'])
 
-
     def pretrain(self, data):  # deep-belief-network-based pretraining
         for layer in self.layer_collector:
             if type(layer) == torch.nn.Linear:

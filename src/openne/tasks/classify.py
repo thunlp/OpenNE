@@ -66,19 +66,9 @@ class Classifier(object):
         Y = self.clf.predict(X_, top_k_list=top_k_list)
         return Y
 
-    def split_train_evaluate(self, X, Y, train_percent, seed=None):
-        state = torch.random.get_rng_state()
-        training_size = int(train_percent * len(X))
-        if seed is not None:
-            torch.random.manual_seed(seed)
-        shuffle_indices = torch.randperm(len(X))
-        X_train = [X[shuffle_indices[i]] for i in range(training_size)]
-        Y_train = [Y[shuffle_indices[i]] for i in range(training_size)]
-        X_test = [X[shuffle_indices[i]] for i in range(training_size, len(X))]
-        Y_test = [Y[shuffle_indices[i]] for i in range(training_size, len(X))]
-
-        self.train(X_train, Y_train, Y)
-        torch.random.set_rng_state(state)
+    def train_and_evaluate(self, graph, train_percent, seed=None):
+        X_train, Y_train, _, _, X_test, Y_test = graph.get_split_data(train_percent, seed=seed)
+        self.train(X_train, Y_train, graph.labels()[1])
         return self.evaluate(X_test, Y_test)
 
 

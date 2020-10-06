@@ -72,15 +72,15 @@ performances of OpenNE-PyTorch models on Cora Dataset as compared with the previ
 <tr bgcolor='#ffffff'>
     <td>GF</td>
     <td><strong>15.01</strong></td>
-    <td>21.05</td>
+    <td>19.53</td>
     <td>.546</td>
     <td><strong>.775</strong></td>
-    <td>-</td>
+    <td>default # epochs changed</td>
 </tr>
 <tr bgcolor='#eeeeee'>
     <td>LINE</td>
     <td><strong>86.75</strong></td>
-    <td>108.5</td>
+    <td>98.69</td>
     <td>.417</td>
     <td><strong>.722</strong></td>
     <td>default # epochs changed</td>
