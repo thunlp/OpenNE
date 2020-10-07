@@ -6,13 +6,19 @@ import torch.nn.functional as F
 class Model(torch.nn.Module):
     def __init__(self, **kwargs):
         super(Model, self).__init__()
-        allowed_kwargs = {'name', 'logging'} #
+        allowed_kwargs = {'name', 'logging', 'silent'} #
         for kwarg in kwargs.keys():
             assert kwarg in allowed_kwargs, 'Invalid keyword argument: ' + kwarg
         name = kwargs.get('name')
         if not name:
             name = self.__class__.__name__.lower()
         self.name = name
+
+        silent = kwargs.get('silent')
+        if silent:
+            self.silent = True
+        else:
+            self.silent = False
 
         logging = kwargs.get('logging', False)
         self.logging = logging
@@ -54,13 +60,17 @@ class Model(torch.nn.Module):
     def save(self):
         save_path = "tmp/%s.ckpt" % self.name
         torch.save(self.state_dict(), save_path)
-        print("Model saved in file: %s" % save_path)
+        self.debug("Model saved in file: %s" % save_path)
 
     def load(self):
         save_path = "tmp/%s.ckpt" % self.name
         state_dict = torch.load(save_path)
         self.load_state_dict(state_dict)
-        print("Model restored from file: %s" % save_path)
+        self.debug("Model restored from file: %s" % save_path)
+
+    def debug(self, *args, **kwargs):
+        if not self.silent:
+            print(*args, **kwargs)
 
 
 class GCNModel(Model):

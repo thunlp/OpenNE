@@ -13,6 +13,8 @@ class ModelWithEmbeddings(torch.nn.Module):
         self.vectors = {}
         self.embeddings = None
         self.debug_info = None
+        for i in kwargs:
+            self.__setattr__(i, kwargs[i])
         if save:
             if output is None:
                 self.outputpath = os.path.join(osp.dirname(osp.realpath(__file__)),
@@ -30,7 +32,7 @@ class ModelWithEmbeddings(torch.nn.Module):
             kwargs['outputembeddingfile'] = self.outputembeddingfile
             kwargs['save'] = save
             self.outputpath = osp.abspath(self.outputpath)
-            print("output path = ", self.outputpath)
+            self.debug("output path = ", self.outputpath)
             if not os.path.isdir(self.outputpath):
                 makedirs(self.outputpath)
             try:
@@ -48,9 +50,9 @@ class ModelWithEmbeddings(torch.nn.Module):
 
         else:
             kwargs['save'] = save
-
         for i in kwargs:
             self.__setattr__(i, kwargs[i])
+
 
     def save_model(self, filename):
         torch.save(self.state_dict(), filename)
@@ -208,7 +210,7 @@ class ModelWithEmbeddings(torch.nn.Module):
         self.vectors = {}
         self.embeddings = None
         t1 = time()
-        print("Start training...")
+        self.debug("Start training...")
         self.build(graph, **kwargs)
         self.to(self._device)
         # print([(i, v.shape) for i, v in self.named_parameters(recurse=True)])
@@ -217,7 +219,7 @@ class ModelWithEmbeddings(torch.nn.Module):
 
         if kwargs['_multiple_epochs']:
             epochs = kwargs['epochs']
-            print("total iter: %i" % epochs)
+            self.debug("total iter: %i" % epochs)
         else:
             epochs = 1
         time0 = time()
@@ -231,28 +233,28 @@ class ModelWithEmbeddings(torch.nn.Module):
                     self.debug_info += '; '
                 else:
                     self.debug_info = ''
-                print("epoch {}: {}time used = {}s".format(i + 1, self.debug_info, time() - time0))
+                self.debug("epoch {}: {}time used = {}s".format(i + 1, self.debug_info, time() - time0))
                 time0 = time()
             elif not kwargs['_multiple_epochs']:
                 if self.debug_info:
                     self.debug_info += '\n'
                 else:
                     self.debug_info = ''
-                print("{}Time used = {}s".format(self.debug_info, time() - time0))
+                self.debug("{}Time used = {}s".format(self.debug_info, time() - time0))
                 time0 = time()
             if self.early_stopping_judge(graph, step=i, **kwargs):
-                print("Early stopping condition satisfied. Abort training.")
+                self.debug("Early stopping condition satisfied. Abort training.")
                 break
         self.make_output(graph, **kwargs)
 
         t2 = time()
-        print("Finished training. Time used = {}.".format(t2 - t1))
+        self.debug("Finished training. Time used = {}.".format(t2 - t1))
         if self.save:
             embeddingpath = osp.abspath(osp.join(self.outputpath, self.outputembeddingfile))
-            print("Saving embeddings to {}...".format(embeddingpath))
+            self.debug("Saving embeddings to {}...".format(embeddingpath))
             self.save_embeddings(embeddingpath)
             modelpath = osp.abspath(osp.join(self.outputpath, self.outputmodelfile))
-            print("Saving model to {}...".format(modelpath))
+            self.debug("Saving model to {}...".format(modelpath))
             self.save_model(modelpath)
         return self.vectors
 
@@ -277,3 +279,6 @@ class ModelWithEmbeddings(torch.nn.Module):
                 self.__dict__[attribute_name] = value
                 return True
             return False
+    def debug(self, *args, **kwargs):
+        if not self.silent:
+            print(*args, **kwargs)

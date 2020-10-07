@@ -10,14 +10,14 @@ import os
 
 
 def wrapper(class_instance, epoch, walk_length):
-    print("walk_wrapper")
     return class_instance.simulate_walks_one_epoch(epoch, walk_length)
 
 class BasicWalker:
-    def __init__(self, G, workers):
+    def __init__(self, G, workers, silent=False):
         self.G = G.G   # nx.DiGraph(G.G)
         self.node_size = G.nodesize
         self.look_up_dict = G.look_up_dict
+        self.silent = silent
         self.workers = None  # workers
 
     def rwalk(self, walk_length, start_node):
@@ -41,7 +41,7 @@ class BasicWalker:
 
     def simulate_walks_one_epoch(self, epoch, walk_length):
         stime = time()
-        print("Run epoch {}".format(epoch))
+        self.debug("Run epoch {}".format(epoch))
         # print("Run epoch {} (PID {})".format(epoch, os.getpid()))
         G = self.G
         nodes = list(G.nodes())
@@ -51,7 +51,7 @@ class BasicWalker:
             walks.append(self.rwalk(
                     walk_length=walk_length, start_node=node))
         etime = time()
-        print("Epoch {} ends in {} seconds.".format(epoch, etime - stime))
+        self.debug("Epoch {} ends in {} seconds.".format(epoch, etime - stime))
         # print("Epoch {} (PID {}) ends in {} seconds.".format(epoch, os.getpid(), etime - stime))
         return walks
 
@@ -62,7 +62,7 @@ class BasicWalker:
 
         walks = []
 
-        print('Walk iteration:')
+        self.debug('Walk iteration:')
 
         if self.workers:
             pool = multiprocessing.Pool(self.workers)
@@ -86,8 +86,8 @@ class BasicWalker:
 
 
 class Walker(BasicWalker):
-    def __init__(self, G, p, q, workers):
-        super(Walker, self).__init__(G, workers)
+    def __init__(self, G, p, q, workers, **kwargs):
+        super(Walker, self).__init__(G, workers, **kwargs)
         self.p = p
         self.q = q
 
@@ -170,6 +170,9 @@ class Walker(BasicWalker):
 
         return
 
+    def debug(self, *args, **kwargs):
+        if not self.silent:
+            print(*args, **kwargs)
 
 def alias_setup(probs):
     """

@@ -121,7 +121,7 @@ class _LINE(ModelWithEmbeddings):
         power = 0.75
         numNodes = self.node_size
 
-        print("Pre-processing for non-uniform negative sampling!")
+        self.debug("Pre-processing for non-uniform negative sampling!")
         node_degree = torch.zeros(numNodes)  # out degree
         look_up = graph.look_up_dict
         for edge in graph.G.edges():
