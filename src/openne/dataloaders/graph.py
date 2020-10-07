@@ -30,16 +30,15 @@ class Graph(Dataset, ABC):
         self.look_back_list = []
         self.name_dict = name_dict
 
-        defaultkwargs = {}
-        for kw in set(defaultkwargs).union(set(kwargs)):
-            self.__setattr__(kw, kwargs.get(kw, defaultkwargs[kw]))
+        for kw in set(kwargs):
+            self.__setattr__(kw, kwargs.get(kw))
 
         self.filenames = [i for k, i in name_dict.items()]
         self.paths = [self.full(f) for f in self.filenames]
         rootprompt = ""
         if self.dir:
             rootprompt = "from root dir: {}".format(osp.abspath(self.dir))
-        print("Loading {} Dataset {}".format(type(self).__name__, rootprompt))
+        self.debug("Loading {} Dataset {}".format(type(self).__name__, rootprompt))
         self.load_data()
 
     def load_data(self):
@@ -48,10 +47,10 @@ class Graph(Dataset, ABC):
                 errmsg = '\n'.join([f for f in self.paths if osp.exists(f)])
                 raise FileNotFoundError("Cannot find required files:\n{}".format(errmsg))
             makedirs(self.dir)
-            print('Downloading dataloaders "{}" from "{}".\n'
+            self.debug('Downloading dataloaders "{}" from "{}".\n'
                   'Files will be saved to "{}".'.format(type(self).__name__, self.resource_url, self.dir))
             self.download()
-            print('Downloaded.')
+            self.debug('Downloaded.')
         self.read()
 
     def download(self):
@@ -319,6 +318,10 @@ class Graph(Dataset, ABC):
         """
         return self._split(train_percent=train_percent, validate_percent=validate_percent,
                            validate_size=validate_size, seed=seed)
+
+    def debug(self, *args, **kwargs):
+        if not getattr(self, 'silent', False):
+            print(*args, **kwargs)
 
 
 class LocalFile(Graph, ABC):

@@ -31,5 +31,14 @@ class SupervisedNodeClassification(BaseTask):
     def evaluate(self, model, res, dataset):
         # # Testing
         test_res, test_cost, test_acc, test_duration = model.evaluate(dataset.test_mask, False)
-        print("Test set results:", "cost=", "{:.5f}".format(test_cost),
-              "accuracy=", "{:.5f}".format(test_acc), "time=", "{:.5f}".format(test_duration))
+        test_cost = float(test_cost)
+        test_acc = float(test_acc)
+        self.debug("Test set results:")
+        self.debug("    cost=")
+        self.debug("{:.5f}".format(test_cost), end=' ')
+        self.debug("\n    accuracy=")
+        self.debug("{:.5f}".format(test_acc), end=' ')
+        self.debug("\n    time=")
+        self.debug("{:.5f}".format(test_duration), end=' ')
+        return {"cost": test_cost, "accuracy": test_acc, "test_time=": test_duration}
+

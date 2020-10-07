@@ -36,10 +36,10 @@ class Node2vec(ModelWithEmbeddings):
         self.args['workers'] = kwargs["workers"]
 
         if self.dw:
-            self.walker = walker.BasicWalker(graph, workers=kwargs["workers"])
+            self.walker = walker.BasicWalker(graph, workers=kwargs["workers"], silent=self.silent)
         else:
-            self.walker = walker.Walker(graph, p=p, q=q, workers=kwargs["workers"])
-            print("Preprocess transition probs...")
+            self.walker = walker.Walker(graph, p=p, q=q, workers=kwargs["workers"], silent=self.silent)
+            self.debug("Preprocess transition probs...")
             self.walker.preprocess_transition_probs()
         sentences = self.walker.simulate_walks(num_walks=num_paths, walk_length=path_length)
         self.args["sentences"] = sentences
@@ -50,10 +50,10 @@ class Node2vec(ModelWithEmbeddings):
         self.args['max_vocab_size'] = kwargs['max_vocab_size']
 
     def train_model(self, graph, **kwargs):
-        print("training Word2Vec model...")
+        self.debug("training Word2Vec model...")
         word2vec = Word2Vec(**self.args)
         self.vectors = {}
-        print("Obtaining vectors...")
+        self.debug("Obtaining vectors...")
         for word in graph.G.nodes():
             self.vectors[word] = torch.tensor(word2vec.wv[str(word)])
         del word2vec

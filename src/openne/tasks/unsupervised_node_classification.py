@@ -36,11 +36,10 @@ class UnsupervisedNodeClassification(BaseTask):
         return self.kwargs
 
     def evaluate(self, model, res, graph):
-        self._classify(graph, res, 0)
+        return self._classify(graph, res, 0)
 
-    def _classify(self, graph, vectors, seed=None, simple=False, silent=False):
-        if not silent:
-            print("Training classifier using {:.2f}% nodes...".format(
+    def _classify(self, graph, vectors, seed=None, simple=False):
+        self.debug("Training classifier using {:.2f}% nodes...".format(
                 self.kwargs['clf_ratio']*100))
-        clf = Classifier(vectors=vectors, clf=LogisticRegression(solver='lbfgs'), simple=simple, silent=silent)
+        clf = Classifier(vectors=vectors, clf=LogisticRegression(solver='lbfgs'), simple=simple, silent=self.kwargs['silent'])
         return clf.train_and_evaluate(graph, self.train_kwargs()['clf_ratio'], seed=seed)

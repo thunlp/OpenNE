@@ -134,6 +134,9 @@ def parse_args():
     for arg in model_args:
         addarg(arg, generalgroup, used_names, model_args[arg], arg not in no_default_args, choices=choices)
 
+    generalgroup.add_argument("--silent", action='store_true', help='Run silently.')
+
+
     simpledict = models.modeldict.copy()
     simpledict.__delitem__('node2vec')
     simpledict.__delitem__('deepwalk')
@@ -206,7 +209,8 @@ def main(args):
     # parsing
     args = {x: y for x, y in args.__dict__.items() if y is not None}
 
-    print("actual args:", args)
+    if not args['silent']:
+        print("actual args:", args)
 
     Task, Graph, Model = parse(**args)  # parse required Task, Dataset, Model (classes)
     dellist = ['dataset', 'edgefile', 'adjfile', 'labelfile', 'features',
@@ -219,12 +223,14 @@ def main(args):
     task.check(Model, Graph)  # check parameters
     train_args = task.kwargs
     model = Model(**train_args)  # prepare model
-    graph = Graph()  # prepare dataset
+    graph = Graph(silent=train_args['silent'])  # prepare dataset
 
     res = task.train(model, graph)  # train
 
     # evaluation
-    task.evaluate(model, res, graph)  # evaluate
+    res = task.evaluate(model, res, graph)  # evaluate
+    if train_args['silent']:
+        print(res)
 
 
 if __name__ == "__main__":
