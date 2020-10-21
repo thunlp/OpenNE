@@ -13,6 +13,7 @@ import urllib
 import errno
 from ..utils import *
 
+
 # todo: add split_train_val_test here
 class Graph(Dataset, ABC):
     def __init__(self, resource_url, root_dir, name_dict, **kwargs):
@@ -29,16 +30,15 @@ class Graph(Dataset, ABC):
         self.look_back_list = []
         self.name_dict = name_dict
 
-        defaultkwargs = {}
-        for kw in set(defaultkwargs).union(set(kwargs)):
-            self.__setattr__(kw, kwargs.get(kw, defaultkwargs[kw]))
+        for kw in set(kwargs):
+            self.__setattr__(kw, kwargs.get(kw))
 
         self.filenames = [i for k, i in name_dict.items()]
         self.paths = [self.full(f) for f in self.filenames]
         rootprompt = ""
         if self.dir:
             rootprompt = "from root dir: {}".format(osp.abspath(self.dir))
-        print("Loading {} Dataset {}".format(type(self).__name__, rootprompt))
+        self.debug("Loading {} Dataset {}".format(type(self).__name__, rootprompt))
         self.load_data()
 
     def load_data(self):
@@ -47,10 +47,10 @@ class Graph(Dataset, ABC):
                 errmsg = '\n'.join([f for f in self.paths if osp.exists(f)])
                 raise FileNotFoundError("Cannot find required files:\n{}".format(errmsg))
             makedirs(self.dir)
-            print('Downloading dataloaders "{}" from "{}".\n'
+            self.debug('Downloading dataloaders "{}" from "{}".\n'
                   'Files will be saved to "{}".'.format(type(self).__name__, self.resource_url, self.dir))
             self.download()
-            print('Downloaded.')
+            self.debug('Downloaded.')
         self.read()
 
     def download(self):
@@ -59,11 +59,11 @@ class Graph(Dataset, ABC):
 
     @property
     def read_operation(self):
-        return {'edgefile':  self.read_edgelist,
-                'adjfile':   self.read_adjlist,
+        return {'edgefile': self.read_edgelist,
+                'adjfile': self.read_adjlist,
                 'labelfile': self.read_node_label,
-                'features':  self.read_node_features,
-                'status':    self.read_node_status}
+                'features': self.read_node_features,
+                'status': self.read_node_status}
 
     def read(self):
         name_dict = self.name_dict
@@ -245,9 +245,89 @@ class Graph(Dataset, ABC):
         for i in range(len(edgelist)):
             self.G[edgelist[i][0]][edgelist[i][1]]['feature'] = edgeattrvectors[i]
 
+    def _split(self, train_percent, validate_percent=0, validate_size=None, seed=None):
+        """
+            split dataset
+            if validate_size is assigned then validate_percent will be disabled
+            returns X_train, ..., val..., X_test, Y_test
+            self.X_train, Y_train... can only be accessed after calling this
+            do not call this directly
+            call this only if you want to do a force re-split to the dataset;
+            otherwise call get_split_data()
+        """
+        assert train_percent + validate_percent < 1
+        X, Y = self.labels()
+        state = torch.random.get_rng_state()
+        training_size = int(train_percent * len(X))
+        if validate_size is not None:
+            if training_size < validate_size * 2:    # training set too small
+                validate_size = training_size // 2   # force 50%
+            training_size -= validate_size
+        else:
+            validate_size = int(validate_percent * len(X))
+        if seed is not None:
+            torch.random.manual_seed(seed)
+        shuffle_indices = torch.randperm(len(X))
+        self.shuffle_indices = shuffle_indices
+        X_train = [X[shuffle_indices[i]] for i in range(training_size)]
+        Y_train = [Y[shuffle_indices[i]] for i in range(training_size)]
+        X_val = [X[shuffle_indices[i + training_size]] for i in range(validate_size)]
+        Y_val = [Y[shuffle_indices[i + training_size]] for i in range(validate_size)]
+        X_test = [X[shuffle_indices[i]] for i in range(training_size + validate_size, len(X))]
+        Y_test = [Y[shuffle_indices[i]] for i in range(training_size + validate_size, len(X))]
+        self.train_percent = train_percent
+        self.validate_percent = validate_percent
+        self.X_train = X_train
+        self.Y_train = Y_train
+        self.X_val = X_val
+        self.Y_val = Y_val
+        self.X_test = X_test
+        self.Y_test = Y_test
+
+        def sample_mask(begin, end):
+            mask = torch.zeros(self.nodesize)
+            for i in range(begin, end):
+                mask[shuffle_indices[i]] = 1
+            return mask
+
+        self.train_mask = sample_mask(0, len(self.X_train))
+        self.val_mask = sample_mask(len(self.X_train), len(self.X_train) + len(self.X_val))
+        self.test_mask = sample_mask(len(self.X_train) + len(self.X_val), self.nodesize)
+        torch.random.set_rng_state(state)
+        return X_train, Y_train, X_val, Y_val, X_test, Y_test
+
+    def get_split_data(self, train_percent=None, validate_percent=None, validate_size=None, seed=None):
+        """
+            if validate_size is assigned then validate_percent will be disabled
+            call this if you only want to get certain split.
+            if you want to resplit, call resplit()
+        """
+
+        if hasattr(self, 'X_train') and hasattr(self, 'train_percent') and \
+                (train_percent is None or train_percent == self.train_percent) and \
+                (validate_percent is None or validate_percent == self.validate_percent):
+            return self.X_train, self.Y_train, self.X_val, self.Y_val, self.X_test, self.Y_test
+        if validate_percent is None:
+            validate_percent = 0
+        return self._split(train_percent=train_percent, validate_percent=validate_percent,
+                           validate_size=validate_size, seed=seed)
+
+    def resplit(self, train_percent, validate_percent=0, validate_size=0, seed=None):
+        """
+        if validate_size is assigned then validate_percent will be disabled
+        """
+        return self._split(train_percent=train_percent, validate_percent=validate_percent,
+                           validate_size=validate_size, seed=seed)
+
+    def debug(self, *args, **kwargs):
+        if not getattr(self, 'silent', False):
+            print(*args, **kwargs)
+
+
 class LocalFile(Graph, ABC):
     def __init__(self, root_dir, name_dict, **kwargs):
         super(LocalFile, self).__init__(None, root_dir, name_dict, **kwargs)
+
 
 def create_self_defined_dataset(root_dir, name_dict, name, weighted, directed, attributed):
     class SelfDefined(LocalFile):
@@ -267,7 +347,9 @@ def create_self_defined_dataset(root_dir, name_dict, name, weighted, directed, a
         @classmethod
         def attributed(cls):
             return attributed
+
     return SelfDefined
+
 
 class NetResources(Graph, ABC):
     def __init__(self, resource_url, name_dict, **kwargs):

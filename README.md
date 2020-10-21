@@ -72,25 +72,25 @@ performances of OpenNE-PyTorch models on Cora Dataset as compared with the previ
 <tr bgcolor='#ffffff'>
     <td>GF</td>
     <td><strong>15.01</strong></td>
-    <td>45.78</td>
+    <td>19.53</td>
     <td>.546</td>
-    <td><strong>.765</strong></td>
-    <td>-</td>
+    <td><strong>.775</strong></td>
+    <td>default # epochs changed</td>
 </tr>
 <tr bgcolor='#eeeeee'>
     <td>LINE</td>
     <td><strong>86.75</strong></td>
-    <td>102</td>
+    <td>98.69</td>
     <td>.417</td>
-    <td><strong>.685</strong></td>
-    <td>-</td>
+    <td><strong>.722</strong></td>
+    <td>default # epochs changed</td>
 </tr>
 <tr bgcolor='#ffffff'>
     <td>SDNE</td>
     <td>195.02</td>
-    <td><strong>76.80</strong></td>
+    <td><strong>10.22</strong></td>
     <td>.532</td>
-    <td><strong>.750</strong></td>
+    <td><strong>.742</strong></td>
     <td>-</td>
 </tr>
 <tr bgcolor='#eeeeee'>
@@ -154,13 +154,14 @@ It is easy to get started with OpenNE. Here are some commands for basic usages w
     python -m openne --model gf --dataset blogcatalog
     python -m openne --model gcn --dataset cora
 
-##### store_true and store_false parameters
+##### `store_true` and `store_false` parameters
 
-Parameters like --sparse have action "store_true", which means they are False by default, and should be specified if you want to assign True. Run GCN with sparsed matrices by the following command:
+Parameters like `--sparse` have action `store_true`, which means they are `False` by default, 
+and should be specified if you want to assign `True`. Run GCN with sparsed matrices by the following command:
     
     python -m openne --model gcn --dataset cora --sparse
 
-You can use store_false parameters, eg. --no-save, in a similar way:
+You can use `store_false` parameters, eg. `--no-save`, in a similar way:
 
     python -m openne --model gcn --dataset cora --sparse --no-save
     
@@ -168,27 +169,37 @@ OpenNE saves your models and training results to file by default, which may cost
     
 ##### Use your own datasets
 
-Use --local-dataset (which is also a store_true parameter!) and specify --root-dir, --edgefile or --adjfile, --labelfile, --features and --status to import dataset from file. 
+Use `--local-dataset` (which is also a `store_true` parameter!) and specify 
+`--root-dir`, `--edgefile`/`--adjfile`, 
+`--labelfile`, `--features` and `--status` to import dataset from file. 
 
-Optionally, specify store_true parameters --weighted and --directed to view the graph as weighted and/or directed.
+Optionally, specify `store_true` parameters `--weighted` and `--directed` to 
+view the graph as weighted and/or directed.
 
-If you wish to use your dataset in "~/mydataset", which includes edges.txt, an edgelist file, and labels.txt, a label file, input the following:
+If you wish to use your dataset in "~/mydataset", which includes edges.txt, 
+an edgelist file, and labels.txt, a label file, input the following:
     
     python -m openne --model gf --local-dataset --root-dir ~/mydataset --edgefile edges.txt --labelfile labels.txt
 
 
 ##### Input values
 
-While all parameter names must be provided in lower case, string input values are case insensitive:
+While all parameter names must be provided in lower case, string input values are **case insensitive**:
 
     python -m openne --model SDnE --dataset coRA
 
-The simplest way to provide a Python list (as of --encoder-layer-list in SDNE and --hiddens in GCN) is to directly input it without space. You can also wrap the list in double quotes (") to input spaces. The following commands are the same:
+The way to provide a Python list (as of `--encoder-layer-list` in SDNE and `--hiddens` in GCN) is input each elements 
+separated by spaces:
 
-    python -m openne --model sdne --dataset cora --encoder-layer-list [1000,128]
-    python -m openne --model sdne --dataset cora --encoder-layer-list "[1000,128]"
-    python -m openne --model sdne --dataset cora --encoder-layer-list "[1000, 128]"
+    python -m openne --model sdne --dataset cora --encoder-layer-list 1000 128
     
+##### CUDA and multi-GPU
+
+OpenNE uses CUDA by default if `torch.cuda.is_available() == True`. To disable CUDA, use `--cpu`.
+
+When CUDA is enabled, you can select multiple GPU devices by using `--devices [device_ids]`. `[device_ids]` includes 
+a number of integers, on the first of which your model and input are stored. Use `--data-parallel` to utilize
+ data parallelism on the chosen devices.
 
 #### General Options
 
@@ -196,86 +207,100 @@ You can check out the other options available to use with *OpenNE* using:
 
     python -m openne --help
 
-- --model {deepwalk, line, node2vec, grarep, tadw, gcn, lap, gf, hope and sdne} the specified NE model;
-- --dataset {ppi, wikipedia, flickr, blogcatalog, wiki, pubmed, cora, citeseer} standard dataset as provided by OpenNE;
+- `--model {deepwalk, line, node2vec, grarep, tadw, gcn, lap, gf, hope and sdne}` the specified NE model;
+- `--dataset {ppi, wikipedia, flickr, blogcatalog, wiki, pubmed, cora, citeseer}` standard dataset as provided by OpenNE;
 
 If instead you want to create a dataset from file, you can provide your own graph by using switch
-- --local-dataset (action store_true; mutually exclusive with --dataset)
+- `--local-dataset` (action `store_true`; mutually exclusive with `--dataset`)
 
 and the following arguments:
-- --root-dir, root directory of input files. If empty, you should provide absolute paths for graph files;
-- --edgefile, description of input graph in edgelist format;
-- --adjfile, description of input graph in adjlist format (mutually exclusive with --edgefile);
-- --label-file, node label file; 
-- --features, node feature file for certain models (optional);
-- --name, dataset name, "SelfDefined" by default;
-- --weighted, view graph as weighted (action store_true);
-- --directed, view graph as directed (action store_true);
+- `--root-dir`, root directory of input files. If empty, you should provide absolute paths for graph files;
+- `--edgefile`, description of input graph in edgelist format;
+- `--adjfile`, description of input graph in adjlist format (mutually exclusive with `--edgefile`);
+- `--label-file`, node label file; 
+- `--features`, node feature file for certain models (optional);
+- `--name`, dataset name, "SelfDefined" by default;
+- `--weighted`, view graph as weighted (action `store_true`);
+- `--directed`, view graph as directed (action `store_true`);
 
 For general training options:
-- --dim, dimension of node representation, 128 by default;
-- --clf-ratio, the ratio of training data for node classification, 0.5 by default;
-- --no-save, choose not to save the result (action store_false, dest=save);
-- --output, output file for vectors, which will be saved to "results" by default;
-- --sparse, calculate by sparse matrices (action store_true) (only supports lle & gcn);
+- `--dim`, dimension of node representation, 128 by default;
+- `--clf-ratio`, the ratio of training data for node classification, 0.5 by default;
+- `--no-save`, choose not to save the result (action `store_false`, dest=save);
+- `--output`, output file for vectors, which will be saved to "results" by default;
+- `--sparse`, calculate by sparse matrices (action `store_true`) (only supports lle & gcn);
 
 For models with multiple epochs:
-- --epochs, number of epochs;
-- --validate, True if validation is needed; by default it is False except with GCN;
-- --validation-interval, number of epochs between two validations, 5 by default;
-- --debug-output-interval, number of epochs between two debug outputs, 5 by default;
+- `--epochs`, number of epochs;
+- `--validate`, `True` if validation is needed; by default it is `False` except with GCN;
+- `--validation-interval`, number of epochs between two validations, 5 by default;
+- `--debug-output-interval`, number of epochs between two debug outputs, 5 by default;
 
+For device options:
+- `--cpu`, force OpenNE to run on CPU. Ignored if `torch.cuda.is_available() == False`.
+- `--devices`, specify CUDA devices for OpenNE to run on (default 0). Devices other than
+`device_id[0]` are ignored except with `--data-parallel`. Ignored if `torch.cuda.is_available() == False`.
+- `--data-parallel`, split input batch and perform data parallelism (action `store_true`). Only works 
+for methods with `--batch-size` (i.e. line, sdne). 
 
 #### Specific Options
 
 GraphFactorization:
-- --weight-decay, weight for l2-loss of embedding matrix (1.0 by default);
-- --lr, learning rate (0.003 by default)
+- `--weight-decay`, weight for l2-loss of embedding matrix (1.0 by default);
+- `--lr`, learning rate (0.003 by default)
 
 GraRep:
 
-- --kstep, use k-step transition probability matrix（requires dim % kstep == 0).
+- `--kstep`, use k-step transition probability matrix（requires `dim % kstep == 0`).
 
 
 HOPE:
-- --measurement {katz, cn, rpr, aa}  mesurement matrix, katz by default;
-- --beta, parameter with katz measurement, 0.02 by default;
-- --alpha, parameter with rpr measurement, 0.5 by default;
+- `--measurement {katz, cn, rpr, aa}`  mesurement matrix, `katz` by default;
+- `--beta`, parameter with katz measurement, 0.02 by default;
+- `--alpha`, parameter with rpr measurement, 0.5 by default;
 
 LINE:
-- --lr, learning rate, 0.001 by default;
-- --batch-size, 1000 by default;
-- --negative-ratio, 5 by default;
-- --order, 1 for the 1st-order, 2 for the 2nd-order and 3 for 1st + 2nd, 3 by default;
+- `--lr`, learning rate, 0.001 by default;
+- `--batch-size`, 1024 by default;
+- `--negative-ratio`, 5 by default;
+- `--order`, 1 for the 1st-order, 2 for the 2nd-order and 3 for 1st + 2nd, 3 by default;
 
 SDNE:
 
-- --encoder-list, list of neuron numbers at each encoder layer. Instead of --dim, The last number is the dimension of the output node representation. [128] by default. See "Input Instructions";
-- --alpha, parameter that controls the first-order proximity loss, 1e-6 by default;
-- --beta, parameter used for construct matrix B, 5 by default;
-- --nu1, parameter that controls l1-loss of weights in autoencoder, 1e-8 by default;
-- --nu2, parameter that controls l2-loss of weights in autoencoder, 1e-5 by default;
-- --bs, batch size, 200 by default;
-- --lr, learning rate, 0.001 by default;
-- --decay, allow decay in learning rate (action store_true);
+- `--encoder-layer-list`, list of neuron numbers at each encoder layer. 
+In SDNE, the last number `--encoder-layer-list`, instead of `--dim`, is the dimension of the output node representation. \[128\] by default;
+- `--alpha`, parameter that controls the first-order proximity loss, 1e-6 by default;
+- `--beta`, parameter used for construct matrix B, 5 by default;
+- `--nu1`, parameter that controls l1-loss of weights in autoencoder, 1e-8 by default;
+- `--nu2`, parameter that controls l2-loss of weights in autoencoder, 1e-5 by default;
+- `--bs`, batch size, 200 by default;
+- `--lr`, learning rate, 0.001 by default;
+- `--decay`, allow decay in learning rate (action store_true);
 
 TADW: (requires attributed graph, eg. cora, pubmed, citeseer)
-- --lamb, parameter that controls the weight of regularization terms, 0.2 by default;
+- `--lamb`, parameter that controls the weight of regularization terms, 0.4 by default;
 
 GCN: (requires attributed graph)
-- --lr, learning rate, 0.01 by default;
-- --dropout, dropout rate, 0.5 by default;
-- --weight-decay, weight for l2-loss of embedding matrix, 0.0001 by default;
-- --hiddens, list of neuron numbers in each hidden layer, [16] by default;
-- --max-degree, maximum Chebyshev polynomial degree. 0 (disable Chebyshev polynomial) by default;
+- `--lr`, learning rate, 0.01 by default;
+- `--dropout`, dropout rate, 0.5 by default;
+- `--weight-decay`, weight for l2-loss of embedding matrix, 0.0001 by default;
+- `--hiddens`, list of neuron numbers in each hidden layer, \[16\] by default;
+- `--max-degree`, maximum Chebyshev polynomial degree. 0 (disable Chebyshev polynomial) by default;
 
+GAE and VGAE: (requires attributed graph) shares the same parameter list with GCN.
+- `--lr`, default 0.01;
+- `--dropout`, default 0.0;
+- `--weight-decay`, default 1e-4;
+- `--early-stopping`, default 100;
+- `--hiddens`, default \[32\];
+- `--max-degree`, default 0;
 
 DeepWalk and node2vec:
-- --num-paths, number of random walks that starts at each node, 10 by default;
-- --path-length, length of random walk started at each node, 80 by default;
-- --window, window size of skip-gram model; 10 by default;
-- --q (only node2vec), 1.0 by default;
-- --p (only node2vec), 1.0 by default.
+- `--num-paths`, number of random walks that starts at each node, 10 by default;
+- `--path-length`, length of random walk started at each node, 80 by default;
+- `--window`, window size of skip-gram model; 10 by default;
+- `--q` (only node2vec), 1.0 by default;
+- `--p` (only node2vec), 1.0 by default.
 
 ## Experimental Results
 

@@ -36,7 +36,7 @@ def preprocess_features(features, sparse=False):
     return features.to_sparse() if sparse else features
 
 
-def normalize_adj(adj): #  safe. don't change by now
+def normalize_adj(adj):  #  safe. don't change by now
     """Symmetrically normalize adjacency matrix."""
     adj = sp.coo_matrix(adj)
     rowsum = np.array(adj.sum(1))

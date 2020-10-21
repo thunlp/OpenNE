@@ -15,16 +15,16 @@ class GAEModel(nn.Module):
         self.dimensions = dimensions
         self.adj = adj
         self.layers = nn.ModuleList()
-        for i in range(1,len(self.dimensions)-1):
-            self.layers.append(GraphConvolution(self.dimensions[i-1], self.dimensions[i], dropout, act=F.relu))
+        for i in range(1, len(self.dimensions) - 1):
+            self.layers.append(GraphConvolution(self.dimensions[i - 1], self.dimensions[i], dropout, act=F.relu))
         self.layers.append(GraphConvolution(self.dimensions[-2], self.dimensions[-1], dropout, act=lambda x: x))
-        
 
     def forward(self, x):
         output = x
         for layer in self.layers:
             output = layer(output, self.adj)
         return output
+
 
 class GAE(ModelWithEmbeddings):
 
@@ -35,7 +35,7 @@ class GAE(ModelWithEmbeddings):
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
-        check_existance(kwargs, {"learning_rate": 0.01,
+        check_existance(kwargs, {"lr": 0.01,
                                  "epochs": 200,
                                  "dropout": 0.,
                                  "weight_decay": 1e-4,
@@ -43,7 +43,7 @@ class GAE(ModelWithEmbeddings):
                                  "clf_ratio": 0.5,
                                  "hiddens": [32],
                                  "max_degree": 0})
-        check_range(kwargs, {"learning_rate": (0, np.inf),
+        check_range(kwargs, {"lr": (0, np.inf),
                              "epochs": (0, np.inf),
                              "dropout": (0, 1),
                              "weight_decay": (0, 1),
@@ -51,17 +51,17 @@ class GAE(ModelWithEmbeddings):
                              "clf_ratio": (0, 1),
                              "max_degree": (0, np.inf)})
         return kwargs
-    
+
     @classmethod
     def check_graphtype(cls, graphtype, **kwargs):
         if not graphtype.attributed():
             raise TypeError("GAE only accepts attributed graphs!")
 
-    def build(self, graph, *, learning_rate=0.01, epochs=200,
+    def build(self, graph, *, lr=0.01, epochs=200,
               dropout=0., weight_decay=1e-4, early_stopping=100,
               clf_ratio=0.5, **kwargs):
         """
-                        learning_rate: Initial learning rate
+                        lr: Initial learning rate
                         epochs: Number of epochs to train
                         hidden1: Number of units in hidden layer 1
                         dropout: Dropout rate (1 - keep probability)
@@ -70,30 +70,25 @@ class GAE(ModelWithEmbeddings):
                         max_degree: Maximum Chebyshev polynomial degree
         """
         self.clf_ratio = clf_ratio
-        self.learning_rate = learning_rate
+        self.lr = lr
         self.epochs = epochs
         self.dropout = dropout
         self.weight_decay = weight_decay
         self.early_stopping = early_stopping
-        self.sparse = False
         self.preprocess_data(graph)
-        print(self.clf_ratio)
-        
         # Create models
-        input_dim = self.features.shape[1] if not self.sparse else self.features[2][1]
-        feature_shape = self.features.shape if not self.sparse else self.features[0].shape[0]
-        
-        self.dimensions = [input_dim]+self.hiddens+[self.output_dim]
-        
+        input_dim = self.features.shape[1]
+
+        self.dimensions = [input_dim] + self.hiddens + [self.output_dim]
         self.model = GAEModel(self.dimensions, self.support[0], self.dropout)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
 
     def train_model(self, graph, **kwargs):
         # Train models
-        output, train_loss,  __ = self.evaluate()
-        self.debug_info =str({"train_loss": "{:.5f}".format(train_loss)})
-        
+        output, train_loss, __ = self.evaluate()
+        self.debug_info = "train_loss = {:.5f}".format(train_loss)
+        return output
+
     def build_label(self, graph):
         g = graph.G
         look_up = graph.look_up_dict
@@ -106,22 +101,24 @@ class GAE(ModelWithEmbeddings):
                 if l not in label_dict:
                     label_dict[l] = label_id
                     label_id += 1
-        self.labels = torch.zeros((len(labels), label_id))
+        self.register_float_buffer("labels", torch.zeros((len(labels), label_id)))
         self.label_dict = label_dict
         for node, l in labels:
             node_id = look_up[node]
             for ll in l:
                 l_id = label_dict[ll]
-                self.labels[node_id][l_id] = 1
-    
+                self.labels[node_id, l_id] = 1
+
     def loss(self, output, adj_label, pos_weight, norm):
         cost = 0.
 
-        cost += norm * F.binary_cross_entropy_with_logits(torch.mm(output, output.t()), adj_label, pos_weight=pos_weight)
-        
-        return cost 
+        cost += norm * F.binary_cross_entropy_with_logits(torch.mm(output, output.t()), adj_label,
+                                                          pos_weight=pos_weight)
 
-    # Define models evaluation function
+        return cost
+
+        # Define models evaluation function
+
     def evaluate(self, train=True):
         t_test = time.time()
         self.optimizer.zero_grad()
@@ -130,11 +127,11 @@ class GAE(ModelWithEmbeddings):
         loss = self.loss(output, self.adj_label, self.pos_weight, self.norm)
         if train:
             loss.backward()
-            #print([(name, param.grad) for name,param in self.model.named_parameters()])
+            # print([(name, param.grad) for name,param in self.model.named_parameters()])
             self.optimizer.step()
         return output, loss, (time.time() - t_test)
 
-    def make_output(self, graph, **kwargs):
+    def _get_embeddings(self, graph, **kwargs):
         self.embeddings = self.model(self.features).detach()
 
     def preprocess_data(self, graph):
@@ -143,22 +140,24 @@ class GAE(ModelWithEmbeddings):
             y_train, y_val, y_test can merge to y
         """
         g = graph.G
-        look_back = graph.look_back_list
-        self.features = torch.from_numpy(graph.features()).type(torch.float32)
-        self.features = preprocess_features(self.features, sparse=self.sparse)
-
+        features = torch.from_numpy(graph.features()).type(torch.float32)
+        features = preprocess_features(features, sparse=self.sparse)
+        self.register_buffer("features", features)
         n = graph.nodesize
         self.build_label(graph)
         adj_label = graph.adjmat(weighted=False, directed=False, sparse=True)
-        
-        self.adj_label = torch.FloatTensor((adj_label + sp.eye(n).toarray()))
+        self.register_float_buffer("adj_label", adj_label + sp.eye(n).toarray())
         adj = nx.adjacency_matrix(g)  # the type of graph
-        self.pos_weight = torch.Tensor([float(n * n - adj.sum()) / adj.sum()])
+        self.register_float_buffer("pos_weight", [float(n * n - adj.sum()) / adj.sum()])
         self.norm = n * n / float((n * n - adj.sum()) * 2)
+
         if self.max_degree == 0:
             self.support = [preprocess_graph(adj)]
         else:
             self.support = chebyshev_polynomials(adj, self.max_degree)
+        self.support = [i.to(self._device) for i in self.support]
+        for n, i in enumerate(self.support):
+            self.register_buffer("support_{0}".format(n), i)
         # print(self.support)
 
 class GraphConvolution(nn.Module):
@@ -172,7 +171,7 @@ class GraphConvolution(nn.Module):
         self.out_features = out_features
         self.dropout = dropout
         self.act = act
-        self.weight = nn.Parameter(torch.FloatTensor(in_features, out_features))
+        self.weight = nn.Parameter(torch.zeros(in_features, out_features), requires_grad=True)
         self.reset_parameters()
 
     def reset_parameters(self):
