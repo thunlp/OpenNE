@@ -25,11 +25,12 @@ def adjust_lr(optimizer, step, decay_strategy=lambda x: 0.03):
 
 
 class RBM(torch.nn.Module):
-    def __init__(self, weights=None, bias=None, visible_dim=128, hidden_dim=64, lr=1e-5, decay=False, batch_size=16):
+    def __init__(self, weights=None, bias=None, visible_dim=128, hidden_dim=64, lr=1e-5, decay=False, batch_size=16, silent=False):
         super(RBM, self).__init__()
         self.lr = lr
         self.decay = decay
         self.batch_size = batch_size
+        self.silent = silent
         if weights == None:
             self.weights = torch.nn.init.xavier_uniform_(torch.FloatTensor(visible_dim, hidden_dim))
             self.v_dim = visible_dim
@@ -87,12 +88,13 @@ class RBM(torch.nn.Module):
                 batch = batch.view(len(batch), self.v_dim)
                 a = (self.contrastive_divergence(batch))
                 allcost += a
-            print("Epoch:{}, lr={},cost={}".format(epoch, self.lr, allcost))
+            if not self.silent:
+                print("Epoch:{}, lr={},cost={}".format(epoch, self.lr, allcost))
         self.lr = lr0
 
 
 class SDNENet(torch.nn.Module):
-    def __init__(self, encoder_layer_list, alpha, nu1, nu2, pretrain_lr=1e-5, pretrain_epoch=1):
+    def __init__(self, encoder_layer_list, alpha, nu1, nu2, pretrain_lr=1e-5, pretrain_epoch=1, silent=False, **kwargs):
         super(SDNENet, self).__init__()
         self.alpha = alpha
         self.nu1 = nu1
@@ -117,15 +119,21 @@ class SDNENet(torch.nn.Module):
         self.encoder.apply(init_weights)
         self.decoder.apply(init_weights)
 
+        self.silent = silent
+
+        if kwargs['data_parallel']:
+            self.encoder = torch.nn.DataParallel(self.encoder, kwargs['devices'])
+            self.decoder = torch.nn.DataParallel(self.decoder, kwargs['devices'])
+
     def pretrain(self, data):  # deep-belief-network-based pretraining
         for layer in self.layer_collector:
             if type(layer) == torch.nn.Linear:
                 rbm = RBM(visible_dim=len(layer.weight[0]), hidden_dim=len(layer.weight), batch_size=len(data),
                           lr=self.pretrain_lr * len(data),
-                          decay=False)
+                          decay=False, silent=self.silent)
                 rbm.train_model(data, epochs=self.pretrain_epoch)
-                layer.weight = torch.nn.Parameter(rbm.weights.t())
-                layer.bias = torch.nn.Parameter(rbm.h_bias)
+                layer.weight = torch.nn.Parameter(rbm.weights.t(), True)
+                layer.bias = torch.nn.Parameter(rbm.h_bias, True)
                 data = rbm.sample(rbm.forward(data))
 
     def forward(self, a_b):
@@ -154,7 +162,7 @@ class SDNENet(torch.nn.Module):
 
 
 class SDNE(ModelWithEmbeddings):
-    def __init__(self, encoder_layer_list, alpha=1e-6, beta=5., nu1=1e-8, nu2=1e-4, **kwargs):
+    def __init__(self, encoder_layer_list, alpha=20., beta=5., nu1=1e-8, nu2=1e-4, **kwargs):
         """
         encoder_layer_list: a list of numbers of the neuron at each encoder layer, the last number is the
         dimension of the output node representation
@@ -168,15 +176,16 @@ class SDNE(ModelWithEmbeddings):
     @classmethod
     def check_train_parameters(cls, **kwargs):
         check_existance(kwargs, {'encoder_layer_list': [128],
-                                 'alpha': 1e-6,
+                                 'alpha': 20,
                                  'beta': 5.,
                                  'nu1': 1e-8,
                                  'nu2': 1e-4,
                                  'batch_size': 200,
-                                 'epochs': 100,
+                                 'epochs': 200,
                                  'lr': 0.001,
                                  'decay': False,
-                                 'pretrain': False})
+                                 'pretrain': False,
+                                 'data_parallel': False})
         check_range(kwargs, {'batch_size': (0, np.inf),
                              'epochs': (0, np.inf),
                              'lr': (0, np.inf),
@@ -184,24 +193,27 @@ class SDNE(ModelWithEmbeddings):
                              'pretrain': [True, False, 0, 1]})
         return kwargs
 
-    def build(self, graph, *, batch_size=200, epochs=100, lr=0.001, decay=False, pretrain=False, **kwargs):
+    def build(self, graph, *, batch_size=200, epochs=100, lr=0.001, decay=False,
+              pretrain=False, data_parallel=False, **kwargs):
         self.node_size = graph.nodesize
         self.dim = self.encoder_layer_list[-1]
-        self.encoder_layer_list = [self.node_size]
-        self.encoder_layer_list.extend(self.encoder_layer_list)
-        self.encoder_layer_num = len(self.encoder_layer_list) + 1
+        encoder_layer_list = [self.node_size]
+        encoder_layer_list.extend(self.encoder_layer_list)
+        self.encoder_layer_num = len(encoder_layer_list) + 1
         self.bs = batch_size
         self.epochs = (epochs * self.node_size) // batch_size
         self.real_epochs = epochs
         self.decay = decay
         self.pretrain = pretrain
+        self.data_parallel = data_parallel
         if self.decay:
             self.lr = lambda x: lr / (1 + 0.9999 * x)
         else:
             self.lr = lambda x: lr
-        self.adj_mat = torch.from_numpy(graph.adjmat(weighted=True, directed=True)).type(torch.float32)
+        self.adjmat_device(graph, weighted=True, directed=True)
+        self.model = SDNENet(encoder_layer_list, self.alpha, self.nu1, self.nu2,
+                             data_parallel=data_parallel, devices=kwargs['devices'], silent=self.silent)
 
-        self.model = SDNENet(self.encoder_layer_list, self.alpha, self.nu1, self.nu2)
         if self.pretrain:
             self.model.pretrain(self.adj_mat)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr(0))
@@ -221,8 +233,8 @@ class SDNE(ModelWithEmbeddings):
         self.optimizer.step()
         if self.decay:
             adjust_lr(self.optimizer, step, decay_strategy=self.lr)
-        self.debug_info = "total loss: {}, l1 loss: {}, l2 loss: {}".format(loss, l1, l2)
+        self.debug_info = "total loss: {:.5f}, l1 loss: {:.5f}, l2 loss: {:.5f}".format(loss, float(l1), float(l2))
 
-    def make_output(self, graph, **kwargs):
+    def _get_embeddings(self, graph, **kwargs):
         embeddings, _ = self.model(self.adj_mat)
         self.embeddings = embeddings.detach()

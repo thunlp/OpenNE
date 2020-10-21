@@ -11,11 +11,11 @@ def sample_mask(idx, l):
     return mask.type(dtype=torch.bool)
 
 class Planetoid(NetResources, ABC):
-    def __init__(self):
+    def __init__(self, **kwargs):
         url = 'https://github.com/kimiyoung/planetoid/raw/master/data'
         names = ['x', 'tx', 'allx', 'y', 'ty', 'ally', 'graph', 'test.index']
         name_dict = {name: 'ind.' + type(self).lname() + '.' + name for name in names}
-        super(Planetoid, self).__init__(url, name_dict)
+        super(Planetoid, self).__init__(url, name_dict, **kwargs)
         # edge_attr, edge_index, test_mask, train_mask, val_mask, x, y
 
     @classmethod
@@ -72,7 +72,7 @@ class Planetoid(NetResources, ABC):
             for j in self.G.neighbors(i):
                 self.G[i][j]['weight'] = 1.0
 
-        self.G = nx.relabel_nodes(self.G, {i: str(i) for i in range(self.nodesize)})
+        # self.G = nx.relabel_nodes(self.G, {i: str(i) for i in range(self.nodesize)})
         self.encode_node()
 
     @classmethod
@@ -80,8 +80,8 @@ class Planetoid(NetResources, ABC):
         return True
 
 class Cora(Planetoid):
-    def __init__(self):
-        super(Cora, self).__init__()
+    def __init__(self, **kwargs):
+        super(Cora, self).__init__(**kwargs)
 
     @classmethod
     def weighted(cls):
@@ -104,8 +104,8 @@ class CiteSeer(Planetoid):
         return False
 
 class PubMed(Planetoid):
-    def __init__(self):
-        super(PubMed, self).__init__()
+    def __init__(self, **kwargs):
+        super(PubMed, self).__init__(**kwargs)
 
     @classmethod
     def weighted(cls):

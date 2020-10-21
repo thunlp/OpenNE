@@ -1,6 +1,9 @@
 # we do not need change this
 
 from __future__ import print_function
+
+import warnings
+
 import numpy
 import torch
 from sklearn.multiclass import OneVsRestClassifier # data training. TODO: write a PyTorch version of OVRClassifier
@@ -24,10 +27,15 @@ class TopKRanker(OneVsRestClassifier):
 
 class Classifier(object):
 
-    def __init__(self, vectors, clf):
+    def __init__(self, vectors, clf, simple=False, silent=False):
         self.embeddings = vectors
         self.clf = TopKRanker(clf)
         self.binarizer = MultiLabelBinarizer(sparse_output=True)
+        if simple:
+            self.f1cat = 2
+        else:
+            self.f1cat = 4
+        self.silent = silent
 
     def train(self, X, Y, Y_all):
         self.binarizer.fit(Y_all)
@@ -39,11 +47,18 @@ class Classifier(object):
         top_k_list = [len(l) for l in Y]
         Y_ = self.predict(X, top_k_list)  # Y_ Tensor
         Y = self.binarizer.transform(Y)  # Y  np array
-        averages = ["micro", "macro", "samples", "weighted"]
+        averages = ["micro", "macro", "samples", "weighted"][:self.f1cat]
         results = {}
+
         for average in averages:
-            results[average] = f1_score(Y, numpy.asarray(Y_), average=average)
-        print(results)
+            if self.silent:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    results[average] = f1_score(Y, numpy.asarray(Y_), average=average)
+            else:
+                results[average] = f1_score(Y, numpy.asarray(Y_), average=average)
+        if not self.silent:
+            print(results)
         return results
 
     def predict(self, X, top_k_list):
@@ -51,19 +66,9 @@ class Classifier(object):
         Y = self.clf.predict(X_, top_k_list=top_k_list)
         return Y
 
-    def split_train_evaluate(self, X, Y, train_percent, seed=None):
-        state = torch.random.get_rng_state()
-        training_size = int(train_percent * len(X))
-        if seed is not None:
-            torch.random.manual_seed(seed)
-        shuffle_indices = torch.randperm(len(X))
-        X_train = [X[shuffle_indices[i]] for i in range(training_size)]
-        Y_train = [Y[shuffle_indices[i]] for i in range(training_size)]
-        X_test = [X[shuffle_indices[i]] for i in range(training_size, len(X))]
-        Y_test = [Y[shuffle_indices[i]] for i in range(training_size, len(X))]
-
-        self.train(X_train, Y_train, Y)
-        torch.random.set_rng_state(state)
+    def train_and_evaluate(self, graph, train_percent, seed=None):
+        X_train, Y_train, _, _, X_test, Y_test = graph.get_split_data(train_percent, seed=seed)
+        self.train(X_train, Y_train, graph.labels()[1])
         return self.evaluate(X_test, Y_test)
 
 
