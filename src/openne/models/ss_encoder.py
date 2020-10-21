@@ -1,7 +1,7 @@
 import numpy as np
 from .gcn.utils import *
-from .gcn.layers import GraphConvolution, Linear
 from .models import *
+from .gcn.inits import *
 import time
 import scipy.sparse as sp
 import torch
@@ -41,6 +41,58 @@ class Encoder(nn.Module):
         logits = torch.cat((pos_score, neg_score), 0)
         return torch.unsqueeze(logits, 0)
 
+class Linear(nn.Module):
+    """Linear layer."""
+
+    def __init__(self, input_dim, output_dim, dropout=0., num_features_nonzero=0.,
+                 sparse_inputs=False, act=torch.relu, bias=False):
+        super(Linear, self).__init__()
+
+        self.dropout = dropout  # note we modified the API
+        self.act = act
+        self.sparse_inputs = sparse_inputs
+        self.output_dim = output_dim
+        self.input_dim = input_dim
+        # helper variable for sparse dropout
+        self.num_features_nonzero = num_features_nonzero
+        self.logging = False
+
+        self.act = act
+        self.weight = nn.Parameter(torch.zeros(input_dim, output_dim), requires_grad=True)
+        
+        if bias:
+            self.bias = zeros([output_dim])
+        else:
+            self.bias = None
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        torch.nn.init.xavier_uniform_(self.weight)
+
+
+    def forward(self, inputs=None):
+        x = inputs
+        if self.training:
+            # dropout
+            if self.sparse_inputs:
+                x = sparse_dropout(x, self.dropout, self.num_features_nonzero)
+            else:
+                x = torch.dropout(x, self.dropout, True)
+        elif self.sparse_inputs:
+            x = tuple_to_sparse(x)
+        
+        pre_sup = torch.mm(x, self.weight)
+        output = pre_sup
+            
+        # bias
+        if self.bias is not None:
+            output += self.bias
+        return self.act(output)
+    
+    def __repr__(self):
+        return self.__class__.__name__ + ' (' \
+               + str(self.input_dim) + ' -> ' \
+               + str(self.output_dim) + ')'
 
 class Discriminator(nn.Module):
     def __init__(self, n_h):
