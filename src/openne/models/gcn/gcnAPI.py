@@ -59,6 +59,7 @@ class GCN(ModelWithEmbeddings):
         self.early_stopping = early_stopping
         self.sparse = sparse
 
+
         self.preprocess_data(graph)
         # Create models
         input_dim = self.features.shape[1]  # row
@@ -69,25 +70,31 @@ class GCN(ModelWithEmbeddings):
         output_dim = self.labels.shape[1]
         self.model = gcnModel.GCNModel(input_dim=input_dim, output_dim=output_dim, hidden_dims=self.hiddens,
                                        supports=self.support, dropout=self.dropout, sparse_inputs=self.sparse,
-                                       num_features_nonzero=feature_shape, weight_decay=self.weight_decay, logging=False)
+                                       num_features_nonzero=feature_shape, weight_decay=self.weight_decay,
+                                       logging=False)
         self.cost_val = []
 
     def train_model(self, graph, **kwargs):
         # Train models
-        output, train_loss, train_acc, __ = self.evaluate(kwargs['train_mask'])
+        output, train_loss, train_acc, __ = self.evaluate(graph.train_mask)
         self.debug_info = "train_loss = {:.5f}, train_acc = {:.5f}".format(train_loss, train_acc)
         return output
 
+    def _get_embeddings(self, graph, **kwargs):
+        self.embeddings = self.model(self.features).detach()
+
     def early_stopping_judge(self, graph, *, step=0, **kwargs):
-        return step > self.early_stopping and self.cost_val[-1] > torch.mean(
+        return kwargs['validate'] and step > self.early_stopping and self.cost_val[-1] > torch.mean(
                     torch.stack(self.cost_val[-(self.early_stopping + 1):-1]))
 
     # Define models evaluation function
     def evaluate(self, mask, train=True):
+        mask = mask.to(self._device)
         torch.autograd.set_detect_anomaly(True)
         t_test = time.time()
         self.model.zero_grad()
         self.model.train(train)
+
         output = self.model(self.features)
         loss = self.model.loss(self.labels, mask)
         accuracy = self.model.accuracy(self.labels, mask)
@@ -110,7 +117,7 @@ class GCN(ModelWithEmbeddings):
                 if l not in label_dict:
                     label_dict[l] = label_id
                     label_id += 1
-        self.labels = torch.zeros((len(labels), label_id))
+        self.register_float_buffer("labels", torch.zeros((len(labels), label_id)))
         self.label_dict = label_dict
         for node, l in labels:
             node_id = look_up[node]
@@ -124,13 +131,16 @@ class GCN(ModelWithEmbeddings):
             y_train, y_val, y_test can merge to y
         """
         g = graph.G
-        look_back = graph.look_back_list
-        self.features = torch.from_numpy(graph.features()).type(torch.float32)
-        self.features = preprocess_features(self.features, sparse=self.sparse)
+        features = torch.from_numpy(graph.features()).type(torch.float32)
+        features = preprocess_features(features, sparse=self.sparse)
+        self.register_buffer("features", features)
         self.build_label(graph)
         adj = graph.adjmat(weighted=True, directed=True)
         if self.max_degree == 0:
             self.support = [preprocess_adj(adj)]
         else:
             self.support = chebyshev_polynomials(adj, self.max_degree)
-        # print(self.support)
+        self.support = [i.to(self._device) for i in self.support]
+        for n, i in enumerate(self.support):
+            self.register_buffer("support_{0}".format(n), i)
+

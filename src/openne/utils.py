@@ -6,6 +6,8 @@ import os.path as osp
 import errno
 import urllib
 import ssl
+import torch
+
 ssl._create_default_https_context = ssl._create_unverified_context
 
 def check_existance(src_dict, req_items, defaults=None):
@@ -23,8 +25,7 @@ def check_existance(src_dict, req_items, defaults=None):
     """
     if isinstance(req_items, dict):
         for k, v in req_items.items():
-            if k not in src_dict:
-                src_dict[k] = v
+            src_dict.setdefault(k, v)
     else:
         for i in range(len(req_items)):
             if req_items[i] not in src_dict:
@@ -117,3 +118,7 @@ def download_url(url, folder, log=True):
         f.write(data.read())
 
     return path
+
+class UnlimitedDataParallel(torch.nn.DataParallel):
+    def __getattr__(self, name):
+        return getattr(self.module, name)
