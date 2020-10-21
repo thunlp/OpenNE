@@ -52,7 +52,6 @@ class HOPE(ModelWithEmbeddings):
                 D[i][i] /= k
             S = np.matmul(np.matmul(A, D), A)
 
-        # todo: check if the models REALLY DON'T NEED M_g and M_l!
         u, s, vt = sla.svds(S, k=self.dim // 2)  # this one directly use the d/2-dim core for svd
 
         sigma = np.sqrt(s)

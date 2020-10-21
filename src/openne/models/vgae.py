@@ -39,6 +39,7 @@ class VGAEModel(nn.Module):
         z = self.reparameterize(mu, logvar)
         return z, mu, logvar
 
+
 class VGAE(ModelWithEmbeddings):
 
     def __init__(self, output_dim=16, hiddens=None, max_degree=0, **kwargs):
@@ -48,7 +49,7 @@ class VGAE(ModelWithEmbeddings):
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
-        check_existance(kwargs, {"learning_rate": 0.1,
+        check_existance(kwargs, {"lr": 0.1,
                                  "epochs": 300,
                                  "dropout": 0.,
                                  "weight_decay": 1e-4,
@@ -56,7 +57,7 @@ class VGAE(ModelWithEmbeddings):
                                  "clf_ratio": 0.8,
                                  "hiddens": [32],
                                  "max_degree": 0})
-        check_range(kwargs, {"learning_rate": (0, np.inf),
+        check_range(kwargs, {"lr": (0, np.inf),
                              "epochs": (0, np.inf),
                              "dropout": (0, 1),
                              "weight_decay": (0, 1),
@@ -64,17 +65,17 @@ class VGAE(ModelWithEmbeddings):
                              "clf_ratio": (0, 1),
                              "max_degree": (0, np.inf)})
         return kwargs
-    
+
     @classmethod
     def check_graphtype(cls, graphtype, **kwargs):
         if not graphtype.attributed():
             raise TypeError("GAE only accepts attributed graphs!")
 
-    def build(self, graph, *, learning_rate=0.01, epochs=200,
+    def build(self, graph, *, lr=0.01, epochs=300,
               dropout=0.5, weight_decay=1e-4, early_stopping=100,
               clf_ratio=0.1, **kwargs):
         """
-                        learning_rate: Initial learning rate
+                        lr: Initial learning rate
                         epochs: Number of epochs to train
                         hidden1: Number of units in hidden layer 1
                         dropout: Dropout rate (1 - keep probability)
@@ -82,25 +83,22 @@ class VGAE(ModelWithEmbeddings):
                         early_stopping: Tolerance for early stopping (# of epochs)
                         max_degree: Maximum Chebyshev polynomial degree
         """
-        self.learning_rate = learning_rate
+        self.lr = lr
         self.epochs = epochs
         self.dropout = dropout
         self.weight_decay = weight_decay
         self.early_stopping = early_stopping
-        self.sparse = False
-
         self.preprocess_data(graph)
         # Create models
-        input_dim = self.features.shape[1] if not self.sparse else self.features[2][1]
-        feature_shape = self.features.shape if not self.sparse else self.features[0].shape[0]
-        self.dimensions = [input_dim]+self.hiddens+[self.output_dim]
+        input_dim = self.features.shape[1]
+
+        self.dimensions = [input_dim] + self.hiddens + [self.output_dim]
         self.model = VGAEModel(self.dimensions, self.support[0], self.dropout)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
 
     def train_model(self, graph, **kwargs):
         # Train models
-        output, train_loss,  __ = self.evaluate(torch.ones(graph.nodesize))
+        output, train_loss, __ = self.evaluate()
         self.debug_info = "train_loss = {:.5f}".format(train_loss)
         return output
         
@@ -116,7 +114,7 @@ class VGAE(ModelWithEmbeddings):
                 if l not in label_dict:
                     label_dict[l] = label_id
                     label_id += 1
-        self.labels = torch.zeros((len(labels), label_id))
+        self.labels = torch.zeros((len(labels), label_id), device=self._device)
         self.label_dict = label_dict
         for node, l in labels:
             node_id = look_up[node]
@@ -133,7 +131,7 @@ class VGAE(ModelWithEmbeddings):
 
 
     # Define models evaluation function
-    def evaluate(self, mask, train=True):
+    def evaluate(self, train=True):
         #torch.autograd.set_detect_anomaly(True)
         t_test = time.time()
         self.optimizer.zero_grad()
@@ -147,8 +145,8 @@ class VGAE(ModelWithEmbeddings):
             self.optimizer.step()
         return output, loss, (time.time() - t_test)
 
-    def make_output(self, graph, **kwargs):
-        output, mu, var= self.model(self.features)
+    def _get_embeddings(self, graph, **kwargs):
+        output, mu, var = self.model(self.features)
         self.embeddings = mu.detach()
 
     def preprocess_data(self, graph):
@@ -158,20 +156,53 @@ class VGAE(ModelWithEmbeddings):
         """
         g = graph.G
         look_back = graph.look_back_list
-        self.features = torch.from_numpy(graph.features()).type(torch.float32)
-        self.features = preprocess_features(self.features, sparse=self.sparse)
-
+        features = torch.from_numpy(graph.features()).type(torch.float32)
+        features = preprocess_features(features, sparse=self.sparse)
+        self.register_buffer("features", features)
         n = graph.nodesize
         self.n_nodes = n
         self.build_label(graph)
         adj_label = graph.adjmat(weighted=False, directed=False, sparse=True)
-        
-        self.adj_label = torch.FloatTensor((adj_label + sp.eye(n).toarray()))
+        self.register_float_buffer("adj_label", adj_label + sp.eye(n).toarray())
         adj = nx.adjacency_matrix(g)  # the type of graph
-        self.pos_weight = torch.Tensor([float(n * n - adj.sum()) / adj.sum()])
+        self.register_float_buffer("pos_weight", [float(n * n - adj.sum()) / adj.sum()])
         self.norm = n * n / float((n * n - adj.sum()) * 2)
 
         if self.max_degree == 0:
             self.support = [preprocess_graph(adj)]
         else:
             self.support = chebyshev_polynomials(adj, self.max_degree)
+        self.support = [i.to(self._device) for i in self.support]
+        for n, i in enumerate(self.support):
+            self.register_buffer("support_{0}".format(n), i)
+        # print(self.support)
+
+
+class GraphConvolution(nn.Module):
+    """
+    Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
+    """
+
+    def __init__(self, in_features, out_features, dropout=0., act=F.relu):
+        super(GraphConvolution, self).__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.dropout = dropout
+        self.act = act
+        self.weight = nn.Parameter(torch.zeros(in_features, out_features), requires_grad=True)
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        torch.nn.init.xavier_uniform_(self.weight)
+
+    def forward(self, input, adj):
+        input = F.dropout(input, self.dropout, self.training)
+        support = torch.mm(input, self.weight)
+        output = torch.spmm(adj, support)
+        output = self.act(output)
+        return output
+
+    def __repr__(self):
+        return self.__class__.__name__ + ' (' \
+               + str(self.in_features) + ' -> ' \
+               + str(self.out_features) + ')'

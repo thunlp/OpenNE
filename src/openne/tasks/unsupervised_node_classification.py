@@ -1,3 +1,5 @@
+import warnings
+
 from .tasks import BaseTask
 from .classify import Classifier
 from ..utils import *
@@ -13,23 +15,31 @@ class UnsupervisedNodeClassification(BaseTask):
         self.kwargs = modelclass.check(datasetclass, **self.train_kwargs())
 
     def train_kwargs(self):
+        #  by default validate == False
+        #  validate is always false
+        check_existance(self.kwargs, {"_validate": False, "_no_validate": False})
         check_existance(self.kwargs, {"validate": False, 'clf_ratio': 0.5})
 
+
         def f_v(model, graph, **kwargs):
-            model.get_vectors(graph)
-            res = self._classify(graph, model.vectors)
+            model.make_output(graph, **kwargs)
+            model._get_vectors(graph)
+
+            res = self._classify(graph, model.vectors, simple=True, silent=True)
             if model.setvalue('best_result', res['macro']):
                 if kwargs['auto_save']:
                     model.setvalue('best_vectors', model.vectors, lambda x, y: True)
+            model.debug_info += "; val_acc = {}".format(res)
+
         check_existance(self.kwargs, {'auto_save': True, '_validation_hooks': [f_v] if self.kwargs['validate'] else []})
+        super(UnsupervisedNodeClassification, self).train_kwargs()
         return self.kwargs
 
     def evaluate(self, model, res, graph):
-        self._classify(graph, res, 0)
+        return self._classify(graph, res, 0)
 
-    def _classify(self, graph, vectors, seed=None):
-        X, Y = graph.labels()
-        print("Training classifier using {:.2f}% nodes...".format(
-            self.kwargs['clf_ratio']*100))
-        clf = Classifier(vectors=vectors, clf=LogisticRegression(solver='lbfgs'))
-        return clf.split_train_evaluate(X, Y, self.train_kwargs()['clf_ratio'], seed=seed)
+    def _classify(self, graph, vectors, seed=None, simple=False):
+        self.debug("Training classifier using {:.2f}% nodes...".format(
+                self.kwargs['clf_ratio']*100))
+        clf = Classifier(vectors=vectors, clf=LogisticRegression(solver='lbfgs'), simple=simple, silent=self.kwargs['silent'])
+        return clf.train_and_evaluate(graph, self.train_kwargs()['clf_ratio'], seed=seed)

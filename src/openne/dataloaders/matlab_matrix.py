@@ -6,8 +6,8 @@ from abc import ABC
 from .graph import *
 import scipy.io
 class MatlabMatrix(NetResources, ABC):
-    def __init__(self, resource_url, filename):
-        super(MatlabMatrix, self).__init__(resource_url, {'matfile': filename + '.mat'})
+    def __init__(self, resource_url, filename, **kwargs):
+        super(MatlabMatrix, self).__init__(resource_url, {'matfile': filename + '.mat'}, **kwargs)
 
     def read(self):
         path = self.paths[0]
@@ -22,10 +22,10 @@ class MatlabMatrix(NetResources, ABC):
 
 
 class BlogCatalog(MatlabMatrix):
-    def __init__(self):
+    def __init__(self, **kwargs):
         filename = 'blogcatalog'
         url = 'http://leitang.net/code/social-dimension/data'
-        super(BlogCatalog, self).__init__(resource_url=url, filename=filename)
+        super(BlogCatalog, self).__init__(resource_url=url, filename=filename, **kwargs)
 
     @classmethod
     def directed(cls):
@@ -40,10 +40,10 @@ class BlogCatalog(MatlabMatrix):
         return False
 
 class Flickr(MatlabMatrix):
-    def __init__(self):
+    def __init__(self, **kwargs):
         filename = 'flickr'
         url = 'http://leitang.net/code/social-dimension/data'
-        super(Flickr, self).__init__(resource_url=url, filename=filename)
+        super(Flickr, self).__init__(resource_url=url, filename=filename, **kwargs)
 
     @classmethod
     def directed(cls):
@@ -58,10 +58,10 @@ class Flickr(MatlabMatrix):
         return False
 
 class Wikipedia(MatlabMatrix):
-    def __init__(self):
+    def __init__(self, **kwargs):
         filename = 'POS'
         url = 'http://snap.stanford.edu/node2vec'
-        super(Wikipedia, self).__init__(resource_url=url, filename=filename)
+        super(Wikipedia, self).__init__(resource_url=url, filename=filename, **kwargs)
 
     @classmethod
     def directed(cls):
@@ -76,10 +76,10 @@ class Wikipedia(MatlabMatrix):
         return False
 
 class PPI(MatlabMatrix):
-    def __init__(self):
+    def __init__(self, **kwargs):
         filename = 'Homo_sapiens'
         url = 'http://snap.stanford.edu/node2vec'
-        super(PPI, self).__init__(resource_url=url, filename=filename)
+        super(PPI, self).__init__(resource_url=url, filename=filename, **kwargs)
 
     @classmethod
     def directed(cls):
