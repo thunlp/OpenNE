@@ -22,7 +22,7 @@ class GAEModel(nn.Module):
     def forward(self, x):
         output = x
         for layer in self.layers:
-            output = layer(output)
+            output = layer(output, self.adj)
         return output
 
 
