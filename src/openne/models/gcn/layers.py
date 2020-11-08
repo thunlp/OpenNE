@@ -122,3 +122,4 @@ class GraphConvolution(Layer):
         if self.bias is not None:
             output += self.bias
         return self.act(output)
+
