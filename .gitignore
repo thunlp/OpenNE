@@ -1,0 +1,11 @@
+/results
+/.idea
+/src/openne/__pycache__
+/src/openne/dataloaders/__pycache__
+/src/openne/models/__pycache__
+/src/openne/models/gcn/__pycache__
+/src/openne/tasks/__pycache__
+/src/build/*
+/src/openne.egg-info/*
+/src/dist/*
+/src/testwalk.bat

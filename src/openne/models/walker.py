@@ -83,7 +83,9 @@ class BasicWalker:
 
         # print(len(walks))
         return walks
-
+    def debug(self, *args, **kwargs):
+        if not self.silent:
+            print(*args, **kwargs)
 
 class Walker(BasicWalker):
     def __init__(self, G, p, q, workers, **kwargs):
@@ -170,9 +172,7 @@ class Walker(BasicWalker):
 
         return
 
-    def debug(self, *args, **kwargs):
-        if not self.silent:
-            print(*args, **kwargs)
+
 
 def alias_setup(probs):
     """
@@ -208,9 +208,9 @@ def alias_setup(probs):
 
 
 def alias_draw(J, q):
-    '''
+    """
     Draw sample from a non-uniform discrete distribution using alias sampling.
-    '''
+    """
     K = len(J)
     kk = int(math.floor(random.random()*K))
 
