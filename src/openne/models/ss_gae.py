@@ -1,7 +1,7 @@
 import numpy as np
 from .gcn.utils import *
-from .gcn.layers import GraphConvolution
 from .models import *
+from .ss_model import SSModel
 import time
 import scipy.sparse as sp
 import torch
@@ -9,33 +9,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class GAEModel(nn.Module):
-    def __init__(self, dimensions, adj, dropout):
-        super(GAEModel, self).__init__()
-        self.dimensions = dimensions
-        self.adj = adj
-        self.layers = nn.ModuleList()
-        for i in range(1, len(self.dimensions) - 1):
-            self.layers.append(GraphConvolution(self.dimensions[i - 1], self.dimensions[i], dropout, act=F.relu))
-        self.layers.append(GraphConvolution(self.dimensions[-2], self.dimensions[-1], dropout, act=lambda x: x))
 
-    def forward(self, x):
-        output = x
-        for layer in self.layers:
-            output = layer(output, self.adj)
-        return output
-
-
-class GAE(ModelWithEmbeddings):
+class SS_GAE(ModelWithEmbeddings):
 
     def __init__(self, output_dim=16, hiddens=None, max_degree=0, **kwargs):
         if hiddens is None:
             hiddens = [32]
-        super(GAE, self).__init__(output_dim=output_dim, hiddens=hiddens, max_degree=max_degree, **kwargs)
+        super(SS_GAE, self).__init__(output_dim=output_dim, hiddens=hiddens, max_degree=max_degree, **kwargs)
 
     @classmethod
     def check_train_parameters(cls, **kwargs):
-        check_existance(kwargs, {"lr": 0.01,
+        check_existance(kwargs, {"learning_rate": 0.01,
                                  "epochs": 200,
                                  "dropout": 0.,
                                  "weight_decay": 1e-4,
@@ -43,7 +27,7 @@ class GAE(ModelWithEmbeddings):
                                  "clf_ratio": 0.5,
                                  "hiddens": [32],
                                  "max_degree": 0})
-        check_range(kwargs, {"lr": (0, np.inf),
+        check_range(kwargs, {"learning_rate": (0, np.inf),
                              "epochs": (0, np.inf),
                              "dropout": (0, 1),
                              "weight_decay": (0, 1),
@@ -51,17 +35,17 @@ class GAE(ModelWithEmbeddings):
                              "clf_ratio": (0, 1),
                              "max_degree": (0, np.inf)})
         return kwargs
-
+    
     @classmethod
     def check_graphtype(cls, graphtype, **kwargs):
         if not graphtype.attributed():
             raise TypeError("GAE only accepts attributed graphs!")
 
-    def build(self, graph, *, lr=0.01, epochs=200,
+    def build(self, graph, *, learning_rate=0.01, epochs=200,
               dropout=0., weight_decay=1e-4, early_stopping=100,
-              clf_ratio=0.5, **kwargs):
+              clf_ratio=0.5, batch_size=10000, enc='linear', dec='mlp', sampler='node-nei-random', **kwargs):
         """
-                        lr: Initial learning rate
+                        learning_rate: Initial learning rate
                         epochs: Number of epochs to train
                         hidden1: Number of units in hidden layer 1
                         dropout: Dropout rate (1 - keep probability)
@@ -70,25 +54,39 @@ class GAE(ModelWithEmbeddings):
                         max_degree: Maximum Chebyshev polynomial degree
         """
         self.clf_ratio = clf_ratio
-        self.lr = lr
+        self.learning_rate = learning_rate
         self.epochs = epochs
         self.dropout = dropout
+        self.batch_size = batch_size
         self.weight_decay = weight_decay
         self.early_stopping = early_stopping
+        self.sparse = False
+        self.enc = enc
+        self.dec = dec
+        self.sampler = sampler
+        
+        
         self.preprocess_data(graph)
         # Create models
-        input_dim = self.features.shape[1]
+        input_dim = self.features.shape[1] if not self.sparse else self.features[2][1]
+        feature_shape = self.features.shape if not self.sparse else self.features[0].shape[0]
+        
+        
 
-        self.dimensions = [input_dim] + self.hiddens + [self.output_dim]
-        self.model = GAEModel(self.dimensions, self.support[0], self.dropout)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
+        self.dimensions = [input_dim]+self.hiddens+[self.output_dim]
+        self.dec_dims = [self.dimensions[-1]*2, 1]
+        self.model = SSModel(encoder_name=self.enc, decoder_name=self.dec, sampler_name=self.sampler,
+                        enc_dims=self.dimensions, adj=self.support[0], features=self.features, batch_size=self.batch_size, dropout=self.dropout, dec_dims=self.dec_dims)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        
+        
+        
 
     def train_model(self, graph, **kwargs):
         # Train models
-        output, train_loss, __ = self.evaluate()
-        self.debug_info = "train_loss = {:.5f}".format(train_loss)
-        return output
-
+        output, train_loss,  __ = self.evaluate()
+        self.debug_info =str({"train_loss": "{:.5f}".format(train_loss)})
+        
     def build_label(self, graph):
         g = graph.G
         look_up = graph.look_up_dict
@@ -101,38 +99,50 @@ class GAE(ModelWithEmbeddings):
                 if l not in label_dict:
                     label_dict[l] = label_id
                     label_id += 1
-        self.register_float_buffer("labels", torch.zeros((len(labels), label_id)))
+        self.labels = torch.zeros((len(labels), label_id))
         self.label_dict = label_dict
         for node, l in labels:
             node_id = look_up[node]
             for ll in l:
                 l_id = label_dict[ll]
-                self.labels[node_id, l_id] = 1
-
-    def loss(self, output, adj_label, pos_weight, norm):
+                self.labels[node_id][l_id] = 1
+    
+    def loss(self, output, adj_label):
         cost = 0.
+        cost += F.binary_cross_entropy_with_logits(output, adj_label)
+        
+        return cost 
 
-        cost += norm * F.binary_cross_entropy_with_logits(torch.mm(output, output.t()), adj_label,
-                                                          pos_weight=pos_weight)
-
-        return cost
-
-        # Define models evaluation function
-
+    # Define models evaluation function
     def evaluate(self, train=True):
         t_test = time.time()
-        self.optimizer.zero_grad()
-        self.model.train(train)
-        output = self.model(self.features)
-        loss = self.loss(output, self.adj_label, self.pos_weight, self.norm)
-        if train:
-            loss.backward()
-            # print([(name, param.grad) for name,param in self.model.named_parameters()])
-            self.optimizer.step()
-        return output, loss, (time.time() - t_test)
+        #st, ed = 0, self.batch_size
+        #neg = self.gen_neg(self.x.size()[0], self.nb_nodes)
+        #neg_inds = self.features[torch.tensor(neg)]
+        cur_loss = 0.
+        batch_num = 0.
+        for batch in self.model.sampler:
+            x, pos, neg = zip(*batch)
+            self.optimizer.zero_grad()
+            bx = torch.tensor(list(x))
+            bpos = torch.tensor(list(pos))
+            bneg = torch.tensor(list(neg))
+            lbl_1 = torch.ones(1, len(x))
+            lbl = torch.cat((lbl_1, 1-lbl_1), 1).to(self._device)
+            batch_num += 1
+            output = self.model(bx, bpos, bneg)
+            loss = self.loss(output, lbl)
+            if train:
+                loss.backward()
+                self.optimizer.step()
+
+            cur_loss += loss.item()
+        
+        return output, cur_loss / batch_num, (time.time() - t_test)
 
     def _get_embeddings(self, graph, **kwargs):
-        self.embeddings = self.model(self.features).detach()
+
+        self.embeddings = self.model.embed(torch.tensor(range(self.nb_nodes))).detach()
 
     def preprocess_data(self, graph):
         """
@@ -155,36 +165,9 @@ class GAE(ModelWithEmbeddings):
             self.support = [preprocess_graph(adj)]
         else:
             self.support = chebyshev_polynomials(adj, self.max_degree)
+
+        self.features = self.features.to(self._device)
+        self.nb_nodes = self.features.shape[0]
         self.support = [i.to(self._device) for i in self.support]
         for n, i in enumerate(self.support):
             self.register_buffer("support_{0}".format(n), i)
-        # print(self.support)
-
-class GraphConvolution(nn.Module):
-    """
-    Simple GCN layer, similar to https://arxiv.org/abs/1609.02907
-    """
-
-    def __init__(self, in_features, out_features, dropout=0., act=F.relu):
-        super(GraphConvolution, self).__init__()
-        self.in_features = in_features
-        self.out_features = out_features
-        self.dropout = dropout
-        self.act = act
-        self.weight = nn.Parameter(torch.zeros(in_features, out_features), requires_grad=True)
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        torch.nn.init.xavier_uniform_(self.weight)
-
-    def forward(self, input, adj):
-        input = F.dropout(input, self.dropout, self.training)
-        support = torch.mm(input, self.weight)
-        output = torch.spmm(adj, support)
-        output = self.act(output)
-        return output
-
-    def __repr__(self):
-        return self.__class__.__name__ + ' (' \
-               + str(self.in_features) + ' -> ' \
-               + str(self.out_features) + ')'

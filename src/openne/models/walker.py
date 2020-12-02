@@ -83,9 +83,11 @@ class BasicWalker:
 
         # print(len(walks))
         return walks
+
     def debug(self, *args, **kwargs):
         if not self.silent:
             print(*args, **kwargs)
+
 
 class Walker(BasicWalker):
     def __init__(self, G, p, q, workers, **kwargs):
