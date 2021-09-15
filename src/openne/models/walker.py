@@ -174,6 +174,9 @@ class Walker(BasicWalker):
 
         return
 
+    def debug(self, *args, **kwargs):
+        if not self.silent:
+            print(*args, **kwargs)
 
 
 def alias_setup(probs):
