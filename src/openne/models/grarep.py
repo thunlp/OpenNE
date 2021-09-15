@@ -35,7 +35,7 @@ class GraRep(ModelWithEmbeddings):
         Ak = torch.eye(graph.nodesize)
         RepMat = torch.zeros((graph.nodesize, int(self.dim * self.kstep)))
         for i in range(self.kstep):
-            print('kstep =', i)
+            self.debug('kstep =', i)
             Ak = torch.mm(Ak, adj)
             probTranMat = GetProbTranMat(Ak, graph.nodesize)
             Rk = self.GetRepUseSVD(probTranMat, 0.5)
