@@ -2,16 +2,23 @@ from .layers import *
 from .metrics import *
 import torch.nn.functional as F
 
+
 class Model(torch.nn.Module):
     def __init__(self, **kwargs):
         super(Model, self).__init__()
-        allowed_kwargs = {'name', 'logging'} #
+        allowed_kwargs = {'name', 'logging', 'silent'} #
         for kwarg in kwargs.keys():
             assert kwarg in allowed_kwargs, 'Invalid keyword argument: ' + kwarg
         name = kwargs.get('name')
         if not name:
             name = self.__class__.__name__.lower()
         self.name = name
+
+        silent = kwargs.get('silent')
+        if silent:
+            self.silent = True
+        else:
+            self.silent = False
 
         logging = kwargs.get('logging', False)
         self.logging = logging
@@ -53,17 +60,22 @@ class Model(torch.nn.Module):
     def save(self):
         save_path = "tmp/%s.ckpt" % self.name
         torch.save(self.state_dict(), save_path)
-        print("Model saved in file: %s" % save_path)
+        self.debug("Model saved in file: %s" % save_path)
 
     def load(self):
         save_path = "tmp/%s.ckpt" % self.name
         state_dict = torch.load(save_path)
         self.load_state_dict(state_dict)
-        print("Model restored from file: %s" % save_path)
+        self.debug("Model restored from file: %s" % save_path)
+
+    def debug(self, *args, **kwargs):
+        if not self.silent:
+            print(*args, **kwargs)
 
 
 class GCNModel(Model):
-    def __init__(self, input_dim, output_dim, hidden_dims, supports, dropout=0., weight_decay=0.,num_features_nonzero=0, logging=False, sparse_inputs=False, **kwargs):
+    def __init__(self, input_dim, output_dim, hidden_dims, supports, dropout=0., weight_decay=0.,
+                 num_features_nonzero=0, logging=False, sparse_inputs=False, **kwargs):
         super(GCNModel, self).__init__(**kwargs)
         self.dimensions = [input_dim]+hidden_dims+[output_dim]
         self.weight_decay = weight_decay
@@ -73,7 +85,7 @@ class GCNModel(Model):
         self.dropout = dropout
         self.logging = logging
         self.sparse_inputs = sparse_inputs
-        self.num_features_nonzero=num_features_nonzero
+        self.num_features_nonzero = num_features_nonzero
         self.build()
 
     def loss(self, labels, labels_mask):
@@ -91,7 +103,7 @@ class GCNModel(Model):
 
     def accuracy(self, labels, labels_mask):
         self._accuracy = masked_accuracy(self.output, labels,
-                                        labels_mask)
+                                         labels_mask)
         return self._accuracy
 
     def _build(self):
@@ -115,7 +127,6 @@ class GCNModel(Model):
                                             sparse_inputs=sparse_inputs[-1],
                                             num_features_nonzero=self.num_features_nonzero,
                                             logging=self.logging))
-        ##self.layers.append(torch.nn.Softmax())
 
     def _optim(self):
         self.optimizer = torch.optim.Adam(self.parameters(), lr=1e-2)

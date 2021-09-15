@@ -11,7 +11,7 @@ from .models import *
 class TADW(ModelWithEmbeddings):
 
     def __init__(self, dim, lamb=0.2, **kwargs):
-        super(TADW, self).__init__(dim=dim//2, lamb=lamb, **kwargs)
+        super(TADW, self).__init__(dim=dim // 2, lamb=lamb, **kwargs)
 
     @staticmethod
     def getT(graph):
@@ -28,7 +28,7 @@ class TADW(ModelWithEmbeddings):
     @classmethod
     def check_train_parameters(cls, **kwargs):
         check_existance(kwargs, {'dim': 128,
-                                 'lamb': 0.2,
+                                 'lamb': 0.4,
                                  'epochs': 20})
         assert kwargs['dim'] % 2 == 0
         return kwargs
@@ -39,16 +39,15 @@ class TADW(ModelWithEmbeddings):
             raise TypeError("TADW only accepts attributed graphs.")
 
     def build(self, graph, **kwargs):
-        self.adj = torch.from_numpy(graph.adjmat(weighted=False, directed=False, scaled=1)).type(torch.float32)
+        self.adj = torch.from_numpy(graph.adjmat(weighted=False, directed=False, scaled=1)).type(torch.float32).to(kwargs.get('_device', 'cpu'))
         # M = (A + A^2) / 2, A = adj (row-normalized adjmat)
         self.M = (self.adj + torch.mm(self.adj, self.adj)) / 2
         # T: text feature matrix (feature_size * node_num)
-        self.T = self.getT(graph)
+        self.T = self.getT(graph).to(kwargs.get('_device', 'cpu'))
         self.node_size = graph.nodesize
         self.feature_size = self.T.shape[0]
-        print(self.T.shape, self.node_size)
-        self.W = torch.randn(self.dim, self.node_size)
-        self.H = torch.randn(self.dim, self.feature_size)
+        self.W = torch.randn(self.dim, self.node_size, device=kwargs.get('_device', 'cpu'))
+        self.H = torch.randn(self.dim, self.feature_size, device=kwargs.get('_device', 'cpu'))
 
     def train_model(self, graph, **kwargs):  # todo: rewrite with learning-models-based method
 
@@ -56,7 +55,7 @@ class TADW(ModelWithEmbeddings):
         B = torch.mm(self.H, self.T)
         drv = 2 * torch.mm(torch.mm(B, B.t()), self.W) - \
               2 * torch.mm(B, self.M.t()) + self.lamb * self.W
-        Hess = 2 * torch.mm(B, B.t()) + self.lamb * torch.eye(self.dim)
+        Hess = 2 * torch.mm(B, B.t()) + self.lamb * torch.eye(self.dim, device=kwargs.get('_device', 'cpu'))
         drv = torch.reshape(drv, [self.dim * self.node_size, 1])
         rt = -drv
         dt = rt
@@ -75,8 +74,8 @@ class TADW(ModelWithEmbeddings):
         self.W = torch.reshape(vecW, (self.dim, self.node_size))  # np
 
         # Update H
-        drv = torch.mm((torch.mm(torch.mm(torch.mm(self.W, self.W.t()), self.H), self.T)
-                        - torch.mm(self.W, self.M.t())), self.T.t()) + self.lamb * self.H
+        drv = 2 * torch.mm((torch.mm(torch.mm(torch.mm(self.W, self.W.t()), self.H), self.T)
+                            - torch.mm(self.W, self.M.t())), self.T.t()) + self.lamb * self.H
         drv = torch.reshape(drv, (self.dim * self.feature_size, 1))
         rt = -drv
         dt = rt
@@ -93,7 +92,7 @@ class TADW(ModelWithEmbeddings):
             dt = rt + bt * dt
         self.H = torch.reshape(vecH, (self.dim, self.feature_size))
 
-    def make_output(self, graph, **kwargs):
+    def _get_embeddings(self, graph, **kwargs):
         self.embeddings = torch.cat((
-            torch.from_numpy(normalize(self.W.t())),
-            torch.from_numpy(normalize(torch.mm(self.T.t(), self.H.t())))), dim=1)
+            torch.from_numpy(normalize(self.W.t().cpu())),
+            torch.from_numpy(normalize(torch.mm(self.T.t(), self.H.t()).cpu()))), dim=1)

@@ -26,7 +26,7 @@ def sparse_dropout(x, drop_prob, noise_shape):
     random_tensor += torch.rand(noise_shape)
     dropout_mask = torch.floor(random_tensor).type(torch.bool)
     i = x.indices()[:, dropout_mask]
-    preout = torch.sparse_coo_tensor(i, values=x.values()[dropout_mask], size=x.shape, dtype=torch.float32)
+    preout = torch.sparse_coo_tensor(i, values=x.values()[dropout_mask], size=x.shape, dtype=torch.float32, device=x.device)
     return preout * (1./drop_prob)
 
 
@@ -76,7 +76,7 @@ class GraphConvolution(Layer):
 
     def __init__(self, input_dim, output_dim, support, dropout=0., num_features_nonzero=0.,
                  sparse_inputs=False, act=torch.relu, bias=False,
-                 featureless=False,  **kwargs):
+                 featureless=False, **kwargs):
         super(GraphConvolution, self).__init__(**kwargs)
 
         self.dropout = dropout  # note we modified the API
@@ -107,10 +107,9 @@ class GraphConvolution(Layer):
                 x = sparse_dropout(x, self.dropout, self.num_features_nonzero)
             else:
                 x = torch.dropout(x, self.dropout,True)
-        elif self.sparse_inputs:
-            x = tuple_to_sparse(x)
+
         # convolve
-        output = torch.zeros([self.support[0].size()[0], self.output_dim])
+        output = torch.zeros([self.support[0].size()[0], self.output_dim], device=x.device)
         for i in range(len(self.support)):
             if not self.featureless:
                 pre_sup = torch.mm(x, getattr(self, 'weights_' + str(i)))
@@ -123,3 +122,4 @@ class GraphConvolution(Layer):
         if self.bias is not None:
             output += self.bias
         return self.act(output)
+

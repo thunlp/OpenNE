@@ -31,13 +31,13 @@ class LLE(ModelWithEmbeddings):
         return kwargs
 
     def train_model(self, graph, *, sparse=False, **kwargs):
-        A = graph.adjmat(directed=False, weighted=True, sparse=sparse)  # todo: check when sparse matrix is better
+        A = graph.adjmat(directed=False, weighted=True, sparse=sparse)
         normalize(A, norm='l1', axis=1, copy=False)
         if sparse:
             I_n = sp.eye(graph.nodesize)
         else:
             I_n = np.eye(graph.nodesize)
         I_min_A = I_n - A
-        u, s, vt = lg.svds(I_min_A, k=self.dim + 1, which='SM') #todo: should be SM
+        u, s, vt = lg.svds(I_min_A, k=self.dim + 1, which='SM')
         vt = torch.tensor(vt)
         return vt.t()[:, 1:]
