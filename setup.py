@@ -7,7 +7,7 @@ setup(
     author="THUNLP",
     description="Open Source Network Embedding toolkit",
     packages=find_packages(),
-    long_description=open("../README.md").read(),
+    long_description=open("README.md").read(),
     zip_safe=False,
     setup_requires=[]
 )
