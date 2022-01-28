@@ -20,18 +20,18 @@ We develop this toolkit according to the settings of DeepWalk. The implemented o
 
 - Clone this repo.
 - enter the directory where you clone it, and run the following code
-    ```bash
-    pip install -r requirements.txt
-    cd src
-    python setup.py install
-    ```
+```bash
+pip install -r requirements.txt
+python setup.py install
+```
 
 #### General Options
 
 You can check out the other options available to use with *OpenNE* using:
 
-    python -m openne --help
-
+```bash
+python -m openne --help
+```
 
 - --input, the input file of a network;
 - --graph-format, the format of input graph, adjlist or edgelist;
