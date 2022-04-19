@@ -331,8 +331,8 @@ class LocalFile(Graph, ABC):
 
 def create_self_defined_dataset(root_dir, name_dict, name, weighted, directed, attributed):
     class SelfDefined(LocalFile):
-        def __init__(self):
-            super(SelfDefined, self).__init__(root_dir, name_dict)
+        def __init__(self, **kwargs):
+            super(SelfDefined, self).__init__(root_dir, name_dict, **kwargs)
 
         __name__ = name
 
