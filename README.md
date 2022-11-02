@@ -1,5 +1,15 @@
 # OpenNE: An open source toolkit for Network Embedding
 
+This repository is a subproject of THU-OpenSK, and all subprojects of THU-OpenSK are as follows.
+
+- [OpenNE](https://www.github.com/thunlp/OpenNE)
+- [OpenKE](https://www.github.com/thunlp/OpenKE)
+  - [KB2E](https://www.github.com/thunlp/KB2E)
+  - [TensorFlow-Transx](https://www.github.com/thunlp/TensorFlow-Transx)
+  - [Fast-TransX](https://www.github.com/thunlp/Fast-TransX)
+- [OpenNRE](https://www.github.com/thunlp/OpenNRE)
+  - [JointNRE](https://www.github.com/thunlp/JointNRE)
+
 This repository provides a standard NE/NRL(Network Representation Learning）training and testing framework. In this framework, we unify the input and output interfaces of different NE models and provide scalable options for each model. Moreover, we implement typical NE models under this framework based on tensorflow, which enables these models to be trained with GPUs.
 
 We develop this toolkit according to the settings of DeepWalk. The implemented or modified models include [DeepWalk](https://github.com/phanein/deepwalk), [LINE](https://github.com/tangjianpku/LINE), [node2vec](https://github.com/aditya-grover/node2vec), [GraRep](https://github.com/ShelsonCao/GraRep), [TADW](https://github.com/thunlp/TADW), [GCN](https://github.com/tkipf/gcn), HOPE, GF, SDNE and LE. We will implement more representative NE models continuously according to our released [NRL paper list](https://github.com/thunlp/nrlpapers). Specifically, we welcome other researchers to contribute NE models into this toolkit based on our framework. We will announce the contribution in this project.
@@ -268,7 +278,7 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       year                     = {2016},
       organization             = {ACM}
     }
-
+    
     @inproceedings{belkin2002laplacian,
       title                    = {Laplacian eigenmaps and spectral techniques for embedding and clustering},
       author                   = {Belkin, Mikhail and Niyogi, Partha},
@@ -276,7 +286,7 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       pages                    = {585--591},
       year                     = {2002}
     }
-
+    
     @inproceedings{ahmed2013distributed,
       title                    = {Distributed large-scale natural graph factorization},
       author                   = {Ahmed, Amr and Shervashidze, Nino and Narayanamurthy, Shravan and Josifovski, Vanja and Smola, Alexander J},
@@ -285,7 +295,7 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       year                     = {2013},
       organization             = {ACM}
     }
-
+    
     @inproceedings{wang2016structural,
       title                    = {Structural deep network embedding},
       author                   = {Wang, Daixin and Cui, Peng and Zhu, Wenwu},
