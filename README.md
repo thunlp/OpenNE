@@ -1,12 +1,71 @@
-# OpenNE (sub-project of THU-OpenSKL)
+# OpenNE (sub-project of OpenSKL)
 
-OpenNE is a sub-project of THU-OpenSKL, providing an Open-source toolkit for Network Embedding with [TADW](https://www.ijcai.org/Proceedings/15/Papers/299.pdf) as key features to incorporate text attributes of nodes.
+OpenNE is a sub-project of OpenSKL, providing an **Open**-source **N**etwork **E**mbedding toolkit for network representation learning (NRL), with [TADW](https://www.ijcai.org/Proceedings/15/Papers/299.pdf) as key features to incorporate text attributes of nodes.
 
 ## Overview
 
-OpenNE provides a standard NE/NRL(Network Representation Learning）training and testing toolkit. We unify the input and output interfaces of different NE models and provide scalable options for each model. Moreover, we implement typical NE models based on tensorflow, which enables these models to be trained with GPUs.
+OpenNE provides a standard training and testing toolkit for network embedding. We unify the input and output interfaces of different NE models and provide scalable options for each model. Moreover, we implement typical NE models based on tensorflow, which enables these models to be trained with GPUs.
 
-We develop this toolkit according to the settings of DeepWalk. The implemented or modified models include [DeepWalk](https://github.com/phanein/deepwalk), [LINE](https://github.com/tangjianpku/LINE), [node2vec](https://github.com/aditya-grover/node2vec), [GraRep](https://github.com/ShelsonCao/GraRep), [TADW](https://github.com/thunlp/TADW), [GCN](https://github.com/tkipf/gcn), HOPE, GF, SDNE and LE. We will implement more representative NE models continuously according to our released [NRL paper list](https://github.com/thunlp/nrlpapers).
+## Models
+Besides [TADW](https://github.com/thunlp/TADW) for learning network embeddings with text attributes, we also implement typical models including [DeepWalk](https://github.com/phanein/deepwalk)  [LINE](https://github.com/tangjianpku/LINE), [node2vec](https://github.com/aditya-grover/node2vec), [GraRep](https://github.com/ShelsonCao/GraRep), , [GCN](https://github.com/tkipf/gcn), HOPE, GF, SDNE and LE. 
+
+If you want to learn more about network embedding, visit another project of ours [NRL paper list](https://github.com/thunlp/nrlpapers).
+
+## Evaluation
+
+To validate the effectiveness of this toolkit, we employ the node classification task for evaluation.
+
+### Settings
+
+We show the node classification results of various methods in different datasets. We set representation dimension to 128, **kstep=4** in GraRep. Note that, both GCN(a semi-supervised NE model) and TADW need additional text features as inputs. Thus, we evaluate these two models on Cora in which each node has text information. We use 10% labeled data to train GCN.
+
+[Wiki](https://github.com/thunlp/MMDW/tree/master/data) (Wiki dataset is provided by [LBC project](http://www.cs.umd.edu/~sen/lbc-proj/LBC.html). But the original link failed.): 2405 nodes, 17981 edges, 19 labels, directed:
+
+- data/wiki/Wiki_edgelist.txt
+- data/wiki/Wiki_category.txt
+
+[Cora](https://linqs.soe.ucsc.edu/data): 2708 nodes, 5429 edges, 7 labels, directed:
+
+- data/cora/cora_edgelist.txt
+- data/cora/cora.features
+- data/cora/cora_labels.txt
+
+Running environment:  <br />
+BlogCatalog: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz. <br />
+Wiki, Cora: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz. <br />
+
+### Results
+
+We report the Micro-F1 and Macro-F1 performance to quantify the effectiveness, and the running time for efficiency evaluation. Overall, OpenNE can provide comparable effectiveness and efficiency as the original papers.
+
+Wiki:
+
+|Algorithm | Time| Micro-F1 | Macro-F1|
+|:------------|-------------:|------------:|-------:|
+|[DeepWalk](https://github.com/phanein/deepwalk) | 52s | 0.669 | 0.560|
+|[LINE 2nd](https://github.com/tangjianpku/LINE) | 70s | 0.576 | 0.387|
+|[node2vec](https://github.com/aditya-grover/node2vec) | 32s  | 0.651 | 0.541|
+|[GraRep](https://github.com/ShelsonCao/GraRep) | 19.6s | 0.633 | 0.476|
+|OpenNE(DeepWalk) | 42s  | 0.658 | 0.570|
+|OpenNE(LINE 2nd) | 90s | 0.661 | 0.521|
+|OpenNE(Node2vec) | 33s  | 0.655 | 0.538|
+|OpenNE(GraRep) | 23.7s | 0.649 | 0.507 |
+|OpenNE(GraphFactorization) | 12.5s | 0.637 | 0.450 |
+|OpenNE(HOPE) | 3.2s | 0.601 | 0.438 |
+|OpenNE(LaplacianEigenmaps) | 4.9s | 0.277 | 0.073 |
+|OpenNE(SDNE) | 39.6s | 0.643 | 0.498 |
+
+Cora:
+
+|Algorithm | Dropout | Weight_decay | Hidden | Dimension | Time| Accuracy |
+|:------------|-------------:|-------:|-------:|-------:|-------:|-------:|
+| [TADW](https://github.com/thunlp/TADW) | - | - | - | 80*2 | 13.9s | 0.780 |
+| [GCN](https://github.com/tkipf/gcn) | 0.5 | 5e-4 | 16 | - | 4.0s | 0.790 |
+| OpenNE(TADW) | - | - | - | 80*2 | 20.8s | 0.791 |
+| OpenNE(GCN) | 0.5 | 5e-4 | 16 | - | 5.5s | 0.789 |
+| OpenNE(GCN) | 0 | 5e-4 | 16 | - | 6.1s | 0.779 |
+| OpenNE(GCN) | 0.5 | 1e-4 | 16 | - | 5.4s | 0.783 |
+| OpenNE(GCN) | 0.5 | 5e-4 | 64 | - | 6.5s | 0.779 |
 
 ## Usage
 
@@ -139,72 +198,7 @@ To show how to apply dimension reduction methods like t-SNE and PCA to embedding
 
 After running the tensorboard, visit `localhost:6006` to view the result.
 
-## Comparisons with other implementations
-
-Running environment:  <br />
-BlogCatalog: CPU: Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz. <br />
-Wiki, Cora: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz. <br />
-
-We show the node classification results of various methods in different datasets. We set representation dimension to 128, **kstep=4** in GraRep. 
-
-Note that, both GCN(a semi-supervised NE model) and TADW need additional text features as inputs. Thus, we evaluate these two models on Cora in which each node has text information. We use 10% labeled data to train GCN.
-
-[BlogCatalog](http://leitang.net/social_dimension.html): 10312 nodes, 333983 edges, 39 labels,  undirected:
-
-- data/blogCatalog/bc_adjlist.txt
-- data/blogCatalog/bc_edgelist.txt
-- data/blogCatalog/bc_labels.txt
-
-|Algorithm | Time| Micro-F1 | Macro-F1|
-|:------------|-------------:|------------:|-------:|
-|[DeepWalk](https://github.com/phanein/deepwalk) | 271s | 0.385 | 0.238|
-|[LINE 1st+2nd](https://github.com/tangjianpku/LINE) | 2008s | 0.398 | 0.235|
-|[Node2vec](https://github.com/aditya-grover/node2vec) | 2623s  | 0.404| 0.264|
-|[GraRep](https://github.com/ShelsonCao/GraRep) | - | - | - |
-|OpenNE(DeepWalk) | 986s  | 0.394 | 0.249|
-|OpenNE(LINE 1st+2nd) | 1555s | 0.390 | 0.253|
-|OpenNE(node2vec) | 3501s  | 0.405 | 0.275|
-|OpenNE(GraRep) | 4178s | 0.393 | 0.230 |
-
-[Wiki](https://github.com/thunlp/MMDW/tree/master/data) (Wiki dataset is provided by [LBC project](http://www.cs.umd.edu/~sen/lbc-proj/LBC.html). But the original link failed.): 2405 nodes, 17981 edges, 19 labels, directed:
-
-- data/wiki/Wiki_edgelist.txt
-- data/wiki/Wiki_category.txt
-
-|Algorithm | Time| Micro-F1 | Macro-F1|
-|:------------|-------------:|------------:|-------:|
-|[DeepWalk](https://github.com/phanein/deepwalk) | 52s | 0.669 | 0.560|
-|[LINE 2nd](https://github.com/tangjianpku/LINE) | 70s | 0.576 | 0.387|
-|[node2vec](https://github.com/aditya-grover/node2vec) | 32s  | 0.651 | 0.541|
-|[GraRep](https://github.com/ShelsonCao/GraRep) | 19.6s | 0.633 | 0.476|
-|OpenNE(DeepWalk) | 42s  | 0.658 | 0.570|
-|OpenNE(LINE 2nd) | 90s | 0.661 | 0.521|
-|OpenNE(Node2vec) | 33s  | 0.655 | 0.538|
-|OpenNE(GraRep) | 23.7s | 0.649 | 0.507 |
-|OpenNE(GraphFactorization) | 12.5s | 0.637 | 0.450 |
-|OpenNE(HOPE) | 3.2s | 0.601 | 0.438 |
-|OpenNE(LaplacianEigenmaps) | 4.9s | 0.277 | 0.073 |
-|OpenNE(SDNE) | 39.6s | 0.643 | 0.498 |
-
-
-[Cora](https://linqs.soe.ucsc.edu/data): 2708 nodes, 5429 edges, 7 labels, directed:
-
-- data/cora/cora_edgelist.txt
-- data/cora/cora.features
-- data/cora/cora_labels.txt
-
-|Algorithm | Dropout | Weight_decay | Hidden | Dimension | Time| Accuracy |
-|:------------|-------------:|-------:|-------:|-------:|-------:|-------:|
-| [TADW](https://github.com/thunlp/TADW) | - | - | - | 80*2 | 13.9s | 0.780 |
-| [GCN](https://github.com/tkipf/gcn) | 0.5 | 5e-4 | 16 | - | 4.0s | 0.790 |
-| OpenNE(TADW) | - | - | - | 80*2 | 20.8s | 0.791 |
-| OpenNE(GCN) | 0.5 | 5e-4 | 16 | - | 5.5s | 0.789 |
-| OpenNE(GCN) | 0 | 5e-4 | 16 | - | 6.1s | 0.779 |
-| OpenNE(GCN) | 0.5 | 1e-4 | 16 | - | 5.4s | 0.783 |
-| OpenNE(GCN) | 0.5 | 5e-4 | 64 | - | 6.5s | 0.779 |
-
-
-## Citing
+## Citation
 
 If you find *OpenNE* is useful for your research, please consider citing the following papers:
 
@@ -299,48 +293,39 @@ If you find *OpenNE* is useful for your research, please consider citing the fol
       organization             = {ACM}
     }
 
-## Sponsor
-
-This research is supported by Tencent, MSRA, NSFC and [BBDM-Lab](http://www.bioinfotech.cn).
-
-<img src="http://logonoid.com/images/tencent-logo.png" width = "300" height = "30" alt="tencent" align=center />
-
-<img src="http://net.pku.edu.cn/~xjl/images/msra.png" width = "200" height = "100" alt="MSRA" align=center />
-
-<img src="http://www.dragon-star.eu/wp-content/uploads/2014/04/NSFC_logo.jpg" width = "100" height = "80" alt="NSFC" align=center />
 
 ******************
-## About THU_OpenSKL
-THU-OpenSKL project aims to harness the power of both structured knowledge and unstructured languages via representation learning. All sub-projects of THU-OpenSKL are as follows.
+## About OpenSKL
+OpenSKL project aims to harness the power of both structured knowledge and natural languages via representation learning. All sub-projects of OpenSKL, under the categories of **Algorithm**, **Resource** and **Application**, are as follows.
 
 - **Algorithm**: 
-  - [OpenNE](https://www.github.com/thunlp/OpenNE)
-    - An effective and efficient toolkit for representing nodes in large-scale graphs as embeddings, with [TADW](https://www.ijcai.org/Proceedings/15/Papers/299.pdf) as key features to incorporate text attributes of nodes.
   - [OpenKE](https://www.github.com/thunlp/OpenKE)
     - An effective and efficient toolkit for representing structured knowledge in large-scale knowledge graphs as embeddings, with <a href="https://ojs.aaai.org/index.php/AAAI/article/view/9491/9350"> TransR</a> and  <a href="https://aclanthology.org/D15-1082.pdf">PTransE</a> as key features to handle complex relations and relational paths.
-    - This toolkit also includes three sub-toolkits:
+    - This toolkit also includes three repositories:
        - [KB2E](https://www.github.com/thunlp/KB2E)
        - [TensorFlow-Transx](https://www.github.com/thunlp/TensorFlow-Transx)
        - [Fast-TransX](https://www.github.com/thunlp/Fast-TransX)
-  - [OpenNRE](https://www.github.com/thunlp/OpenNRE)
-    - An effective and efficient toolkit for implementing neural networks for extracting structured knowledge from text, with [ATT](https://aclanthology.org/P16-1200.pdf) as key features to consider relation-associated text information.
-    - This toolkit also includes two sub-toolkits:
-      - [JointNRE](https://www.github.com/thunlp/JointNRE)
-      - [NRE](https://github.com/thunlp/NRE)
   - [ERNIE](https://github.com/thunlp/ERNIE)
     - An effective and efficient toolkit for augmenting pre-trained language models with knowledge graph representations.
+  - [OpenNE](https://www.github.com/thunlp/OpenNE)
+    - An effective and efficient toolkit for representing nodes in large-scale graphs as embeddings, with [TADW](https://www.ijcai.org/Proceedings/15/Papers/299.pdf) as key features to incorporate text attributes of nodes.
+  - [OpenNRE](https://www.github.com/thunlp/OpenNRE)
+    - An effective and efficient toolkit for implementing neural networks for extracting structured knowledge from text, with [ATT](https://aclanthology.org/P16-1200.pdf) as key features to consider relation-associated text information.
+    - This toolkit also includes two repositories:
+      - [JointNRE](https://www.github.com/thunlp/JointNRE)
+      - [NRE](https://github.com/thunlp/NRE)
 - **Resource**:
   - The embeddings of large-scale knowledge graphs pre-trained by OpenKE, covering three typical large-scale knowledge graphs: Wikidata, Freebase, and XLORE. The embeddings are free to use under the [MIT license](https://opensource.org/license/mit/), and please click the following link to submit [download requests](http://139.129.163.161/download/wikidata).
   - OpenKE-Wikidata
-    - Wikidata is a free and collaborative database, collecting structured data to provide support for Wikipedia. Wikidata contains 20,982,733 entities, 594 relations and 68,904,773 triplets.
-    - TransE version: Knowledge graph embeddings of Wikidata pre-trained by OpenKE. 
-    - [Plugin version of TransR](https://thunlp.oss-cn-qingdao.aliyuncs.com/zzy/transr.npy): Knowledge graph embeddings of Wikidata pre-trained by OpenKE for the project [Knowledge-Plugin](https://github.com/THUNLP/Knowledge-Plugin).
+    - Wikidata is a free and collaborative database, collecting structured data to provide support for Wikipedia. The original Wikidata contains 20,982,733 entities, 594 relations and 68,904,773 triplets. In particular, Wikidata-5M is the core subgraph of Wikidata, containing  5,040,986 high-frequency entities from Wikidata with their corresponding 927 relations and 24,267,796 triplets.
+    - TransE version: Knowledge embeddings of Wikidata pre-trained by OpenKE. 
+    - [TransR version](https://thunlp.oss-cn-qingdao.aliyuncs.com/zzy/transr.npy) of Wikidata-5M: Knowledge embeddings of Wikidata-5M pre-trained by OpenKE for the project [Knowledge-Plugin](https://github.com/THUNLP/Knowledge-Plugin).
   - OpenKE-Freebase
     - Freebase was a large collaborative knowledge base consisting of data composed mainly by its community members. It was an online collection of structured data harvested from many sources. Freebase contains 86,054,151 entities, 14,824 relations and 338,586,276 triplets.
-    - TransE version: Knowledge graph embeddings of Freebase pre-trained by OpenKE. 
+    - TransE version: Knowledge embeddings of Freebase pre-trained by OpenKE. 
   - OpenKE-XLORE
     - XLORE is one of the most popular Chinese knowledge graphs developed by THUKEG. XLORE contains 10,572,209 entities, 138,581 relations and 35,954,249 triplets.
-    - TransE version: Knowledge graph embeddings of XLORE pre-trained by OpenKE.
+    - TransE version: Knowledge embeddings of XLORE pre-trained by OpenKE.
 - **Application**:   
     - [Knowledge-Plugin](https://github.com/THUNLP/Knowledge-Plugin)
-      - An effective and efficient toolkit of plug-and-play knowledge injection for pre-trained language models. Knowledge-Plugin is general for all kinds of knowledge graph embeddings mentioned above. In the toolkit repository, we provide the example of plugging OpenKE-Wikidata embeddings into BERT.
+      - An effective and efficient toolkit of plug-and-play knowledge injection for pre-trained language models. Knowledge-Plugin is general for all kinds of knowledge graph embeddings mentioned above. In the toolkit, we provide the example of plugging OpenKE-Wikidata embeddings into BERT.
