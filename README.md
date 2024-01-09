@@ -7,9 +7,7 @@ OpenNE is a sub-project of OpenSKL, providing an **Open**-source **N**etwork **E
 OpenNE provides a standard training and testing toolkit for network embedding. We unify the input and output interfaces of different NE models and provide scalable options for each model. Moreover, we implement typical NE models based on tensorflow, which enables these models to be trained with GPUs.
 
 ## Models
-Besides [TADW](https://github.com/thunlp/TADW) for learning network embeddings with text attributes, we also implement typical models including [DeepWalk](https://github.com/phanein/deepwalk)  [LINE](https://github.com/tangjianpku/LINE), [node2vec](https://github.com/aditya-grover/node2vec), [GraRep](https://github.com/ShelsonCao/GraRep), , [GCN](https://github.com/tkipf/gcn), HOPE, GF, SDNE and LE. 
-
-If you want to learn more about network embedding, visit another project of ours [NRL paper list](https://github.com/thunlp/nrlpapers).
+Besides [TADW](https://github.com/thunlp/TADW) for learning network embeddings with text attributes, we also implement typical models including [DeepWalk](https://github.com/phanein/deepwalk)  [LINE](https://github.com/tangjianpku/LINE), [node2vec](https://github.com/aditya-grover/node2vec), [GraRep](https://github.com/ShelsonCao/GraRep), , [GCN](https://github.com/tkipf/gcn), HOPE, GF, SDNE and LE. If you want to learn more about network embedding, visit another our [NRL paper list](https://github.com/thunlp/nrlpapers).
 
 ## Evaluation
 
@@ -36,7 +34,7 @@ Wiki, Cora: CPU: Intel(R) Core(TM) i5-7267U CPU @ 3.10GHz. <br />
 
 ### Results
 
-We report the Micro-F1 and Macro-F1 performance to quantify the effectiveness, and the running time for efficiency evaluation. Overall, OpenNE can provide comparable effectiveness and efficiency as the original papers.
+We report the Micro-F1 and Macro-F1 performance to quantify the effectiveness, and the running time for efficiency evaluation. Overall, OpenNE can reproduce the results in the original papers. Our proposed TADW achieves better performance than DeepWalk with the help of text attributes.
 
 Wiki:
 
@@ -59,6 +57,7 @@ Cora:
 
 |Algorithm | Dropout | Weight_decay | Hidden | Dimension | Time| Accuracy |
 |:------------|-------------:|-------:|-------:|-------:|-------:|-------:|
+| [DeepWalk](https://github.com/phanein/deepwalk) | - | - | - | 160 | 33.5s | 0.713 |
 | [TADW](https://github.com/thunlp/TADW) | - | - | - | 80*2 | 13.9s | 0.780 |
 | [GCN](https://github.com/tkipf/gcn) | 0.5 | 5e-4 | 16 | - | 4.0s | 0.790 |
 | OpenNE(TADW) | - | - | - | 80*2 | 20.8s | 0.791 |
@@ -69,7 +68,7 @@ Cora:
 
 ## Usage
 
-#### Installation
+### Installation
 
 - Clone this repo.
 - enter the directory where you clone it, and run the following code
@@ -79,7 +78,7 @@ Cora:
     python setup.py install
     ```
 
-#### General Options
+### General Options
 
 You can check out the other options available to use with *OpenNE* using:
 
@@ -97,7 +96,7 @@ You can check out the other options available to use with *OpenNE* using:
 - --clf-ratio, the ratio of training data for node classification; the default is 0.5;
 - --epochs, the training epochs of LINE and GCN; the default is 5;
 
-#### Example
+### Example
 
 To run "node2vec" on BlogCatalog network and evaluate the learned representations on multi-label node classification task, run the following command in the home directory of this project:
 
@@ -107,7 +106,7 @@ To run "gcn" on Cora network and evaluate the learned representations on multi-l
 
     python -m openne --method gcn --label-file data/cora/cora_labels.txt --input data/cora/cora_edgelist.txt --graph-format edgelist --feature-file data/cora/cora.features  --epochs 200 --output vec_all.txt --clf-ratio 0.1
 
-#### Specific Options
+### Specific Options
 
 DeepWalk and node2vec:
 
@@ -156,7 +155,7 @@ SDNE:
 - --bs, batch size, the default is 200
 - --lr, learning rate, the default is 0.01
 
-#### Input
+### Input
 The supported input format is an edgelist or an adjlist:
 
     edgelist: node1 node2 <weight_float, optional>
@@ -168,7 +167,7 @@ If the model needs additional features, the supported feature input format is as
     node feature_1 feature_2 ... feature_n
 
 
-#### Output
+### Output
 The output file has *n+1* lines for a graph with *n* nodes. 
 The first line has the following format:
 
@@ -180,7 +179,7 @@ The next *n* lines are as follows:
 
 where dim1, ... , dimd is the *d*-dimensional representation learned by *OpenNE*.
 
-#### Evaluation
+### Testing
 
 If you want to evaluate the learned node representations, you can input the node labels. It will use a portion (default: 50%) of nodes to train a classifier and calculate F1-score on the rest dataset.
 
@@ -188,7 +187,7 @@ The supported input label format is
 
     node label1 label2 label3...
 
-#### Embedding visualization
+### Embedding visualization
 
 To show how to apply dimension reduction methods like t-SNE and PCA to embedding visualization, we choose the 20 newsgroups dataset. Using the text feature, we built the news network by `kneighbors_graph` in scikit-learn. We uploaded the results of different methods in **t-SNE-PCA.pptx** where the colors of nodes represent the labels of nodes. A simple script is shown as follows:
 
@@ -319,7 +318,7 @@ OpenSKL project aims to harness the power of both structured knowledge and natur
   - OpenKE-Wikidata
     - Wikidata is a free and collaborative database, collecting structured data to provide support for Wikipedia. The original Wikidata contains 20,982,733 entities, 594 relations and 68,904,773 triplets. In particular, Wikidata-5M is the core subgraph of Wikidata, containing  5,040,986 high-frequency entities from Wikidata with their corresponding 927 relations and 24,267,796 triplets.
     - TransE version: Knowledge embeddings of Wikidata pre-trained by OpenKE. 
-    - [TransR version](https://thunlp.oss-cn-qingdao.aliyuncs.com/zzy/transr.npy) of Wikidata-5M: Knowledge embeddings of Wikidata-5M pre-trained by OpenKE for the project [Knowledge-Plugin](https://github.com/THUNLP/Knowledge-Plugin).
+    - [TransR version](https://thunlp.oss-cn-qingdao.aliyuncs.com/zzy/transr.npy) of Wikidata-5M: Knowledge embeddings of Wikidata-5M pre-trained by OpenKE.
   - OpenKE-Freebase
     - Freebase was a large collaborative knowledge base consisting of data composed mainly by its community members. It was an online collection of structured data harvested from many sources. Freebase contains 86,054,151 entities, 14,824 relations and 338,586,276 triplets.
     - TransE version: Knowledge embeddings of Freebase pre-trained by OpenKE. 
@@ -328,4 +327,4 @@ OpenSKL project aims to harness the power of both structured knowledge and natur
     - TransE version: Knowledge embeddings of XLORE pre-trained by OpenKE.
 - **Application**:   
     - [Knowledge-Plugin](https://github.com/THUNLP/Knowledge-Plugin)
-      - An effective and efficient toolkit of plug-and-play knowledge injection for pre-trained language models. Knowledge-Plugin is general for all kinds of knowledge graph embeddings mentioned above. In the toolkit, we provide the example of plugging OpenKE-Wikidata embeddings into BERT.
+      - An effective and efficient toolkit of plug-and-play knowledge injection for pre-trained language models. Knowledge-Plugin is general for all kinds of knowledge graph embeddings mentioned above. In the toolkit, we plug the TransR version of Wikidata-5M into BERT as an example of applications. With the TransR embedding, we enhance the knowledge ability of BERT without fine-tuning the original model, e.g., up to 8% improvement on question answering.
