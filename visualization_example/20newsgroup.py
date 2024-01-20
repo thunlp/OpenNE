@@ -1,7 +1,7 @@
 import pandas as pd
 import tensorflow as tf
 import numpy as np
-from tensorflow.contrib.tensorboard.plugins import projector
+from tensorboard.plugins import projector
 import os
 
 LOG_DIR = 'log'
